@@ -1,0 +1,38 @@
+{
+  "name": "fengsui-ops",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,cyan \"npm run dev -w @fengsui/server\" \"npm run dev -w @fengsui/web\"",
+    "dev:server": "npm run dev -w @fengsui/server",
+    "dev:web": "npm run dev -w @fengsui/web",
+    "build": "npm run build -w @fengsui/shared && npm run build -w @fengsui/server && npm run build -w @fengsui/web",
+    "typecheck": "npm run typecheck -w @fengsui/shared && npm run typecheck -w @fengsui/server && npm run typecheck -w @fengsui/web && tsc -p tsconfig.scripts.json --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "bootstrap:bitable": "tsx scripts/bootstrap-bitable.ts",
+    "seed:bitable": "tsx scripts/seed-bitable.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@playwright/test": "^1.54.1",
+    "@types/node": "^24.0.15",
+    "@types/supertest": "^6.0.3",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.32.0",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
+    "supertest": "^7.1.4",
+    "tsx": "^4.20.3",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0",
+    "vitest": "^3.2.4"
+  },
+  "overrides": { "esbuild": "^0.28.1" }
+}

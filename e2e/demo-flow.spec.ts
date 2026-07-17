@@ -1,0 +1,31 @@
+import { test, expect } from '@playwright/test';
+
+test('1号引风机完整维修闭环', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('设备总览', { exact: true }).first()).toBeVisible();
+  await page.getByRole('button', { name: /1号引风机/ }).first().click();
+  await expect(page).toHaveURL(/equipment\/IDF-001/);
+  await expect(page.getByTestId('device-health-score')).toHaveText('68');
+  await page.getByRole('button', { name: '立即研判' }).click();
+  await expect(page.getByText('辅助研判 · 1号引风机')).toBeVisible();
+  await expect(page.getByText(/4.2 mm\/s 上升至 6.8 mm\/s/)).toBeVisible();
+  await page.getByRole('button', { name: '关闭' }).click();
+  await page.getByRole('button', { name: '生成维修工单' }).click();
+  await expect(page).toHaveURL(/work-orders\/WO-/);
+  await page.getByTestId('transition-已接单').click();
+  await page.getByTestId('confirm-transition-已接单').click();
+  await expect(page.getByText('已接单', { exact: true }).first()).toBeVisible();
+  await page.getByTestId('transition-检修中').click();
+  await page.getByTestId('confirm-transition-检修中').click();
+  await page.getByTestId('transition-待验证').click();
+  await page.getByTestId('confirm-transition-待验证').click();
+  await page.getByTestId('transition-已完成').click();
+  await page.getByTestId('confirm-transition-已完成').click();
+  await expect(page.getByText(/工单已完成/)).toBeVisible();
+  await page.goto('/equipment/IDF-001');
+  await expect(page.getByTestId('device-health-score')).toHaveText('92');
+  await page.goto('/spare-parts');
+  await expect(page.getByTestId('stock-SP-001')).toHaveText('5');
+  await page.goto('/alerts/ALT-20260717-001');
+  await expect(page.getByRole('dialog').getByText('已关闭', { exact: true })).toBeVisible();
+});

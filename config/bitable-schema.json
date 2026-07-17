@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "description": "烽燧多维表格数据底座。脚本只创建缺失表/字段，不删除或覆盖已有数据。",
+  "tables": [
+    {
+      "name": "Equipment",
+      "description": "设备台账",
+      "primaryKey": "deviceId",
+      "fields": [
+        ["deviceId", 1], ["deviceName", 1], ["deviceType", 1], ["systemArea", 1], ["manufacturer", 1], ["model", 1], ["installationDate", 1], ["runningStatus", 1], ["operatingCondition", 1], ["healthScore", 2], ["riskLevel", 1], ["vibration", 2], ["temperature", 2], ["current", 2], ["pressure", 2], ["speed", 2], ["runningHours", 2], ["lastMaintenanceDate", 1], ["nextMaintenanceDate", 1], ["responsiblePerson", 1], ["responsibleUserId", 1], ["location", 1], ["dataSource", 1], ["updatedAt", 1]
+      ]
+    },
+    {
+      "name": "Telemetry",
+      "description": "监测时序数据",
+      "primaryKey": "recordKey",
+      "fields": [["recordKey", 1], ["timestamp", 1], ["deviceId", 1], ["operatingCondition", 1], ["vibration", 2], ["temperature", 2], ["current", 2], ["pressure", 2], ["speed", 2], ["healthScore", 2], ["riskLevel", 1]]
+    },
+    {
+      "name": "HealthSnapshots",
+      "description": "健康度记录",
+      "primaryKey": "snapshotId",
+      "fields": [["snapshotId", 1], ["deviceId", 1], ["timestamp", 1], ["healthScore", 2], ["riskLevel", 1], ["operatingCondition", 1], ["indicatorContributions", 1], ["modelVersion", 1]]
+    },
+    {
+      "name": "Alerts",
+      "description": "异常预警",
+      "primaryKey": "alertId",
+      "fields": [["alertId", 1], ["deviceId", 1], ["deviceName", 1], ["alertTime", 1], ["riskLevel", 1], ["healthScore", 2], ["operatingCondition", 1], ["abnormalIndicators", 1], ["indicatorContributions", 1], ["suspectedCause", 1], ["aiAnalysis", 1], ["maintenanceSuggestion", 1], ["suggestedDeadline", 1], ["alertStatus", 1], ["confidence", 2], ["source", 1], ["relatedWorkOrderId", 1], ["acknowledgedBy", 1], ["acknowledgedAt", 1], ["closedAt", 1]]
+    },
+    {
+      "name": "WorkOrders",
+      "description": "维修工单",
+      "primaryKey": "workOrderId",
+      "fields": [["workOrderId", 1], ["sourceAlertId", 1], ["deviceId", 1], ["deviceName", 1], ["riskLevel", 1], ["faultDescription", 1], ["maintenanceSuggestion", 1], ["assignee", 1], ["assigneeUserId", 1], ["createdBy", 1], ["createdTime", 1], ["deadline", 1], ["requiredSpareParts", 1], ["consumedSpareParts", 1], ["processingRecord", 1], ["inspectionResult", 1], ["repairResult", 1], ["healthScoreBefore", 2], ["healthScoreAfter", 2], ["status", 1], ["completedAt", 1], ["verificationResult", 1], ["completionIdempotencyKey", 1]]
+    },
+    {
+      "name": "SpareParts",
+      "description": "备件库存",
+      "primaryKey": "partId",
+      "fields": [["partId", 1], ["partName", 1], ["partCategory", 1], ["applicableEquipment", 1], ["currentStock", 2], ["safeStock", 2], ["unit", 1], ["storageLocation", 1], ["supplier", 1], ["lastInboundDate", 1], ["lastOutboundDate", 1], ["stockStatus", 1], ["unitCost", 2], ["remark", 1]]
+    },
+    {
+      "name": "SparePartTransactions",
+      "description": "备件出入库流水",
+      "primaryKey": "transactionId",
+      "fields": [["transactionId", 1], ["partId", 1], ["type", 1], ["quantity", 2], ["time", 1], ["operator", 1], ["relatedWorkOrderId", 1], ["remark", 1], ["idempotencyKey", 1]]
+    },
+    {
+      "name": "KnowledgeBase",
+      "description": "运维知识库",
+      "primaryKey": "knowledgeId",
+      "fields": [["knowledgeId", 1], ["title", 1], ["deviceType", 1], ["faultPhenomenon", 1], ["abnormalIndicators", 1], ["possibleCauses", 1], ["inspectionSteps", 1], ["handlingMethod", 1], ["applicableCondition", 1], ["safetyReminder", 1], ["relatedSpareParts", 1], ["source", 1], ["updatedAt", 1]]
+    },
+    {
+      "name": "OperationLogs",
+      "description": "操作审计日志",
+      "primaryKey": "logId",
+      "fields": [["logId", 1], ["entityType", 1], ["entityId", 1], ["action", 1], ["operator", 1], ["detail", 1], ["timestamp", 1]]
+    }
+  ]
+}

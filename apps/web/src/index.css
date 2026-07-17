@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { color-scheme: light; }
+  body { margin: 0; min-width: 320px; background: #f7f7f7; color: #1f2329; font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+  button, input, select, textarea { font: inherit; }
+  button { -webkit-tap-highlight-color: transparent; }
+  ::selection { background: #e5e6eb; color: #1f2329; }
+}
+
+@layer components {
+  .panel { @apply rounded border border-[#E5E6EB] bg-white; }
+  .panel-header { @apply flex items-center justify-between border-b border-[#E5E6EB] px-5 py-3.5; }
+  .panel-title { @apply text-[15px] font-semibold text-[#1F2329]; }
+  .btn { @apply inline-flex min-h-9 items-center justify-center gap-2 rounded px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45; }
+  .btn-primary { @apply btn bg-[#344054] text-white hover:bg-[#283445]; }
+  .btn-secondary { @apply btn border border-[#D9DADC] bg-white text-[#3A3F47] hover:border-[#B7BBC1] hover:bg-[#F7F7F7]; }
+  .btn-danger { @apply btn border border-red-300 bg-white text-red-700 hover:bg-red-50; }
+  .input { @apply min-h-10 w-full rounded border border-[#D9DADC] bg-white px-3 text-sm text-[#1F2329] outline-none transition-colors placeholder:text-[#8F959E] focus:border-[#7C8FA6]; }
+  .label { @apply mb-1.5 block text-sm font-medium text-[#3A3F47]; }
+  .table-wrap { @apply overflow-x-auto; }
+  .data-table { @apply w-full min-w-[760px] border-collapse text-left text-sm; }
+  .data-table th { @apply whitespace-nowrap bg-[#FAFAFA] px-4 py-3 text-xs font-semibold text-[#646A73]; }
+  .data-table td { @apply border-t border-[#EDEEF0] px-4 py-3 text-[#3A3F47]; }
+  .data-table tbody tr { @apply transition-colors hover:bg-[#F7F7F7]; }
+  .subtle { @apply text-xs text-[#646A73]; }
+}
+
+.recharts-default-tooltip { border-radius: 4px !important; border-color: #e5e6eb !important; box-shadow: none !important; }
+.scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #c9cdd4; border-radius: 4px; }
+@media (max-width: 900px) { .desktop-only { display: none !important; } }
