@@ -75,12 +75,12 @@ export function createApp(options?: { forceMock?: boolean }) {
     res.json(success({ reset: true }));
   });
 
-  app.get('/api/health', (_req, res) => res.json(success({ status: 'ok', version: '1.0.1', mode, time: new Date().toISOString() })));
+  app.get('/api/health', (_req, res) => res.json(success({ status: 'ok', version: '1.0.2', mode, time: new Date().toISOString() })));
   app.get('/api/integration/status', (_req, res) => res.json(success({
     requestedMode: env.APP_MODE, effectiveMode: mode, degraded: env.APP_MODE !== mode,
     feishuClient: false, sso: mode === 'feishu' ? '等待端内登录' : '演示身份', bitable: mode === 'feishu' ? '已配置' : '模拟数据仓库',
     robot: mode === 'feishu' && env.FEISHU_NOTIFICATION_CHAT_ID ? '已配置' : mode === 'feishu' ? '缺少默认会话' : '卡片预览',
-    aiProvider: 'RuleBasedDiagnosisProvider', version: '1.0.1', lastSyncAt: new Date().toISOString(), missingConfig: missingFeishuConfig,
+    aiProvider: 'RuleBasedDiagnosisProvider', version: '1.0.2', lastSyncAt: new Date().toISOString(), missingConfig: missingFeishuConfig,
   })));
 
   app.post('/api/auth/feishu/login', async (req, res) => {

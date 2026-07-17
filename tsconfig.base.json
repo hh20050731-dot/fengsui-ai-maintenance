@@ -11,11 +11,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@fengsui/shared": ["packages/shared/src/index.ts"],
-      "@fengsui/shared/*": ["packages/shared/src/*"]
-    }
+    "forceConsistentCasingInFileNames": true
   }
 }

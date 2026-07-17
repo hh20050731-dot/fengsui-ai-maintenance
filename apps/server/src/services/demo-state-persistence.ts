@@ -76,8 +76,10 @@ export class DemoStatePersistence {
       return;
     }
     if (entry.method === 'POST' && entry.path === '/work-orders') {
-      const body = replayCreateWorkOrderSchema.parse(entry.body);
-      await this.service.createWorkOrderFromAlert(body.sourceAlertId, { ...body, replayWorkOrderId: entry.resultId });
+      const replayBody = replayCreateWorkOrderSchema.parse(entry.body);
+      const alertId = z.string().min(1).parse(replayBody.sourceAlertId);
+      const body = createWorkOrderSchema.parse(replayBody);
+      await this.service.createWorkOrderFromAlert(alertId, { ...body, replayWorkOrderId: entry.resultId });
       return;
     }
     if (entry.method === 'POST' && orderMatch) {
