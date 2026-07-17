@@ -1,22 +1,37 @@
 import type { ApiResponse } from '@fengsui/shared';
+import { clearDemoJournal, demoJournalHeaders, persistDemoMutation } from './demo-state';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') || '/api';
 
 export class ApiClientError extends Error { constructor(public code: string, message: string, public details?: unknown) { super(message); } }
 
+let effectiveServerMode: 'mock' | 'feishu' | undefined;
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include', ...init,
-    headers: { 'content-type': 'application/json', ...init?.headers },
+    headers: {
+      'content-type': 'application/json',
+      ...(effectiveServerMode === 'feishu' ? {} : demoJournalHeaders()),
+      ...init?.headers,
+    },
   });
+  const responseMode = response.headers.get('x-fengsui-mode');
+  if (responseMode === 'mock' || responseMode === 'feishu') effectiveServerMode = responseMode;
   const payload = await response.json() as ApiResponse<T>;
   if (!response.ok || !payload.success) {
     const error = payload.success ? { code: 'HTTP_ERROR', message: `请求失败（${response.status}）` } : payload.error;
     throw new ApiClientError(error.code, error.message, 'details' in error ? error.details : undefined);
   }
+  if (effectiveServerMode === 'mock') persistDemoMutation(path, init, payload.data);
   return payload.data;
 }
 
 export const postJson = <T>(path: string, body: unknown) => api<T>(path, { method: 'POST', body: JSON.stringify(body) });
 export const patchJson = <T>(path: string, body: unknown) => api<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
 export const idempotencyKey = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
+export async function resetDemoState() {
+  clearDemoJournal();
+  effectiveServerMode = 'mock';
+  return api<{ reset: true }>('/demo/reset', { method: 'POST', body: '{}' });
+}

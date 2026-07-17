@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test('1号引风机完整维修闭环', async ({ page }) => {
   await page.goto('/');
+  await page.evaluate(() => window.localStorage.clear());
+  await page.reload();
   await expect(page.getByText('设备总览', { exact: true }).first()).toBeVisible();
   await page.getByRole('button', { name: /1号引风机/ }).first().click();
   await expect(page).toHaveURL(/equipment\/IDF-001/);
@@ -22,10 +24,35 @@ test('1号引风机完整维修闭环', async ({ page }) => {
   await page.getByTestId('transition-已完成').click();
   await page.getByTestId('confirm-transition-已完成').click();
   await expect(page.getByText(/工单已完成/)).toBeVisible();
+  await page.reload();
+  await expect(page.getByText(/工单已完成/)).toBeVisible();
   await page.goto('/equipment/IDF-001');
+  await expect(page.getByTestId('device-health-score')).toHaveText('92');
+  await page.reload();
   await expect(page.getByTestId('device-health-score')).toHaveText('92');
   await page.goto('/spare-parts');
   await expect(page.getByTestId('stock-SP-001')).toHaveText('5');
+  await page.reload();
+  await expect(page.getByTestId('stock-SP-001')).toHaveText('5');
   await page.goto('/alerts/ALT-20260717-001');
   await expect(page.getByRole('dialog').getByText('已关闭', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '关闭' }).click();
+  await page.goto('/knowledge');
+  await expect(page.getByText('1号引风机维修闭环候选案例')).toBeVisible();
+
+  let confirmationCount = 0;
+  page.on('dialog', async (dialog) => { confirmationCount += 1; await dialog.accept(); });
+  await page.goto('/settings');
+  await page.getByTestId('reset-demo-data').click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(confirmationCount).toBe(2);
+  await page.goto('/equipment/IDF-001');
+  await expect(page.getByTestId('device-health-score')).toHaveText('68');
+  await page.goto('/spare-parts');
+  await expect(page.getByTestId('stock-SP-001')).toHaveText('6');
+  await page.goto('/alerts/ALT-20260717-001');
+  await expect(page.getByRole('dialog').getByText('待确认', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '关闭' }).click();
+  await page.goto('/knowledge');
+  await expect(page.getByText('1号引风机维修闭环候选案例')).toHaveCount(0);
 });

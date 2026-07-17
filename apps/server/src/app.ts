@@ -17,6 +17,7 @@ import { RuleBasedDiagnosisProvider } from './providers/ai-diagnosis-provider.js
 import { FeishuBotNotificationProvider, MockNotificationProvider } from './providers/notification-provider.js';
 import { FeishuBitableRepository } from './repositories/feishu-bitable-repository.js';
 import { MockRepository } from './repositories/mock-repository.js';
+import { APP_MODE_HEADER, DEMO_JOURNAL_HEADER, DemoStatePersistence } from './services/demo-state-persistence.js';
 import { OperationsService } from './services/operations-service.js';
 import type { User, WorkOrder } from '@fengsui/shared';
 
@@ -27,24 +28,59 @@ export function createApp(options?: { forceMock?: boolean }) {
   const repository = mode === 'feishu' ? new FeishuBitableRepository() : new MockRepository();
   const notificationProvider = mode === 'feishu' ? new FeishuBotNotificationProvider() : new MockNotificationProvider();
   const authProvider = mode === 'feishu' ? new FeishuAuthProvider() : new DemoAuthProvider();
-  const service = new OperationsService(repository, new RuleBasedDiagnosisProvider(), notificationProvider);
+  const service = new OperationsService(repository, new RuleBasedDiagnosisProvider(), notificationProvider, { createKnowledgeCandidates: mode === 'mock' });
+  const demoPersistence = mode === 'mock' ? new DemoStatePersistence(repository as MockRepository, service) : undefined;
   const sessions = new Map<string, User>();
   const processedEvents = new Set<string>();
   const app = express();
 
   app.disable('x-powered-by');
   app.use(helmet({ contentSecurityPolicy: false }));
-  app.use(cors({ origin: true, credentials: true }));
+  app.use(cors({ origin: true, credentials: true, exposedHeaders: [APP_MODE_HEADER] }));
   app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
   if (env.NODE_ENV !== 'test') app.use(morgan('tiny'));
 
-  app.get('/api/health', (_req, res) => res.json(success({ status: 'ok', version: '1.0.0', mode, time: new Date().toISOString() })));
+  let demoRequestQueue = Promise.resolve();
+  app.use((req, res, next) => {
+    res.setHeader(APP_MODE_HEADER, mode);
+    const encodedJournal = req.header(DEMO_JOURNAL_HEADER);
+    if (!demoPersistence || encodedJournal === undefined) { next(); return; }
+
+    const previousRequest = demoRequestQueue;
+    let releaseRequest!: () => void;
+    demoRequestQueue = new Promise<void>((resolve) => { releaseRequest = resolve; });
+    void previousRequest.then(async () => {
+      let released = false;
+      const release = () => {
+        if (released) return;
+        released = true;
+        releaseRequest();
+      };
+      try {
+        await demoPersistence.restore(encodedJournal);
+        res.once('finish', release);
+        res.once('close', release);
+        next();
+      } catch (error) {
+        release();
+        next(error);
+      }
+    });
+  });
+
+  app.post('/api/demo/reset', (_req, res) => {
+    if (!demoPersistence) throw new AppError(409, 'DEMO_MODE_REQUIRED', '飞书数据模式不使用浏览器演示数据');
+    demoPersistence.reset();
+    res.json(success({ reset: true }));
+  });
+
+  app.get('/api/health', (_req, res) => res.json(success({ status: 'ok', version: '1.0.1', mode, time: new Date().toISOString() })));
   app.get('/api/integration/status', (_req, res) => res.json(success({
     requestedMode: env.APP_MODE, effectiveMode: mode, degraded: env.APP_MODE !== mode,
     feishuClient: false, sso: mode === 'feishu' ? '等待端内登录' : '演示身份', bitable: mode === 'feishu' ? '已配置' : '模拟数据仓库',
     robot: mode === 'feishu' && env.FEISHU_NOTIFICATION_CHAT_ID ? '已配置' : mode === 'feishu' ? '缺少默认会话' : '卡片预览',
-    aiProvider: 'RuleBasedDiagnosisProvider', version: '1.0.0', lastSyncAt: new Date().toISOString(), missingConfig: missingFeishuConfig,
+    aiProvider: 'RuleBasedDiagnosisProvider', version: '1.0.1', lastSyncAt: new Date().toISOString(), missingConfig: missingFeishuConfig,
   })));
 
   app.post('/api/auth/feishu/login', async (req, res) => {

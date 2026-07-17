@@ -1,9 +1,10 @@
-import { createMockData, type Alert, type Equipment, type OperationLog, type SparePart, type SparePartTransaction, type TelemetryPoint, type WorkOrder } from '@fengsui/shared';
+import { createMockData, type Alert, type Equipment, type KnowledgeEntry, type OperationLog, type SparePart, type SparePartTransaction, type TelemetryPoint, type WorkOrder } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
 import type { DataRepository } from './data-repository.js';
 
 export class MockRepository implements DataRepository {
   protected data = createMockData();
+  reset() { this.data = createMockData(); }
   async listEquipment() { return this.data.equipment; }
   async getEquipment(id: string) { return this.data.equipment.find((item) => item.deviceId === id); }
   async createEquipment(input: Equipment) { this.data.equipment.push(input); this.data.telemetry[input.deviceId] = []; return input; }
@@ -23,6 +24,12 @@ export class MockRepository implements DataRepository {
   async listSpareTransactions() { return this.data.spareTransactions; }
   async addSpareTransaction(input: SparePartTransaction) { this.data.spareTransactions.unshift(input); }
   async listKnowledge() { return this.data.knowledge; }
+  async addKnowledge(input: KnowledgeEntry) {
+    const index = this.data.knowledge.findIndex((item) => item.knowledgeId === input.knowledgeId);
+    if (index >= 0) this.data.knowledge[index] = input;
+    else this.data.knowledge.unshift(input);
+    return input;
+  }
   async listOperationLogs(entityId?: string) { return entityId ? this.data.operationLogs.filter((item) => item.entityId === entityId) : this.data.operationLogs; }
   async addOperationLog(input: OperationLog) { this.data.operationLogs.unshift(input); }
 

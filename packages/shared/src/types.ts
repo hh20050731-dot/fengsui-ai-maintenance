@@ -210,6 +210,14 @@ export interface DashboardData {
   areaDistribution: Array<{ area: string; healthy: number; risk: number }>;
 }
 
+export interface DemoJournalEntry {
+  version: 1;
+  method: 'POST' | 'PATCH';
+  path: string;
+  body: unknown;
+  resultId?: string;
+}
+
 export interface ApiSuccess<T> { success: true; data: T; meta?: Record<string, unknown> }
 export interface ApiFailure { success: false; error: { code: string; message: string; details?: unknown } }
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;

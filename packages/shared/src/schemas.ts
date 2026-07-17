@@ -41,3 +41,12 @@ export const stockChangeSchema = z.object({
   idempotencyKey: z.string().min(6),
 });
 export const diagnosisRequestSchema = z.object({ deviceId: z.string().min(1), question: z.string().optional() });
+
+export const demoJournalEntrySchema = z.object({
+  version: z.literal(1),
+  method: z.enum(['POST', 'PATCH']),
+  path: z.string().startsWith('/').max(180),
+  body: z.unknown(),
+  resultId: z.string().min(1).max(120).optional(),
+});
+export const demoJournalSchema = z.array(demoJournalEntrySchema).max(40);

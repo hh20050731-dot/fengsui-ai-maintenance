@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
-  assertWorkOrderTransition, getStockStatus, type AiDiagnosis, type DashboardData, type Equipment, type SparePartUsage,
+  assertWorkOrderTransition, getStockStatus, type AiDiagnosis, type DashboardData, type Equipment, type KnowledgeEntry, type SparePartUsage,
   type TelemetryPoint, type WorkOrder, type WorkOrderStatus,
 } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
@@ -10,7 +10,14 @@ import type { DataRepository } from '../repositories/data-repository.js';
 
 export class OperationsService {
   private idempotency = new Map<string, unknown>();
-  constructor(public repository: DataRepository, private ai: AiDiagnosisProvider, private notifications: NotificationProvider) {}
+  constructor(
+    public repository: DataRepository,
+    private ai: AiDiagnosisProvider,
+    private notifications: NotificationProvider,
+    private options: { createKnowledgeCandidates?: boolean } = {},
+  ) {}
+
+  resetTransientState() { this.idempotency.clear(); }
 
   async dashboard(range = '24h'): Promise<DashboardData> {
     const [equipment, alerts, orders, parts] = await Promise.all([this.repository.listEquipment(), this.repository.listAlerts(), this.repository.listWorkOrders(), this.repository.listSpareParts()]);
@@ -48,7 +55,7 @@ export class OperationsService {
     return this.ai.diagnose({ device, telemetry: await this.repository.getTelemetry(deviceId), knowledge: await this.repository.listKnowledge(), question });
   }
 
-  async createWorkOrderFromAlert(alertId: string, input: { assignee: string; assigneeUserId: string; deadline?: string; idempotencyKey: string }, createdBy = '黄浩') {
+  async createWorkOrderFromAlert(alertId: string, input: { assignee: string; assigneeUserId: string; deadline?: string; idempotencyKey: string; replayWorkOrderId?: string }, createdBy = '黄浩') {
     const cached = this.idempotency.get(input.idempotencyKey) as WorkOrder | undefined;
     if (cached) return cached;
     const alert = await this.repository.getAlert(alertId);
@@ -63,7 +70,7 @@ export class OperationsService {
     const parts = await this.repository.listSpareParts();
     const required = parts.filter((part) => alert.deviceId === 'IDF-001' ? ['风机轴承', '通用润滑油'].includes(part.partName) : alert.abnormalIndicators.some((indicator) => part.partName.includes(indicator.replace('轴承', '')))).slice(0, 2);
     const order: WorkOrder = {
-      workOrderId: `WO-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String((await this.repository.listWorkOrders()).length + 1).padStart(3, '0')}`,
+      workOrderId: input.replayWorkOrderId ?? `WO-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String((await this.repository.listWorkOrders()).length + 1).padStart(3, '0')}`,
       sourceAlertId: alert.alertId, deviceId: alert.deviceId, deviceName: alert.deviceName, riskLevel: alert.riskLevel,
       faultDescription: `${alert.abnormalIndicators.join('、')}异常：${alert.suspectedCause}`,
       maintenanceSuggestion: alert.maintenanceSuggestion, assignee: input.assignee, assigneeUserId: input.assigneeUserId,
@@ -150,7 +157,26 @@ export class OperationsService {
     const telemetry = await this.repository.getTelemetry(order.deviceId);
     const point: TelemetryPoint = { timestamp: new Date().toISOString(), deviceId: device.deviceId, operatingCondition: device.operatingCondition, vibration: device.vibration, temperature: device.temperature, current: device.current, pressure: device.pressure, speed: device.speed, healthScore: score, riskLevel: device.riskLevel };
     await this.repository.setTelemetry(order.deviceId, [...telemetry, point]);
+    const alert = order.sourceAlertId ? await this.repository.getAlert(order.sourceAlertId) : undefined;
     if (order.sourceAlertId) await this.repository.updateAlert(order.sourceAlertId, { alertStatus: '已关闭', closedAt: new Date().toISOString() });
+    if (this.options.createKnowledgeCandidates && this.repository.addKnowledge) {
+      const candidate: KnowledgeEntry = {
+        knowledgeId: `KB-CANDIDATE-${order.workOrderId}`,
+        title: `${device.deviceName}维修闭环候选案例`,
+        deviceType: device.deviceType,
+        faultPhenomenon: order.faultDescription,
+        abnormalIndicators: alert?.abnormalIndicators ?? [],
+        possibleCauses: [alert?.suspectedCause ?? order.faultDescription],
+        inspectionSteps: order.maintenanceSuggestion,
+        handlingMethod: [order.repairResult ?? '按维修工单记录处理'],
+        applicableCondition: device.operatingCondition,
+        safetyReminder: '本条目来自模拟维修闭环，正式采用前需由专业人员复核并结合安全规程。',
+        relatedSpareParts: order.consumedSpareParts.map((item) => item.partName),
+        source: '维修工单闭环候选（模拟数据）',
+        updatedAt: new Date().toISOString(),
+      };
+      await this.repository.addKnowledge(candidate);
+    }
     await this.log('device', order.deviceId, '维修闭环完成', operator, `健康度由 ${order.healthScoreBefore} 恢复至 ${score}；形成知识库候选案例`);
   }
 

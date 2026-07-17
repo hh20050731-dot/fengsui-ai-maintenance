@@ -22,6 +22,7 @@ export interface DataRepository {
   listSpareTransactions(): Promise<SparePartTransaction[]>;
   addSpareTransaction(transaction: SparePartTransaction): Promise<void>;
   listKnowledge(): Promise<KnowledgeEntry[]>;
+  addKnowledge?(entry: KnowledgeEntry): Promise<KnowledgeEntry>;
   listOperationLogs(entityId?: string): Promise<OperationLog[]>;
   addOperationLog(log: OperationLog): Promise<void>;
 }
