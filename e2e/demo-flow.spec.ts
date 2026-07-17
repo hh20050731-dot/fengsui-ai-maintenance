@@ -56,3 +56,14 @@ test('1号引风机完整维修闭环', async ({ page }) => {
   await page.goto('/knowledge');
   await expect(page.getByText('1号引风机维修闭环候选案例')).toHaveCount(0);
 });
+
+test('引风机3D数字孪生场景与入口联动', async ({ page }) => {
+  await page.goto('/digital-twin?equipment=IDF-01&fault=bearing-overheat');
+  await expect(page.getByRole('heading', { name: '引风机数字孪生' })).toBeVisible();
+  await expect(page.getByTestId('digital-twin-viewer')).toBeVisible();
+  await expect(page.getByTestId('twin-temperature')).toContainText('82');
+  await expect(page.getByRole('button', { name: '轴承温升' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: '联轴器不对中' }).click();
+  await expect(page).toHaveURL(/fault=coupling-misalignment/);
+  await expect(page.getByText('轴系振动异常', { exact: true })).toBeVisible();
+});

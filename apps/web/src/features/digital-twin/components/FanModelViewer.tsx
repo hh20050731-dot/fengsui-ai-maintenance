@@ -1,0 +1,104 @@
+import { ContactShadows, Grid, Html, OrbitControls, useGLTF, useProgress } from '@react-three/drei';
+import { Canvas, useThree } from '@react-three/fiber';
+import { Component, Suspense, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import type { ErrorInfo, PropsWithChildren, RefObject } from 'react';
+import { PerspectiveCamera, Vector3 } from 'three';
+import { AlertCircle, Box } from 'lucide-react';
+import type { CameraView, FanModelViewerHandle, FaultScenario, ModelInspection, ModelNodeInfo, PartResolution } from '../digitalTwinTypes';
+import { ModelScene } from './ModelScene';
+import { ViewToolbar } from './ViewToolbar';
+
+class ModelErrorBoundary extends Component<PropsWithChildren<{ resetKey: number; fallback: (error: Error) => React.ReactNode }>, { error: Error | null }> {
+  override state: { error: Error | null } = { error: null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  override componentDidCatch(error: Error, info: ErrorInfo) { console.error('[数字孪生] 模型加载失败', error, info); }
+  override componentDidUpdate(previous: Readonly<PropsWithChildren<{ resetKey: number }>>) { if (previous.resetKey !== this.props.resetKey && this.state.error) this.setState({ error: null }); }
+  override render() { return this.state.error ? this.props.fallback(this.state.error) : this.props.children; }
+}
+
+function ModelLoading({ modelUrl }: { modelUrl: string }) {
+  const { progress } = useProgress();
+  return <Html center><div className="w-56 rounded border border-[#D9DADC] bg-white/95 p-4 text-center text-sm text-[#3A3F47]"><div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded border border-[#E5E6EB] text-[#646A73]"><Box className="animate-pulse" size={18} /></div><div>正在加载引风机模型</div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#E5E6EB]"><div className="h-full bg-[#64798f] transition-[width]" style={{ width: `${Math.max(4, progress)}%` }} /></div><div className="mt-2 font-mono text-[10px] text-[#8F959E]">{Math.round(progress)}% · {modelUrl}</div></div></Html>;
+}
+
+function CameraController({ radius, apiRef }: { radius: number; apiRef: RefObject<FanModelViewerHandle | null> }) {
+  const { camera, size } = useThree();
+  const controls = useRef<any>(null);
+  const setView = useCallback((view: CameraView) => {
+    const perspective = camera as PerspectiveCamera;
+    const verticalFov = perspective.fov * Math.PI / 180;
+    const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * Math.max(size.width / Math.max(size.height, 1), 0.4));
+    const distance = radius / Math.sin(Math.min(verticalFov, horizontalFov) / 2) * 1.14;
+    const directions: Record<CameraView, Vector3> = {
+      reset: new Vector3(1.2, 0.72, 1.2), front: new Vector3(0, 0.12, 1), side: new Vector3(1, 0.12, 0), top: new Vector3(0, 1, 0.001),
+    };
+    perspective.position.copy(directions[view].normalize().multiplyScalar(distance));
+    perspective.near = Math.max(distance / 100, 0.01);
+    perspective.far = distance * 100;
+    perspective.updateProjectionMatrix();
+    controls.current?.target.set(0, 0, 0);
+    controls.current?.update();
+  }, [camera, radius, size.height, size.width]);
+  useImperativeHandle(apiRef, () => ({ setView }), [setView]);
+  useEffect(() => { setView('reset'); }, [setView]);
+  return <OrbitControls ref={controls} makeDefault enableRotate enableZoom enablePan dampingFactor={0.08} enableDamping minDistance={radius * 0.65} maxDistance={radius * 8} />;
+}
+
+export const FanModelViewer = forwardRef<FanModelViewerHandle, {
+  modelUrl: string;
+  scenario: FaultScenario;
+  selectedNode: ModelNodeInfo | null;
+  onSelectNode: (node: ModelNodeInfo | null) => void;
+  onInspection: (inspection: ModelInspection) => void;
+  onPartResolution: (resolution: PartResolution) => void;
+}>(function FanModelViewer({ modelUrl, scenario, selectedNode, onSelectNode, onInspection, onPartResolution }, ref) {
+  const container = useRef<HTMLDivElement>(null);
+  const cameraApi = useRef<FanModelViewerHandle>(null);
+  const [radius, setRadius] = useState(3);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [pageFullscreen, setPageFullscreen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  useImperativeHandle(ref, () => ({ setView: (view) => cameraApi.current?.setView(view) }), []);
+  useEffect(() => {
+    const update = () => setFullscreen(document.fullscreenElement === container.current);
+    document.addEventListener('fullscreenchange', update);
+    return () => document.removeEventListener('fullscreenchange', update);
+  }, []);
+  useEffect(() => {
+    if (!pageFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [pageFullscreen]);
+  const toggleFullscreen = async () => {
+    if (document.fullscreenElement) { await document.exitFullscreen(); return; }
+    if (pageFullscreen) { setPageFullscreen(false); return; }
+    try {
+      await container.current?.requestFullscreen();
+      if (!document.fullscreenElement) setPageFullscreen(true);
+    } catch {
+      setPageFullscreen(true);
+    }
+  };
+  const retry = () => { useGLTF.clear(modelUrl); setReloadKey((value) => value + 1); };
+  return <div ref={container} className={`relative h-[520px] min-h-[420px] overflow-hidden rounded-sm bg-[#E9ECEF] xl:h-[620px] ${pageFullscreen ? 'fixed inset-0 z-[80] h-screen xl:h-screen' : ''}`} data-testid="digital-twin-viewer">
+    <ViewToolbar onView={(view) => cameraApi.current?.setView(view)} onFullscreen={() => void toggleFullscreen()} fullscreen={fullscreen || pageFullscreen} />
+    <ModelErrorBoundary resetKey={reloadKey} fallback={(error) => <div className="flex h-full items-center justify-center p-8"><div className="max-w-lg rounded border border-red-200 bg-white p-6 text-center"><AlertCircle className="mx-auto text-red-600" size={28} /><h3 className="mt-3 font-semibold text-[#1F2329]">3D模型加载失败</h3><p className="mt-2 text-sm text-[#646A73]">实际请求路径：<span className="break-all font-mono">{modelUrl}</span></p><p className="mt-2 text-xs leading-5 text-[#8F959E]">请确认模型位于前端 public/models 目录，并检查 Vite 基础路径或网络请求是否可用。{error.message ? ` 错误：${error.message}` : ''}</p><button className="btn-secondary mt-4" onClick={retry}>重新加载</button></div></div>}>
+      <Canvas key={reloadKey} shadows="basic" dpr={[1, 1.5]} camera={{ fov: 38, position: [6, 3.6, 6], near: 0.05, far: 500 }} gl={{ antialias: true, powerPreference: 'high-performance' }} onPointerMissed={() => onSelectNode(null)}>
+        <color attach="background" args={['#E9ECEF']} />
+        <fog attach="fog" args={['#E9ECEF', 11, 25]} />
+        <ambientLight intensity={0.48} />
+        <hemisphereLight args={['#f8fafc', '#66717b', 0.88]} />
+        <directionalLight position={[6, 9, 7]} intensity={1.45} castShadow shadow-mapSize={[1024, 1024]} />
+        <directionalLight position={[-5, 3, -4]} intensity={0.48} />
+        <Suspense fallback={<ModelLoading modelUrl={modelUrl} />}>
+          <ModelScene modelUrl={modelUrl} scenario={scenario} selectedNodeUuid={selectedNode?.uuid ?? null} onSelectNode={onSelectNode} onInspection={onInspection} onFit={setRadius} onPartResolution={onPartResolution} />
+        </Suspense>
+        <Grid position={[0, -2.55, 0]} args={[24, 24]} cellSize={0.5} cellThickness={0.5} cellColor="#c9cdd4" sectionSize={2.5} sectionThickness={0.8} sectionColor="#aeb4bb" fadeDistance={18} fadeStrength={1} infiniteGrid />
+        <ContactShadows position={[0, -2.48, 0]} opacity={0.25} scale={12} blur={2.5} far={8} />
+        <CameraController radius={radius} apiRef={cameraApi} />
+      </Canvas>
+    </ModelErrorBoundary>
+    <div className="pointer-events-none absolute bottom-3 left-3 rounded border border-[#D9DADC] bg-white/90 px-2.5 py-1.5 text-[11px] text-[#646A73]">左键旋转 · 滚轮缩放 · 右键平移 · 点击部件查看节点</div>
+  </div>;
+});

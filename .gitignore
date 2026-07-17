@@ -5,6 +5,11 @@ dist/
 coverage/
 playwright-report/
 test-results/
+screenshots/
+.cache/
+.tmp/
+tmp/
+*.tsbuildinfo
 *.log
 .DS_Store
 .vercel/

@@ -1,5 +1,5 @@
 import {
-  AlertTriangle, Bell, BookOpen, Boxes, ChevronLeft, ChevronRight, ClipboardList, Gauge,
+  AlertTriangle, Bell, BookOpen, Boxes, Box, ChevronLeft, ChevronRight, ClipboardList, Gauge,
   Menu, PackageSearch, Settings, Wrench, X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -10,6 +10,7 @@ import { useAppContext } from '../contexts/AppContext';
 
 const navigation = [
   { to: '/', label: '设备总览', icon: Gauge }, { to: '/equipment', label: '设备台账', icon: Boxes },
+  { to: '/digital-twin', label: '3D数字孪生', icon: Box },
   { to: '/alerts', label: '预警中心', icon: AlertTriangle }, { to: '/ai', label: '辅助研判', icon: BookOpen },
   { to: '/work-orders', label: '维修工单', icon: ClipboardList }, { to: '/spare-parts', label: '备件库存', icon: PackageSearch },
   { to: '/knowledge', label: '运维知识库', icon: Wrench }, { to: '/settings', label: '系统设置', icon: Settings },

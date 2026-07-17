@@ -20,7 +20,24 @@ export const createWorkOrderSchema = z.object({
   assigneeUserId: z.string().default('zhang-gong'),
   deadline: z.string().min(1).optional(),
   idempotencyKey: z.string().min(6),
+  digitalTwinContext: z.object({
+    equipmentName: z.string().min(1),
+    equipmentId: z.string().min(1),
+    faultPart: z.string().min(1),
+    faultType: z.string().min(1),
+    riskLevel: z.enum(['低', '中高', '高']),
+    failureProbability: z.number().min(0).max(100),
+    healthScore: z.number().min(0).max(100),
+    temperature: z.number(),
+    vibration: z.number().min(0),
+    speed: z.number().min(0),
+    current: z.number().min(0),
+    diagnosis: z.string().min(5),
+    advice: z.array(z.string().min(2)).min(1),
+    createdAt: z.string().datetime(),
+  }).optional(),
 });
+export type CreateWorkOrderInput = z.infer<typeof createWorkOrderSchema>;
 export const transitionWorkOrderSchema = z.object({
   targetStatus: z.enum(['待接单', '已接单', '检修中', '待验证', '已完成', '已取消']),
   operator: z.string().min(1).default('黄浩'),

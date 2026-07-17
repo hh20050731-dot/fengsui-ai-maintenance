@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
-  assertWorkOrderTransition, getStockStatus, type AiDiagnosis, type DashboardData, type Equipment, type KnowledgeEntry, type SparePartUsage,
+  assertWorkOrderTransition, getStockStatus, type AiDiagnosis, type CreateWorkOrderInput, type DashboardData, type Equipment, type KnowledgeEntry, type SparePartUsage,
   type TelemetryPoint, type WorkOrder, type WorkOrderStatus,
 } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
@@ -55,12 +55,14 @@ export class OperationsService {
     return this.ai.diagnose({ device, telemetry: await this.repository.getTelemetry(deviceId), knowledge: await this.repository.listKnowledge(), question });
   }
 
-  async createWorkOrderFromAlert(alertId: string, input: { assignee: string; assigneeUserId: string; deadline?: string; idempotencyKey: string; replayWorkOrderId?: string }, createdBy = '黄浩') {
+  async createWorkOrderFromAlert(alertId: string, input: CreateWorkOrderInput & { replayWorkOrderId?: string }, createdBy = '黄浩') {
     const cached = this.idempotency.get(input.idempotencyKey) as WorkOrder | undefined;
     if (cached) return cached;
     const alert = await this.repository.getAlert(alertId);
     if (!alert) throw new AppError(404, 'ALERT_NOT_FOUND', '未找到预警');
     if (alert.relatedWorkOrderId) { const existing = await this.repository.getWorkOrder(alert.relatedWorkOrderId); if (existing) return existing; }
+    const twin = input.digitalTwinContext;
+    if (twin && twin.equipmentId !== alert.deviceId) throw new AppError(409, 'EQUIPMENT_MISMATCH', '数字孪生场景设备与关联预警设备不一致');
     try {
       const notification = await this.notifications.sendAlert(alert);
       await this.log('alert', alert.alertId, notification.delivered ? '发送预警通知' : '预警通知发送失败', '系统', notification.delivered ? `消息 ${notification.messageId || 'Mock 卡片预览'} 已生成` : `${notification.error ?? '未知错误'}；业务流程继续，可稍后重试`);
@@ -68,16 +70,21 @@ export class OperationsService {
       await this.log('alert', alert.alertId, '预警通知发送失败', '系统', `${error instanceof Error ? error.message : '未知错误'}；业务流程继续，可稍后重试`);
     }
     const parts = await this.repository.listSpareParts();
-    const required = parts.filter((part) => alert.deviceId === 'IDF-001' ? ['风机轴承', '通用润滑油'].includes(part.partName) : alert.abnormalIndicators.some((indicator) => part.partName.includes(indicator.replace('轴承', '')))).slice(0, 2);
+    const twinPartNames = twin?.faultType === '联轴器不对中' ? ['联轴器'] : twin?.faultType === '轴承温升' ? ['风机轴承', '通用润滑油'] : [];
+    const required = parts.filter((part) => twin ? twinPartNames.includes(part.partName) : alert.deviceId === 'IDF-001' ? ['风机轴承', '通用润滑油'].includes(part.partName) : alert.abnormalIndicators.some((indicator) => part.partName.includes(indicator.replace('轴承', '')))).slice(0, 2);
+    const riskLevel: WorkOrder['riskLevel'] = twin ? twin.riskLevel === '高' ? '高风险' : twin.riskLevel === '中高' ? '二级预警' : '关注' : alert.riskLevel;
+    const faultDescription = twin
+      ? `${twin.faultPart} · ${twin.faultType}；故障概率 ${twin.failureProbability}%；温度 ${twin.temperature}℃、振动 ${twin.vibration} mm/s、转速 ${twin.speed} r/min、电流 ${twin.current} A；辅助研判：${twin.diagnosis}`
+      : `${alert.abnormalIndicators.join('、')}异常：${alert.suspectedCause}`;
     const order: WorkOrder = {
       workOrderId: input.replayWorkOrderId ?? `WO-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String((await this.repository.listWorkOrders()).length + 1).padStart(3, '0')}`,
-      sourceAlertId: alert.alertId, deviceId: alert.deviceId, deviceName: alert.deviceName, riskLevel: alert.riskLevel,
-      faultDescription: `${alert.abnormalIndicators.join('、')}异常：${alert.suspectedCause}`,
-      maintenanceSuggestion: alert.maintenanceSuggestion, assignee: input.assignee, assigneeUserId: input.assigneeUserId,
-      createdBy, createdTime: new Date().toISOString(), deadline: input.deadline ?? new Date(Date.now() + 24 * 3_600_000).toISOString(),
+      sourceAlertId: alert.alertId, deviceId: alert.deviceId, deviceName: alert.deviceName, riskLevel,
+      faultDescription,
+      maintenanceSuggestion: twin?.advice ?? alert.maintenanceSuggestion, assignee: input.assignee, assigneeUserId: input.assigneeUserId,
+      createdBy, createdTime: twin?.createdAt ?? new Date().toISOString(), deadline: input.deadline ?? new Date(Date.now() + 24 * 3_600_000).toISOString(),
       requiredSpareParts: required.map((part) => ({ partId: part.partId, partName: part.partName, quantity: 1, unit: part.unit })),
-      consumedSpareParts: [], processingRecord: [{ id: randomUUID(), time: new Date().toISOString(), operator: createdBy, action: '创建工单', detail: `由预警 ${alert.alertId} 生成` }],
-      healthScoreBefore: alert.healthScore, status: '待接单',
+      consumedSpareParts: [], processingRecord: [{ id: randomUUID(), time: new Date().toISOString(), operator: createdBy, action: '创建工单', detail: twin ? `由预警 ${alert.alertId} 和3D数字孪生“${twin.faultType}”场景生成` : `由预警 ${alert.alertId} 生成` }],
+      healthScoreBefore: twin?.healthScore ?? alert.healthScore, status: '待接单',
     };
     await this.repository.createWorkOrder(order);
     await this.repository.updateAlert(alertId, { alertStatus: '已生成工单', relatedWorkOrderId: order.workOrderId });
