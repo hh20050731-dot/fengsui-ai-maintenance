@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { faultScenarioFromAlertIndicators, faultScenarios } from './faultScenarios';
+import { canCreateWorkOrderForScenario, faultScenarioFromAlertIndicators, faultScenarios } from './faultScenarios';
 
 describe('数字孪生故障场景', () => {
   it('四种场景的指标、趋势和研判结果保持同步', () => {
@@ -15,5 +15,12 @@ describe('数字孪生故障场景', () => {
     expect(faultScenarioFromAlertIndicators(['轴承振动', '轴承温度'])).toBe('bearing-overheat');
     expect(faultScenarioFromAlertIndicators(['联轴器对中'])).toBe('coupling-misalignment');
     expect(faultScenarioFromAlertIndicators(['叶轮不平衡'])).toBe('impeller-imbalance');
+  });
+
+  it('正常场景不开放工单操作，故障场景保留原有工单入口', () => {
+    expect(canCreateWorkOrderForScenario('normal')).toBe(false);
+    expect(canCreateWorkOrderForScenario('bearing-overheat')).toBe(true);
+    expect(canCreateWorkOrderForScenario('impeller-imbalance')).toBe(true);
+    expect(canCreateWorkOrderForScenario('coupling-misalignment')).toBe(true);
   });
 });

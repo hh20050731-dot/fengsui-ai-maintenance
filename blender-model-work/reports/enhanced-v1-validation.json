@@ -1,0 +1,247 @@
+{
+  "importSucceeded": true,
+  "objectCount": 43,
+  "meshCount": 40,
+  "keyNodeCount": 16,
+  "requiredKeyNodeCount": 16,
+  "missingNodes": [],
+  "duplicateNames": [],
+  "missingMaterials": [],
+  "hierarchy": {
+    "casingGroupUnderRoot": true,
+    "impellerGroupUnderRoot": true,
+    "casingChildren": {
+      "SHELL": "casing_group",
+      "SHELL002": "casing_group"
+    },
+    "impellerChildren": {
+      "SHELL001": "impeller_group",
+      "SHELL008": "impeller_group"
+    }
+  },
+  "bounds": {
+    "min": [
+      -292.32418823,
+      -1402.66638184,
+      -325.00039673
+    ],
+    "max": [
+      357.67581177,
+      800.0,
+      1109.99987793
+    ],
+    "deltaFromPreExport": 0.00012207
+  },
+  "triangles": {
+    "original": 428042,
+    "added": 4624,
+    "total": 432666
+  },
+  "axisDistances": {
+    "motor": 0.00017512,
+    "motor_shaft": 0.00012258,
+    "main_shaft": 4.452e-05,
+    "coupling_input": 0.00011249,
+    "coupling_element": 0.00010303,
+    "coupling_output": 9.35e-05,
+    "bearing_drive_housing": 6.827e-05,
+    "bearing_non_drive_housing": 4.304e-05,
+    "bearing_drive_locator": 6.827e-05,
+    "bearing_non_drive_locator": 4.304e-05,
+    "rotation_axis": 8.015e-05
+  },
+  "impellerOriginDistances": {
+    "SHELL001": 0.0,
+    "SHELL008": 0.0
+  },
+  "baseContact": {
+    "motor": {
+      "verticalGap": -3.1e-05,
+      "touchesBaseWithinTolerance": true
+    },
+    "bearing_drive_housing": {
+      "verticalGap": -1.5e-05,
+      "touchesBaseWithinTolerance": true
+    },
+    "bearing_non_drive_housing": {
+      "verticalGap": -1.5e-05,
+      "touchesBaseWithinTolerance": true
+    },
+    "coupling_guard": {
+      "verticalGap": 0.0,
+      "touchesBaseWithinTolerance": true
+    }
+  },
+  "casingIntersections": [],
+  "casingCanHideIndependently": true,
+  "guardCanHideIndependently": true,
+  "customProperties": {
+    "bearing_drive_locator": {
+      "expected": {
+        "semantic_locator": true,
+        "physical_geometry": false,
+        "fault_type": "bearing_overheat",
+        "display_name_zh": "驱动端轴承"
+      },
+      "actual": {
+        "semantic_locator": true,
+        "physical_geometry": false,
+        "fault_type": "bearing_overheat",
+        "display_name_zh": "驱动端轴承"
+      },
+      "preserved": true
+    },
+    "bearing_non_drive_locator": {
+      "expected": {
+        "semantic_locator": true,
+        "physical_geometry": false,
+        "fault_type": "bearing_overheat",
+        "display_name_zh": "非驱动端轴承"
+      },
+      "actual": {
+        "semantic_locator": true,
+        "physical_geometry": false,
+        "fault_type": "bearing_overheat",
+        "display_name_zh": "非驱动端轴承"
+      },
+      "preserved": true
+    },
+    "impeller_group": {
+      "expected": {
+        "fault_type": "impeller_imbalance"
+      },
+      "actual": {
+        "fault_type": "impeller_imbalance",
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization"
+      },
+      "preserved": true
+    },
+    "casing_group": {
+      "expected": {
+        "supports_transparency": true,
+        "supports_visibility_toggle": true
+      },
+      "actual": {
+        "supports_transparency": true,
+        "supports_visibility_toggle": true,
+        "semantic_model": true,
+        "manufacturer_exact": false
+      },
+      "preserved": true
+    },
+    "coupling_input": {
+      "expected": {
+        "fault_type": "coupling_misalignment",
+        "semantic_model": true,
+        "manufacturer_exact": false
+      },
+      "actual": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "联轴器（简化语义模型）",
+        "fault_type": "coupling_misalignment"
+      },
+      "preserved": true
+    },
+    "coupling_element": {
+      "expected": {
+        "fault_type": "coupling_misalignment",
+        "semantic_model": true,
+        "manufacturer_exact": false
+      },
+      "actual": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "联轴器（简化语义模型）",
+        "fault_type": "coupling_misalignment"
+      },
+      "preserved": true
+    },
+    "coupling_output": {
+      "expected": {
+        "fault_type": "coupling_misalignment",
+        "semantic_model": true,
+        "manufacturer_exact": false
+      },
+      "actual": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "联轴器（简化语义模型）",
+        "fault_type": "coupling_misalignment"
+      },
+      "preserved": true
+    },
+    "coupling_guard": {
+      "expected": {
+        "supports_visibility_toggle": true,
+        "supports_transparency": true
+      },
+      "actual": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "联轴器防护罩（简化）",
+        "supports_visibility_toggle": true,
+        "supports_transparency": true,
+        "diagnostic_default_visible": false
+      },
+      "preserved": true
+    }
+  },
+  "customPropertiesPreserved": true,
+  "normalMaterials": {
+    "SHELL": [
+      "MAT_CASING"
+    ],
+    "SHELL002": [
+      "MAT_CASING"
+    ],
+    "SHELL001": [
+      "MAT_IMPELLER"
+    ],
+    "SHELL008": [
+      "MAT_IMPELLER"
+    ],
+    "motor": [
+      "MAT_MOTOR"
+    ],
+    "motor_shaft": [
+      "MAT_SHAFT"
+    ],
+    "main_shaft": [
+      "MAT_SHAFT"
+    ],
+    "coupling_input": [
+      "MAT_COUPLING"
+    ],
+    "coupling_element": [
+      "MAT_COUPLING"
+    ],
+    "coupling_output": [
+      "MAT_COUPLING"
+    ],
+    "bearing_drive_housing": [
+      "MAT_BEARING"
+    ],
+    "bearing_non_drive_housing": [
+      "MAT_BEARING"
+    ],
+    "drive_base": [
+      "MAT_BASE"
+    ],
+    "coupling_guard": [
+      "MAT_GUARD"
+    ]
+  },
+  "faultMaterialsAssignedToNormalModel": {},
+  "normalMaterialsRestorable": true,
+  "glbExtensionsUsed": [],
+  "dracoUsed": false,
+  "valid": true,
+  "failures": []
+}

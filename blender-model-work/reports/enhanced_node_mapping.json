@@ -1,0 +1,194 @@
+{
+  "root": "Fan_Digital_Twin",
+  "collections": {
+    "EXISTING_CASING": [
+      "SHELL",
+      "SHELL002"
+    ],
+    "EXISTING_IMPELLER": [
+      "SHELL001",
+      "SHELL008"
+    ],
+    "EXISTING_INTERNAL_PARTS": [
+      "SHELL003",
+      "SHELL004",
+      "SHELL005",
+      "SHELL006",
+      "SHELL007",
+      "SHELL009",
+      "SHELL010",
+      "SHELL011",
+      "SHELL012",
+      "SHELL013",
+      "SHELL014",
+      "SHELL015",
+      "SHELL016",
+      "SHELL017",
+      "SHELL018",
+      "SHELL019",
+      "SHELL020",
+      "SHELL021",
+      "SHELL022",
+      "SHELL023",
+      "SHELL024",
+      "SHELL025"
+    ],
+    "ADDED_DRIVE_SYSTEM": [
+      "drive_base",
+      "main_shaft",
+      "coupling_output",
+      "coupling_element",
+      "coupling_input",
+      "motor_shaft",
+      "bearing_non_drive_housing",
+      "bearing_drive_housing",
+      "motor"
+    ],
+    "SEMANTIC_LOCATORS": [
+      "bearing_drive_locator",
+      "bearing_non_drive_locator",
+      "rotation_axis"
+    ],
+    "UNRESOLVED_PARTS": [
+      "Cube"
+    ]
+  },
+  "parents": {
+    "casing_group": [
+      "SHELL",
+      "SHELL002"
+    ],
+    "impeller_group": [
+      "SHELL001",
+      "SHELL008"
+    ]
+  },
+  "semanticObjects": {
+    "drive_base": {
+      "type": "MESH",
+      "semanticModel": true,
+      "semanticLocator": null,
+      "physicalGeometry": true,
+      "manufacturerExact": false,
+      "purpose": "digital_twin_visualization",
+      "faultType": null,
+      "displayNameZh": "传动系统底座（简化）"
+    },
+    "main_shaft": {
+      "type": "MESH",
+      "semanticModel": true,
+      "semanticLocator": null,
+      "physicalGeometry": true,
+      "manufacturerExact": false,
+      "purpose": "digital_twin_visualization",
+      "faultType": null,
+      "displayNameZh": "主轴（简化语义模型）"
+    },
+    "coupling_output": {
+      "type": "MESH",
+      "semanticModel": true,
+      "semanticLocator": null,
+      "physicalGeometry": true,
+      "manufacturerExact": false,
+      "purpose": "digital_twin_visualization",
+      "faultType": null,
+      "displayNameZh": "联轴器（简化语义模型）"
+    },
+    "coupling_element": {
+      "type": "MESH",
+      "semanticModel": true,
+      "semanticLocator": null,
+      "physicalGeometry": true,
+      "manufacturerExact": false,
+      "purpose": "digital_twin_visualization",
+      "faultType": null,
+      "displayNameZh": "联轴器（简化语义模型）"
+    },
+    "coupling_input": {
+      "type": "MESH",
+      "semanticModel": true,
+      "semanticLocator": null,
+      "physicalGeometry": true,
+      "manufacturerExact": false,
+      "purpose": "digital_twin_visualization",
+      "faultType": null,
+      "displayNameZh": "联轴器（简化语义模型）"
+    },
+    "motor_shaft": {
+      "type": "MESH",
+      "semanticModel": true,
+      "semanticLocator": null,
+      "physicalGeometry": true,
+      "manufacturerExact": false,
+      "purpose": "digital_twin_visualization",
+      "faultType": null,
+      "displayNameZh": "电机轴（简化语义模型）"
+    },
+    "bearing_non_drive_housing": {
+      "type": "MESH",
+      "semanticModel": true,
+      "semanticLocator": null,
+      "physicalGeometry": true,
+      "manufacturerExact": false,
+      "purpose": "digital_twin_visualization",
+      "faultType": null,
+      "displayNameZh": "非驱动端轴承座（简化）"
+    },
+    "bearing_drive_housing": {
+      "type": "MESH",
+      "semanticModel": true,
+      "semanticLocator": null,
+      "physicalGeometry": true,
+      "manufacturerExact": false,
+      "purpose": "digital_twin_visualization",
+      "faultType": null,
+      "displayNameZh": "驱动端轴承座（简化）"
+    },
+    "motor": {
+      "type": "MESH",
+      "semanticModel": true,
+      "semanticLocator": null,
+      "physicalGeometry": true,
+      "manufacturerExact": false,
+      "purpose": "digital_twin_visualization",
+      "faultType": null,
+      "displayNameZh": "驱动电机（简化语义模型）"
+    },
+    "bearing_non_drive_locator": {
+      "type": "MESH",
+      "semanticModel": null,
+      "semanticLocator": true,
+      "physicalGeometry": false,
+      "manufacturerExact": null,
+      "purpose": null,
+      "faultType": "bearing_overheat",
+      "displayNameZh": "非驱动端轴承"
+    },
+    "bearing_drive_locator": {
+      "type": "MESH",
+      "semanticModel": null,
+      "semanticLocator": true,
+      "physicalGeometry": false,
+      "manufacturerExact": null,
+      "purpose": null,
+      "faultType": "bearing_overheat",
+      "displayNameZh": "驱动端轴承"
+    },
+    "rotation_axis": {
+      "type": "MESH",
+      "semanticModel": null,
+      "semanticLocator": true,
+      "physicalGeometry": false,
+      "manufacturerExact": null,
+      "purpose": null,
+      "faultType": null,
+      "displayNameZh": "叶轮旋转轴线"
+    }
+  },
+  "safety": {
+    "originalObjectsDeleted": false,
+    "originalObjectsRenamed": false,
+    "websiteModelModified": false,
+    "formalGlbExported": false
+  }
+}

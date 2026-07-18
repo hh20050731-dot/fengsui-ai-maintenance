@@ -1,0 +1,2735 @@
+{
+  "analysisStatus": "complete",
+  "analysisMode": "Blender bpy read-only analysis of isolated copy",
+  "generatedAt": "2026-07-18T16:21:48.893545+00:00",
+  "input": {
+    "path": "C:\\Users\\Fture\\Documents\\飞书Ai\\blender-model-work\\input\\induced-draft-fan.glb",
+    "sizeBytes": 18951132,
+    "sha256Before": "532E331BEA3E944798ACACB4165760CDB051C09A5D3B5949AE8009C478257D5D",
+    "sha256After": "532E331BEA3E944798ACACB4165760CDB051C09A5D3B5949AE8009C478257D5D",
+    "unchanged": true
+  },
+  "blender": {
+    "version": "5.2.0 LTS",
+    "binaryPath": "D:\\SteamLibrary\\steamapps\\common\\Blender\\blender.exe"
+  },
+  "classification": {
+    "code": "multiple_independent_objects",
+    "label": "已有多个独立对象"
+  },
+  "counts": {
+    "collections": 1,
+    "objects": 27,
+    "meshObjects": 27,
+    "meshDataBlocks": 27,
+    "empties": 0,
+    "vertices": 641345,
+    "faces": 428042,
+    "triangles": 428042,
+    "materials": 5,
+    "objectsWithTextures": 0,
+    "animatedObjects": 0
+  },
+  "keywordChecks": {
+    "motor": [],
+    "coupling": [],
+    "shaft": [],
+    "bearing": [],
+    "impeller": [],
+    "casing": [],
+    "inlet": [],
+    "outlet": [],
+    "base": []
+  },
+  "collections": [
+    {
+      "name": "Scene Collection",
+      "parent": null,
+      "objects": [
+        "Cube",
+        "SHELL",
+        "SHELL001",
+        "SHELL002",
+        "SHELL003",
+        "SHELL004",
+        "SHELL005",
+        "SHELL006",
+        "SHELL007",
+        "SHELL008",
+        "SHELL009",
+        "SHELL010",
+        "SHELL011",
+        "SHELL012",
+        "SHELL013",
+        "SHELL014",
+        "SHELL015",
+        "SHELL016",
+        "SHELL017",
+        "SHELL018",
+        "SHELL019",
+        "SHELL020",
+        "SHELL021",
+        "SHELL022",
+        "SHELL023",
+        "SHELL024",
+        "SHELL025"
+      ],
+      "children": []
+    }
+  ],
+  "materials": [
+    {
+      "name": "Material.001",
+      "hasTexture": false,
+      "textures": []
+    },
+    {
+      "name": "color_cccccc",
+      "hasTexture": false,
+      "textures": []
+    },
+    {
+      "name": "color_c8c8c8",
+      "hasTexture": false,
+      "textures": []
+    },
+    {
+      "name": "color_cd843f",
+      "hasTexture": false,
+      "textures": []
+    },
+    {
+      "name": "color_adb5bd",
+      "hasTexture": false,
+      "textures": []
+    }
+  ],
+  "objects": [
+    {
+      "originalName": "Cube",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        2.0,
+        2.0,
+        2.0
+      ],
+      "center": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "boundingBox": {
+        "min": [
+          -1.0,
+          -1.0,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "center": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "corners": [
+          [
+            -1.0,
+            -1.0,
+            -1.0
+          ],
+          [
+            -1.0,
+            -1.0,
+            1.0
+          ],
+          [
+            -1.0,
+            1.0,
+            1.0
+          ],
+          [
+            -1.0,
+            1.0,
+            -1.0
+          ],
+          [
+            1.0,
+            -1.0,
+            -1.0
+          ],
+          [
+            1.0,
+            -1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0,
+            -1.0
+          ]
+        ]
+      },
+      "vertexCount": 24,
+      "faceCount": 12,
+      "triangleCount": 12,
+      "looseGeometryIslands": 6,
+      "materials": [
+        {
+          "name": "Material.001",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "Cube.001"
+    },
+    {
+      "originalName": "SHELL",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        650.0,
+        1435.000122,
+        1435.000122
+      ],
+      "center": [
+        32.675812,
+        -685.166199,
+        392.499939
+      ],
+      "boundingBox": {
+        "min": [
+          -292.324188,
+          -1402.666382,
+          -325.000214
+        ],
+        "max": [
+          357.675812,
+          32.333946,
+          1110.000122
+        ],
+        "center": [
+          32.675812,
+          -685.166199,
+          392.499939
+        ],
+        "corners": [
+          [
+            -292.324188,
+            32.333946,
+            -325.000031
+          ],
+          [
+            -292.324188,
+            -1402.66626,
+            -325.000214
+          ],
+          [
+            -292.324188,
+            -1402.666382,
+            1109.999878
+          ],
+          [
+            -292.324188,
+            32.333755,
+            1110.000122
+          ],
+          [
+            357.675812,
+            32.333946,
+            -325.000031
+          ],
+          [
+            357.675812,
+            -1402.66626,
+            -325.000214
+          ],
+          [
+            357.675812,
+            -1402.666382,
+            1109.999878
+          ],
+          [
+            357.675812,
+            32.333755,
+            1110.000122
+          ]
+        ]
+      },
+      "vertexCount": 120237,
+      "faceCount": 84166,
+      "triangleCount": 84166,
+      "looseGeometryIslands": 19898,
+      "materials": [
+        {
+          "name": "color_cccccc",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL"
+    },
+    {
+      "originalName": "SHELL001",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        325.0,
+        325.000031,
+        206.000031
+      ],
+      "center": [
+        0.0,
+        7.333904,
+        0.0
+      ],
+      "boundingBox": {
+        "min": [
+          -162.5,
+          -95.66613,
+          -162.500031
+        ],
+        "max": [
+          162.5,
+          110.333939,
+          162.500031
+        ],
+        "center": [
+          0.0,
+          7.333904,
+          0.0
+        ],
+        "corners": [
+          [
+            -162.5,
+            110.333939,
+            -162.5
+          ],
+          [
+            -162.5,
+            -95.666084,
+            -162.500031
+          ],
+          [
+            -162.5,
+            -95.66613,
+            162.5
+          ],
+          [
+            -162.5,
+            110.333893,
+            162.500031
+          ],
+          [
+            162.5,
+            110.333939,
+            -162.5
+          ],
+          [
+            162.5,
+            -95.666084,
+            -162.500031
+          ],
+          [
+            162.5,
+            -95.66613,
+            162.5
+          ],
+          [
+            162.5,
+            110.333893,
+            162.500031
+          ]
+        ]
+      },
+      "vertexCount": 188126,
+      "faceCount": 119556,
+      "triangleCount": 119556,
+      "looseGeometryIslands": 38139,
+      "materials": [
+        {
+          "name": "color_c8c8c8",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL001"
+    },
+    {
+      "originalName": "SHELL002",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        650.0,
+        1435.000122,
+        1435.000122
+      ],
+      "center": [
+        32.675812,
+        -685.166199,
+        392.499939
+      ],
+      "boundingBox": {
+        "min": [
+          -292.324188,
+          -1402.666382,
+          -325.000214
+        ],
+        "max": [
+          357.675812,
+          32.333946,
+          1110.000122
+        ],
+        "center": [
+          32.675812,
+          -685.166199,
+          392.499939
+        ],
+        "corners": [
+          [
+            -292.324188,
+            32.333946,
+            -325.000031
+          ],
+          [
+            -292.324188,
+            -1402.66626,
+            -325.000214
+          ],
+          [
+            -292.324188,
+            -1402.666382,
+            1109.999878
+          ],
+          [
+            -292.324188,
+            32.333755,
+            1110.000122
+          ],
+          [
+            357.675812,
+            32.333946,
+            -325.000031
+          ],
+          [
+            357.675812,
+            -1402.66626,
+            -325.000214
+          ],
+          [
+            357.675812,
+            -1402.666382,
+            1109.999878
+          ],
+          [
+            357.675812,
+            32.333755,
+            1110.000122
+          ]
+        ]
+      },
+      "vertexCount": 117093,
+      "faceCount": 81994,
+      "triangleCount": 81994,
+      "looseGeometryIslands": 19376,
+      "materials": [
+        {
+          "name": "color_cccccc",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL002"
+    },
+    {
+      "originalName": "SHELL003",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        9.0,
+        16.000002,
+        147.000015
+      ],
+      "center": [
+        322.175812,
+        -59.166153,
+        305.0
+      ],
+      "boundingBox": {
+        "min": [
+          317.675812,
+          -132.666168,
+          297.0
+        ],
+        "max": [
+          326.675812,
+          14.333862,
+          313.000031
+        ],
+        "center": [
+          322.175812,
+          -59.166153,
+          305.0
+        ],
+        "corners": [
+          [
+            317.675812,
+            14.333862,
+            297.000031
+          ],
+          [
+            317.675812,
+            -132.666168,
+            297.0
+          ],
+          [
+            317.675812,
+            -132.666168,
+            313.0
+          ],
+          [
+            317.675812,
+            14.33386,
+            313.000031
+          ],
+          [
+            326.675812,
+            14.333862,
+            297.000031
+          ],
+          [
+            326.675812,
+            -132.666168,
+            297.0
+          ],
+          [
+            326.675812,
+            -132.666168,
+            313.0
+          ],
+          [
+            326.675812,
+            14.33386,
+            313.000031
+          ]
+        ]
+      },
+      "vertexCount": 26,
+      "faceCount": 28,
+      "triangleCount": 28,
+      "looseGeometryIslands": 2,
+      "materials": [
+        {
+          "name": "color_cccccc",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL003"
+    },
+    {
+      "originalName": "SHELL004",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        12.0,
+        11.996278,
+        147.000015
+      ],
+      "center": [
+        337.675812,
+        -59.166153,
+        305.0
+      ],
+      "boundingBox": {
+        "min": [
+          331.675812,
+          -132.666168,
+          299.001862
+        ],
+        "max": [
+          343.675812,
+          14.333862,
+          310.998169
+        ],
+        "center": [
+          337.675812,
+          -59.166153,
+          305.0
+        ],
+        "corners": [
+          [
+            331.675812,
+            14.333862,
+            299.001892
+          ],
+          [
+            331.675812,
+            -132.666168,
+            299.001862
+          ],
+          [
+            331.675812,
+            -132.666168,
+            310.998138
+          ],
+          [
+            331.675812,
+            14.33386,
+            310.998169
+          ],
+          [
+            343.675812,
+            14.333862,
+            299.001892
+          ],
+          [
+            343.675812,
+            -132.666168,
+            299.001862
+          ],
+          [
+            343.675812,
+            -132.666168,
+            310.998138
+          ],
+          [
+            343.675812,
+            14.33386,
+            310.998169
+          ]
+        ]
+      },
+      "vertexCount": 764,
+      "faceCount": 516,
+      "triangleCount": 516,
+      "looseGeometryIslands": 128,
+      "materials": [
+        {
+          "name": "color_cccccc",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL004"
+    },
+    {
+      "originalName": "SHELL005",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        12.0,
+        11.996278,
+        147.000015
+      ],
+      "center": [
+        -272.324188,
+        -59.166153,
+        305.0
+      ],
+      "boundingBox": {
+        "min": [
+          -278.324188,
+          -132.666168,
+          299.001862
+        ],
+        "max": [
+          -266.324188,
+          14.333862,
+          310.998169
+        ],
+        "center": [
+          -272.324188,
+          -59.166153,
+          305.0
+        ],
+        "corners": [
+          [
+            -278.324188,
+            14.333862,
+            299.001892
+          ],
+          [
+            -278.324188,
+            -132.666168,
+            299.001862
+          ],
+          [
+            -278.324188,
+            -132.666168,
+            310.998138
+          ],
+          [
+            -278.324188,
+            14.33386,
+            310.998169
+          ],
+          [
+            -266.324188,
+            14.333862,
+            299.001892
+          ],
+          [
+            -266.324188,
+            -132.666168,
+            299.001862
+          ],
+          [
+            -266.324188,
+            -132.666168,
+            310.998138
+          ],
+          [
+            -266.324188,
+            14.33386,
+            310.998169
+          ]
+        ]
+      },
+      "vertexCount": 764,
+      "faceCount": 516,
+      "triangleCount": 516,
+      "looseGeometryIslands": 128,
+      "materials": [
+        {
+          "name": "color_c8c8c8",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL005"
+    },
+    {
+      "originalName": "SHELL006",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        12.0,
+        11.996278,
+        147.000015
+      ],
+      "center": [
+        337.675812,
+        -59.166065,
+        -305.000061
+      ],
+      "boundingBox": {
+        "min": [
+          331.675812,
+          -132.666077,
+          -310.998199
+        ],
+        "max": [
+          343.675812,
+          14.333944,
+          -299.001892
+        ],
+        "center": [
+          337.675812,
+          -59.166065,
+          -305.000061
+        ],
+        "corners": [
+          [
+            331.675812,
+            14.333944,
+            -310.998169
+          ],
+          [
+            331.675812,
+            -132.666077,
+            -310.998199
+          ],
+          [
+            331.675812,
+            -132.666077,
+            -299.001923
+          ],
+          [
+            331.675812,
+            14.333942,
+            -299.001892
+          ],
+          [
+            343.675812,
+            14.333944,
+            -310.998169
+          ],
+          [
+            343.675812,
+            -132.666077,
+            -310.998199
+          ],
+          [
+            343.675812,
+            -132.666077,
+            -299.001923
+          ],
+          [
+            343.675812,
+            14.333942,
+            -299.001892
+          ]
+        ]
+      },
+      "vertexCount": 764,
+      "faceCount": 516,
+      "triangleCount": 516,
+      "looseGeometryIslands": 128,
+      "materials": [
+        {
+          "name": "color_c8c8c8",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL006"
+    },
+    {
+      "originalName": "SHELL007",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        12.0,
+        11.996278,
+        147.000015
+      ],
+      "center": [
+        -272.324188,
+        -59.166065,
+        -305.000061
+      ],
+      "boundingBox": {
+        "min": [
+          -278.324188,
+          -132.666077,
+          -310.998199
+        ],
+        "max": [
+          -266.324188,
+          14.333944,
+          -299.001892
+        ],
+        "center": [
+          -272.324188,
+          -59.166065,
+          -305.000061
+        ],
+        "corners": [
+          [
+            -278.324188,
+            14.333944,
+            -310.998169
+          ],
+          [
+            -278.324188,
+            -132.666077,
+            -310.998199
+          ],
+          [
+            -278.324188,
+            -132.666077,
+            -299.001923
+          ],
+          [
+            -278.324188,
+            14.333942,
+            -299.001892
+          ],
+          [
+            -266.324188,
+            14.333944,
+            -310.998169
+          ],
+          [
+            -266.324188,
+            -132.666077,
+            -310.998199
+          ],
+          [
+            -266.324188,
+            -132.666077,
+            -299.001923
+          ],
+          [
+            -266.324188,
+            14.333942,
+            -299.001892
+          ]
+        ]
+      },
+      "vertexCount": 764,
+      "faceCount": 516,
+      "triangleCount": 516,
+      "looseGeometryIslands": 128,
+      "materials": [
+        {
+          "name": "color_cccccc",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL007"
+    },
+    {
+      "originalName": "SHELL008",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        325.0,
+        325.000031,
+        206.000031
+      ],
+      "center": [
+        0.0,
+        7.333904,
+        0.0
+      ],
+      "boundingBox": {
+        "min": [
+          -162.5,
+          -95.66613,
+          -162.500031
+        ],
+        "max": [
+          162.5,
+          110.333939,
+          162.500031
+        ],
+        "center": [
+          0.0,
+          7.333904,
+          0.0
+        ],
+        "corners": [
+          [
+            -162.5,
+            110.333939,
+            -162.5
+          ],
+          [
+            -162.5,
+            -95.666084,
+            -162.500031
+          ],
+          [
+            -162.5,
+            -95.66613,
+            162.5
+          ],
+          [
+            -162.5,
+            110.333893,
+            162.500031
+          ],
+          [
+            162.5,
+            110.333939,
+            -162.5
+          ],
+          [
+            162.5,
+            -95.666084,
+            -162.500031
+          ],
+          [
+            162.5,
+            -95.66613,
+            162.5
+          ],
+          [
+            162.5,
+            110.333893,
+            162.500031
+          ]
+        ]
+      },
+      "vertexCount": 188126,
+      "faceCount": 119556,
+      "triangleCount": 119556,
+      "looseGeometryIslands": 38139,
+      "materials": [
+        {
+          "name": "color_c8c8c8",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL008"
+    },
+    {
+      "originalName": "SHELL009",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        551.358154,
+        599.145264,
+        147.000015
+      ],
+      "center": [
+        32.052246,
+        -59.166115,
+        25.427383
+      ],
+      "boundingBox": {
+        "min": [
+          -243.626831,
+          -132.666168,
+          -274.145264
+        ],
+        "max": [
+          307.731323,
+          14.33394,
+          325.000031
+        ],
+        "center": [
+          32.052246,
+          -59.166115,
+          25.427383
+        ],
+        "corners": [
+          [
+            -243.626831,
+            14.33394,
+            -274.145233
+          ],
+          [
+            -243.626831,
+            -132.666092,
+            -274.145264
+          ],
+          [
+            -243.626831,
+            -132.666168,
+            325.0
+          ],
+          [
+            -243.626831,
+            14.333858,
+            325.000031
+          ],
+          [
+            307.731323,
+            14.33394,
+            -274.145233
+          ],
+          [
+            307.731323,
+            -132.666092,
+            -274.145264
+          ],
+          [
+            307.731323,
+            -132.666168,
+            325.0
+          ],
+          [
+            307.731323,
+            14.333858,
+            325.000031
+          ]
+        ]
+      },
+      "vertexCount": 5216,
+      "faceCount": 4420,
+      "triangleCount": 4420,
+      "looseGeometryIslands": 399,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL009"
+    },
+    {
+      "originalName": "SHELL010",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        561.35199,
+        500.660828,
+        147.000015
+      ],
+      "center": [
+        32.056091,
+        -59.166107,
+        -28.838821
+      ],
+      "boundingBox": {
+        "min": [
+          -248.619904,
+          -132.666153,
+          -279.16925
+        ],
+        "max": [
+          312.732086,
+          14.33394,
+          221.491608
+        ],
+        "center": [
+          32.056091,
+          -59.166107,
+          -28.838821
+        ],
+        "corners": [
+          [
+            -248.619904,
+            14.33394,
+            -279.16922
+          ],
+          [
+            -248.619904,
+            -132.666092,
+            -279.16925
+          ],
+          [
+            -248.619904,
+            -132.666153,
+            221.491592
+          ],
+          [
+            -248.619904,
+            14.333873,
+            221.491608
+          ],
+          [
+            312.732086,
+            14.33394,
+            -279.16922
+          ],
+          [
+            312.732086,
+            -132.666092,
+            -279.16925
+          ],
+          [
+            312.732086,
+            -132.666153,
+            221.491592
+          ],
+          [
+            312.732086,
+            14.333873,
+            221.491608
+          ]
+        ]
+      },
+      "vertexCount": 5230,
+      "faceCount": 4412,
+      "triangleCount": 4412,
+      "looseGeometryIslands": 409,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL010"
+    },
+    {
+      "originalName": "SHELL011",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        6.0,
+        6.000001,
+        10.000001
+      ],
+      "center": [
+        0.0,
+        -139.666138,
+        90.999985
+      ],
+      "boundingBox": {
+        "min": [
+          -3.0,
+          -144.666138,
+          87.999985
+        ],
+        "max": [
+          3.0,
+          -134.666138,
+          93.999992
+        ],
+        "center": [
+          0.0,
+          -139.666138,
+          90.999985
+        ],
+        "corners": [
+          [
+            -3.0,
+            -134.666138,
+            87.999992
+          ],
+          [
+            -3.0,
+            -144.666138,
+            87.999985
+          ],
+          [
+            -3.0,
+            -144.666138,
+            93.999985
+          ],
+          [
+            -3.0,
+            -134.666138,
+            93.999992
+          ],
+          [
+            3.0,
+            -134.666138,
+            87.999992
+          ],
+          [
+            3.0,
+            -144.666138,
+            87.999985
+          ],
+          [
+            3.0,
+            -144.666138,
+            93.999985
+          ],
+          [
+            3.0,
+            -134.666138,
+            93.999992
+          ]
+        ]
+      },
+      "vertexCount": 214,
+      "faceCount": 142,
+      "triangleCount": 142,
+      "looseGeometryIslands": 37,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL011"
+    },
+    {
+      "originalName": "SHELL012",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        6.0,
+        6.000001,
+        10.000001
+      ],
+      "center": [
+        -64.346718,
+        -139.666138,
+        64.34671
+      ],
+      "boundingBox": {
+        "min": [
+          -67.346718,
+          -144.666138,
+          61.346706
+        ],
+        "max": [
+          -61.346718,
+          -134.666138,
+          67.34671
+        ],
+        "center": [
+          -64.346718,
+          -139.666138,
+          64.34671
+        ],
+        "corners": [
+          [
+            -67.346718,
+            -134.666138,
+            61.346706
+          ],
+          [
+            -67.346718,
+            -144.666138,
+            61.346706
+          ],
+          [
+            -67.346718,
+            -144.666138,
+            67.346703
+          ],
+          [
+            -67.346718,
+            -134.666138,
+            67.34671
+          ],
+          [
+            -61.346718,
+            -134.666138,
+            61.346706
+          ],
+          [
+            -61.346718,
+            -144.666138,
+            61.346706
+          ],
+          [
+            -61.346718,
+            -144.666138,
+            67.346703
+          ],
+          [
+            -61.346718,
+            -134.666138,
+            67.34671
+          ]
+        ]
+      },
+      "vertexCount": 194,
+      "faceCount": 130,
+      "triangleCount": 130,
+      "looseGeometryIslands": 33,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL012"
+    },
+    {
+      "originalName": "SHELL013",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        6.0,
+        6.000001,
+        10.000001
+      ],
+      "center": [
+        -91.0,
+        -139.666122,
+        -1.9e-05
+      ],
+      "boundingBox": {
+        "min": [
+          -94.0,
+          -144.666122,
+          -3.00002
+        ],
+        "max": [
+          -88.0,
+          -134.666122,
+          2.999982
+        ],
+        "center": [
+          -91.0,
+          -139.666122,
+          -1.9e-05
+        ],
+        "corners": [
+          [
+            -94.0,
+            -134.666122,
+            -3.000019
+          ],
+          [
+            -94.0,
+            -144.666122,
+            -3.00002
+          ],
+          [
+            -94.0,
+            -144.666122,
+            2.999981
+          ],
+          [
+            -94.0,
+            -134.666122,
+            2.999982
+          ],
+          [
+            -88.0,
+            -134.666122,
+            -3.000019
+          ],
+          [
+            -88.0,
+            -144.666122,
+            -3.00002
+          ],
+          [
+            -88.0,
+            -144.666122,
+            2.999981
+          ],
+          [
+            -88.0,
+            -134.666122,
+            2.999982
+          ]
+        ]
+      },
+      "vertexCount": 220,
+      "faceCount": 142,
+      "triangleCount": 142,
+      "looseGeometryIslands": 40,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL013"
+    },
+    {
+      "originalName": "SHELL014",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        6.0,
+        6.000001,
+        10.000001
+      ],
+      "center": [
+        -64.346718,
+        -139.666107,
+        -64.346748
+      ],
+      "boundingBox": {
+        "min": [
+          -67.346718,
+          -144.666107,
+          -67.346748
+        ],
+        "max": [
+          -61.346718,
+          -134.666107,
+          -61.346745
+        ],
+        "center": [
+          -64.346718,
+          -139.666107,
+          -64.346748
+        ],
+        "corners": [
+          [
+            -67.346718,
+            -134.666107,
+            -67.346741
+          ],
+          [
+            -67.346718,
+            -144.666107,
+            -67.346748
+          ],
+          [
+            -67.346718,
+            -144.666107,
+            -61.346745
+          ],
+          [
+            -67.346718,
+            -134.666107,
+            -61.346745
+          ],
+          [
+            -61.346718,
+            -134.666107,
+            -67.346741
+          ],
+          [
+            -61.346718,
+            -144.666107,
+            -67.346748
+          ],
+          [
+            -61.346718,
+            -144.666107,
+            -61.346745
+          ],
+          [
+            -61.346718,
+            -134.666107,
+            -61.346745
+          ]
+        ]
+      },
+      "vertexCount": 194,
+      "faceCount": 130,
+      "triangleCount": 130,
+      "looseGeometryIslands": 33,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL014"
+    },
+    {
+      "originalName": "SHELL015",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        6.0,
+        6.000001,
+        10.000001
+      ],
+      "center": [
+        0.0,
+        -139.666107,
+        -91.000031
+      ],
+      "boundingBox": {
+        "min": [
+          -3.0,
+          -144.666107,
+          -94.000031
+        ],
+        "max": [
+          3.0,
+          -134.666107,
+          -88.000023
+        ],
+        "center": [
+          0.0,
+          -139.666107,
+          -91.000031
+        ],
+        "corners": [
+          [
+            -3.0,
+            -134.666107,
+            -94.000023
+          ],
+          [
+            -3.0,
+            -144.666107,
+            -94.000031
+          ],
+          [
+            -3.0,
+            -144.666107,
+            -88.000031
+          ],
+          [
+            -3.0,
+            -134.666107,
+            -88.000023
+          ],
+          [
+            3.0,
+            -134.666107,
+            -94.000023
+          ],
+          [
+            3.0,
+            -144.666107,
+            -94.000031
+          ],
+          [
+            3.0,
+            -144.666107,
+            -88.000031
+          ],
+          [
+            3.0,
+            -134.666107,
+            -88.000023
+          ]
+        ]
+      },
+      "vertexCount": 214,
+      "faceCount": 142,
+      "triangleCount": 142,
+      "looseGeometryIslands": 37,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL015"
+    },
+    {
+      "originalName": "SHELL016",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        6.0,
+        6.000001,
+        10.000001
+      ],
+      "center": [
+        64.346718,
+        -139.666107,
+        -64.346748
+      ],
+      "boundingBox": {
+        "min": [
+          61.346718,
+          -144.666107,
+          -67.346748
+        ],
+        "max": [
+          67.346718,
+          -134.666107,
+          -61.346745
+        ],
+        "center": [
+          64.346718,
+          -139.666107,
+          -64.346748
+        ],
+        "corners": [
+          [
+            61.346718,
+            -134.666107,
+            -67.346741
+          ],
+          [
+            61.346718,
+            -144.666107,
+            -67.346748
+          ],
+          [
+            61.346718,
+            -144.666107,
+            -61.346745
+          ],
+          [
+            61.346718,
+            -134.666107,
+            -61.346745
+          ],
+          [
+            67.346718,
+            -134.666107,
+            -67.346741
+          ],
+          [
+            67.346718,
+            -144.666107,
+            -67.346748
+          ],
+          [
+            67.346718,
+            -144.666107,
+            -61.346745
+          ],
+          [
+            67.346718,
+            -134.666107,
+            -61.346745
+          ]
+        ]
+      },
+      "vertexCount": 194,
+      "faceCount": 130,
+      "triangleCount": 130,
+      "looseGeometryIslands": 33,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL016"
+    },
+    {
+      "originalName": "SHELL017",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        6.0,
+        6.000001,
+        10.000001
+      ],
+      "center": [
+        91.0,
+        -139.666122,
+        -1.9e-05
+      ],
+      "boundingBox": {
+        "min": [
+          88.0,
+          -144.666122,
+          -3.00002
+        ],
+        "max": [
+          94.0,
+          -134.666122,
+          2.999982
+        ],
+        "center": [
+          91.0,
+          -139.666122,
+          -1.9e-05
+        ],
+        "corners": [
+          [
+            88.0,
+            -134.666122,
+            -3.000019
+          ],
+          [
+            88.0,
+            -144.666122,
+            -3.00002
+          ],
+          [
+            88.0,
+            -144.666122,
+            2.999981
+          ],
+          [
+            88.0,
+            -134.666122,
+            2.999982
+          ],
+          [
+            94.0,
+            -134.666122,
+            -3.000019
+          ],
+          [
+            94.0,
+            -144.666122,
+            -3.00002
+          ],
+          [
+            94.0,
+            -144.666122,
+            2.999981
+          ],
+          [
+            94.0,
+            -134.666122,
+            2.999982
+          ]
+        ]
+      },
+      "vertexCount": 220,
+      "faceCount": 142,
+      "triangleCount": 142,
+      "looseGeometryIslands": 40,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL017"
+    },
+    {
+      "originalName": "SHELL018",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        6.0,
+        6.000001,
+        10.000001
+      ],
+      "center": [
+        64.346718,
+        -139.666138,
+        64.34671
+      ],
+      "boundingBox": {
+        "min": [
+          61.346718,
+          -144.666138,
+          61.346706
+        ],
+        "max": [
+          67.346718,
+          -134.666138,
+          67.34671
+        ],
+        "center": [
+          64.346718,
+          -139.666138,
+          64.34671
+        ],
+        "corners": [
+          [
+            61.346718,
+            -134.666138,
+            61.346706
+          ],
+          [
+            61.346718,
+            -144.666138,
+            61.346706
+          ],
+          [
+            61.346718,
+            -144.666138,
+            67.346703
+          ],
+          [
+            61.346718,
+            -134.666138,
+            67.34671
+          ],
+          [
+            67.346718,
+            -134.666138,
+            61.346706
+          ],
+          [
+            67.346718,
+            -144.666138,
+            61.346706
+          ],
+          [
+            67.346718,
+            -144.666138,
+            67.346703
+          ],
+          [
+            67.346718,
+            -134.666138,
+            67.34671
+          ]
+        ]
+      },
+      "vertexCount": 194,
+      "faceCount": 130,
+      "triangleCount": 130,
+      "looseGeometryIslands": 33,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL018"
+    },
+    {
+      "originalName": "SHELL019",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        551.358154,
+        599.145264,
+        147.000015
+      ],
+      "center": [
+        32.052246,
+        -59.166115,
+        25.427383
+      ],
+      "boundingBox": {
+        "min": [
+          -243.626831,
+          -132.666168,
+          -274.145264
+        ],
+        "max": [
+          307.731323,
+          14.33394,
+          325.000031
+        ],
+        "center": [
+          32.052246,
+          -59.166115,
+          25.427383
+        ],
+        "corners": [
+          [
+            -243.626831,
+            14.33394,
+            -274.145233
+          ],
+          [
+            -243.626831,
+            -132.666092,
+            -274.145264
+          ],
+          [
+            -243.626831,
+            -132.666168,
+            325.0
+          ],
+          [
+            -243.626831,
+            14.333858,
+            325.000031
+          ],
+          [
+            307.731323,
+            14.33394,
+            -274.145233
+          ],
+          [
+            307.731323,
+            -132.666092,
+            -274.145264
+          ],
+          [
+            307.731323,
+            -132.666168,
+            325.0
+          ],
+          [
+            307.731323,
+            14.333858,
+            325.000031
+          ]
+        ]
+      },
+      "vertexCount": 5216,
+      "faceCount": 4420,
+      "triangleCount": 4420,
+      "looseGeometryIslands": 399,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL019"
+    },
+    {
+      "originalName": "SHELL020",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.0,
+        314.516144,
+        147.000015
+      ],
+      "center": [
+        317.675812,
+        -59.166134,
+        167.741959
+      ],
+      "boundingBox": {
+        "min": [
+          317.675812,
+          -132.666168,
+          10.483883
+        ],
+        "max": [
+          317.675812,
+          14.333901,
+          325.000031
+        ],
+        "center": [
+          317.675812,
+          -59.166134,
+          167.741959
+        ],
+        "corners": [
+          [
+            317.675812,
+            14.333901,
+            10.483903
+          ],
+          [
+            317.675812,
+            -132.666122,
+            10.483883
+          ],
+          [
+            317.675812,
+            -132.666168,
+            325.0
+          ],
+          [
+            317.675812,
+            14.333858,
+            325.000031
+          ],
+          [
+            317.675812,
+            14.333901,
+            10.483903
+          ],
+          [
+            317.675812,
+            -132.666122,
+            10.483883
+          ],
+          [
+            317.675812,
+            -132.666168,
+            325.0
+          ],
+          [
+            317.675812,
+            14.333858,
+            325.000031
+          ]
+        ]
+      },
+      "vertexCount": 4,
+      "faceCount": 2,
+      "triangleCount": 2,
+      "looseGeometryIslands": 1,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL020"
+    },
+    {
+      "originalName": "SHELL021",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        561.35199,
+        500.660828,
+        147.000015
+      ],
+      "center": [
+        32.056091,
+        -59.166107,
+        -28.838821
+      ],
+      "boundingBox": {
+        "min": [
+          -248.619904,
+          -132.666153,
+          -279.16925
+        ],
+        "max": [
+          312.732086,
+          14.33394,
+          221.491608
+        ],
+        "center": [
+          32.056091,
+          -59.166107,
+          -28.838821
+        ],
+        "corners": [
+          [
+            -248.619904,
+            14.33394,
+            -279.16922
+          ],
+          [
+            -248.619904,
+            -132.666092,
+            -279.16925
+          ],
+          [
+            -248.619904,
+            -132.666153,
+            221.491592
+          ],
+          [
+            -248.619904,
+            14.333873,
+            221.491608
+          ],
+          [
+            312.732086,
+            14.33394,
+            -279.16922
+          ],
+          [
+            312.732086,
+            -132.666092,
+            -279.16925
+          ],
+          [
+            312.732086,
+            -132.666153,
+            221.491592
+          ],
+          [
+            312.732086,
+            14.333873,
+            221.491608
+          ]
+        ]
+      },
+      "vertexCount": 5230,
+      "faceCount": 4412,
+      "triangleCount": 4412,
+      "looseGeometryIslands": 409,
+      "materials": [
+        {
+          "name": "color_adb5bd",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL021"
+    },
+    {
+      "originalName": "SHELL022",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.0,
+        314.516144,
+        147.000015
+      ],
+      "center": [
+        317.675812,
+        -59.166134,
+        167.741959
+      ],
+      "boundingBox": {
+        "min": [
+          317.675812,
+          -132.666168,
+          10.483883
+        ],
+        "max": [
+          317.675812,
+          14.333901,
+          325.000031
+        ],
+        "center": [
+          317.675812,
+          -59.166134,
+          167.741959
+        ],
+        "corners": [
+          [
+            317.675812,
+            14.333901,
+            10.483903
+          ],
+          [
+            317.675812,
+            -132.666122,
+            10.483883
+          ],
+          [
+            317.675812,
+            -132.666168,
+            325.0
+          ],
+          [
+            317.675812,
+            14.333858,
+            325.000031
+          ],
+          [
+            317.675812,
+            14.333901,
+            10.483903
+          ],
+          [
+            317.675812,
+            -132.666122,
+            10.483883
+          ],
+          [
+            317.675812,
+            -132.666168,
+            325.0
+          ],
+          [
+            317.675812,
+            14.333858,
+            325.000031
+          ]
+        ]
+      },
+      "vertexCount": 4,
+      "faceCount": 2,
+      "triangleCount": 2,
+      "looseGeometryIslands": 1,
+      "materials": [
+        {
+          "name": "color_adb5bd",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL022"
+    },
+    {
+      "originalName": "SHELL023",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        62.030701,
+        184.02301,
+        147.000015
+      ],
+      "center": [
+        130.001053,
+        -59.166142,
+        232.988525
+      ],
+      "boundingBox": {
+        "min": [
+          98.985703,
+          -132.666168,
+          140.977005
+        ],
+        "max": [
+          161.016403,
+          14.333883,
+          325.000031
+        ],
+        "center": [
+          130.001053,
+          -59.166142,
+          232.988525
+        ],
+        "corners": [
+          [
+            98.985703,
+            14.333883,
+            140.97702
+          ],
+          [
+            98.985703,
+            -132.666138,
+            140.977005
+          ],
+          [
+            98.985703,
+            -132.666168,
+            325.0
+          ],
+          [
+            98.985703,
+            14.333858,
+            325.000031
+          ],
+          [
+            161.016403,
+            14.333883,
+            140.97702
+          ],
+          [
+            161.016403,
+            -132.666138,
+            140.977005
+          ],
+          [
+            161.016403,
+            -132.666168,
+            325.0
+          ],
+          [
+            161.016403,
+            14.333858,
+            325.000031
+          ]
+        ]
+      },
+      "vertexCount": 2025,
+      "faceCount": 1866,
+      "triangleCount": 1866,
+      "looseGeometryIslands": 146,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL023"
+    },
+    {
+      "originalName": "SHELL024",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        28.433998,
+        21.963594,
+        147.000015
+      ],
+      "center": [
+        113.202698,
+        -59.166138,
+        171.927704
+      ],
+      "boundingBox": {
+        "min": [
+          98.985703,
+          -132.666153,
+          160.945908
+        ],
+        "max": [
+          127.419701,
+          14.33388,
+          182.909515
+        ],
+        "center": [
+          113.202698,
+          -59.166138,
+          171.927704
+        ],
+        "corners": [
+          [
+            98.985703,
+            14.33388,
+            160.945923
+          ],
+          [
+            98.985703,
+            -132.666138,
+            160.945908
+          ],
+          [
+            98.985703,
+            -132.666153,
+            182.9095
+          ],
+          [
+            98.985703,
+            14.333878,
+            182.909515
+          ],
+          [
+            127.419701,
+            14.33388,
+            160.945923
+          ],
+          [
+            127.419701,
+            -132.666138,
+            160.945908
+          ],
+          [
+            127.419701,
+            -132.666153,
+            182.9095
+          ],
+          [
+            127.419701,
+            14.333878,
+            182.909515
+          ]
+        ]
+      },
+      "vertexCount": 44,
+      "faceCount": 22,
+      "triangleCount": 22,
+      "looseGeometryIslands": 11,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL024"
+    },
+    {
+      "originalName": "SHELL025",
+      "objectType": "MESH",
+      "parent": null,
+      "children": [],
+      "collections": [
+        "Scene Collection"
+      ],
+      "worldPosition": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        28.960709,
+        22.367586,
+        147.000015
+      ],
+      "center": [
+        115.628716,
+        -59.166138,
+        175.090668
+      ],
+      "boundingBox": {
+        "min": [
+          101.148361,
+          -132.666153,
+          163.90686
+        ],
+        "max": [
+          130.10907,
+          14.33388,
+          186.27446
+        ],
+        "center": [
+          115.628716,
+          -59.166138,
+          175.090668
+        ],
+        "corners": [
+          [
+            101.148361,
+            14.33388,
+            163.906876
+          ],
+          [
+            101.148361,
+            -132.666138,
+            163.90686
+          ],
+          [
+            101.148361,
+            -132.666153,
+            186.274445
+          ],
+          [
+            101.148361,
+            14.333878,
+            186.27446
+          ],
+          [
+            130.10907,
+            14.33388,
+            163.906876
+          ],
+          [
+            130.10907,
+            -132.666138,
+            163.90686
+          ],
+          [
+            130.10907,
+            -132.666153,
+            186.274445
+          ],
+          [
+            130.10907,
+            14.333878,
+            186.27446
+          ]
+        ]
+      },
+      "vertexCount": 44,
+      "faceCount": 22,
+      "triangleCount": 22,
+      "looseGeometryIslands": 11,
+      "materials": [
+        {
+          "name": "color_cd843f",
+          "hasTexture": false,
+          "textures": []
+        }
+      ],
+      "hasTexture": false,
+      "hasAnimation": false,
+      "meshName": "SHELL025"
+    }
+  ],
+  "safety": {
+    "splitPerformed": false,
+    "renamedObjects": false,
+    "decimationPerformed": false,
+    "newGlbExported": false,
+    "temporaryPreviewMaterialsRestored": true
+  }
+}

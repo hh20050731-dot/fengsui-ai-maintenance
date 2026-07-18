@@ -1,0 +1,170 @@
+{
+  "generatedAt": "2026-07-18T17:09:00.546803+00:00",
+  "inputSha256": "532E331BEA3E944798ACACB4165760CDB051C09A5D3B5949AE8009C478257D5D",
+  "rotationAxis": {
+    "method": "PCA最小方差轴 + 叶轮包围盒中心复核",
+    "sourceObjects": [
+      "SHELL001",
+      "SHELL008"
+    ],
+    "origin": [
+      0.0,
+      7.3339,
+      -8e-06
+    ],
+    "direction": [
+      0.00087616,
+      0.99999934,
+      -0.00074575
+    ],
+    "principalVariances": [
+      647.068554,
+      2978.296489,
+      3020.200606
+    ],
+    "smallestToNextVarianceRatio": 4.602753,
+    "angleToPositiveYDegrees": 0.06592223,
+    "confidence": "high",
+    "fallbackCandidatesRequired": false
+  },
+  "impellerOriginsMovedToAxisWithoutGeometryMovement": true,
+  "alignments": [
+    {
+      "object": "main_shaft",
+      "targetAxisOrigin": [
+        0.0,
+        7.3339,
+        -8e-06
+      ],
+      "targetAxisDirection": [
+        0.00087616,
+        0.99999934,
+        -0.00074575
+      ],
+      "constructedOnDetectedAxis": true,
+      "angularDeviationDegrees": 0.0
+    },
+    {
+      "object": "motor_shaft",
+      "targetAxisOrigin": [
+        0.0,
+        7.3339,
+        -8e-06
+      ],
+      "targetAxisDirection": [
+        0.00087616,
+        0.99999934,
+        -0.00074575
+      ],
+      "constructedOnDetectedAxis": true,
+      "angularDeviationDegrees": 0.0
+    },
+    {
+      "object": "coupling_input",
+      "targetAxisOrigin": [
+        0.0,
+        7.3339,
+        -8e-06
+      ],
+      "targetAxisDirection": [
+        0.00087616,
+        0.99999934,
+        -0.00074575
+      ],
+      "constructedOnDetectedAxis": true,
+      "angularDeviationDegrees": 0.0
+    },
+    {
+      "object": "coupling_element",
+      "targetAxisOrigin": [
+        0.0,
+        7.3339,
+        -8e-06
+      ],
+      "targetAxisDirection": [
+        0.00087616,
+        0.99999934,
+        -0.00074575
+      ],
+      "constructedOnDetectedAxis": true,
+      "angularDeviationDegrees": 0.0
+    },
+    {
+      "object": "coupling_output",
+      "targetAxisOrigin": [
+        0.0,
+        7.3339,
+        -8e-06
+      ],
+      "targetAxisDirection": [
+        0.00087616,
+        0.99999934,
+        -0.00074575
+      ],
+      "constructedOnDetectedAxis": true,
+      "angularDeviationDegrees": 0.0
+    },
+    {
+      "object": "bearing_drive_housing",
+      "targetAxisOrigin": [
+        0.0,
+        7.3339,
+        -8e-06
+      ],
+      "targetAxisDirection": [
+        0.00087616,
+        0.99999934,
+        -0.00074575
+      ],
+      "constructedOnDetectedAxis": true,
+      "angularDeviationDegrees": 0.0
+    },
+    {
+      "object": "bearing_non_drive_housing",
+      "targetAxisOrigin": [
+        0.0,
+        7.3339,
+        -8e-06
+      ],
+      "targetAxisDirection": [
+        0.00087616,
+        0.99999934,
+        -0.00074575
+      ],
+      "constructedOnDetectedAxis": true,
+      "angularDeviationDegrees": 0.0
+    },
+    {
+      "object": "bearing_drive_locator",
+      "targetAxisOrigin": [
+        0.0,
+        7.3339,
+        -8e-06
+      ],
+      "targetAxisDirection": [
+        0.00087616,
+        0.99999934,
+        -0.00074575
+      ],
+      "constructedOnDetectedAxis": true,
+      "angularDeviationDegrees": 0.0
+    },
+    {
+      "object": "bearing_non_drive_locator",
+      "targetAxisOrigin": [
+        0.0,
+        7.3339,
+        -8e-06
+      ],
+      "targetAxisDirection": [
+        0.00087616,
+        0.99999934,
+        -0.00074575
+      ],
+      "constructedOnDetectedAxis": true,
+      "angularDeviationDegrees": 0.0
+    }
+  ],
+  "fallbackCandidateViewsGenerated": false,
+  "conclusion": "新增轴、联轴器、轴承座和电机轴均按检测轴线程序化创建并保持共轴。"
+}

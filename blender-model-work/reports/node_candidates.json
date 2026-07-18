@@ -1,0 +1,191 @@
+[
+  {
+    "originalName": "Cube",
+    "suggestedName": "candidate_part_001",
+    "confidence": 0.05,
+    "evidence": "中心(0.000, 0.000, 0.000)，尺寸(2.000, 2.000, 2.000)，三角面12；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL",
+    "suggestedName": "candidate_part_002",
+    "confidence": 0.45,
+    "evidence": "中心(32.676, -685.166, 392.500)，尺寸(650.000, 1435.000, 1435.000)，三角面84166；跨越模型主体并形成长通道/大壳体轮廓，可能属于风道或机壳组合，无法仅凭外形二选一",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL001",
+    "suggestedName": "candidate_part_003",
+    "confidence": 0.68,
+    "evidence": "中心(0.000, 7.334, 0.000)，尺寸(325.000, 325.000, 206.000)，三角面119556；位于主体内部中心且呈高细节近圆盘包围盒，几何上疑似叶轮/旋转组件，但需剖视图和设备图纸确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL002",
+    "suggestedName": "candidate_part_004",
+    "confidence": 0.45,
+    "evidence": "中心(32.676, -685.166, 392.500)，尺寸(650.000, 1435.000, 1435.000)，三角面81994；跨越模型主体并形成长通道/大壳体轮廓，可能属于风道或机壳组合，无法仅凭外形二选一",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL003",
+    "suggestedName": "candidate_part_005",
+    "confidence": 0.15,
+    "evidence": "中心(322.176, -59.166, 305.000)，尺寸(9.000, 16.000, 147.000)，三角面28；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL004",
+    "suggestedName": "candidate_part_006",
+    "confidence": 0.15,
+    "evidence": "中心(337.676, -59.166, 305.000)，尺寸(12.000, 11.996, 147.000)，三角面516；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL005",
+    "suggestedName": "candidate_part_007",
+    "confidence": 0.15,
+    "evidence": "中心(-272.324, -59.166, 305.000)，尺寸(12.000, 11.996, 147.000)，三角面516；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL006",
+    "suggestedName": "candidate_part_008",
+    "confidence": 0.15,
+    "evidence": "中心(337.676, -59.166, -305.000)，尺寸(12.000, 11.996, 147.000)，三角面516；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL007",
+    "suggestedName": "candidate_part_009",
+    "confidence": 0.15,
+    "evidence": "中心(-272.324, -59.166, -305.000)，尺寸(12.000, 11.996, 147.000)，三角面516；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL008",
+    "suggestedName": "candidate_part_010",
+    "confidence": 0.68,
+    "evidence": "中心(0.000, 7.334, 0.000)，尺寸(325.000, 325.000, 206.000)，三角面119556；位于主体内部中心且呈高细节近圆盘包围盒，几何上疑似叶轮/旋转组件，但需剖视图和设备图纸确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL009",
+    "suggestedName": "candidate_part_011",
+    "confidence": 0.15,
+    "evidence": "中心(32.052, -59.166, 25.427)，尺寸(551.358, 599.145, 147.000)，三角面4420；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL010",
+    "suggestedName": "candidate_part_012",
+    "confidence": 0.15,
+    "evidence": "中心(32.056, -59.166, -28.839)，尺寸(561.352, 500.661, 147.000)，三角面4412；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL011",
+    "suggestedName": "candidate_part_013",
+    "confidence": 0.62,
+    "evidence": "中心(0.000, -139.666, 91.000)，尺寸(6.000, 6.000, 10.000)，三角面142；多个同尺寸小件沿圆周规则分布，疑似紧固或定位件，具体名称需人工确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL012",
+    "suggestedName": "candidate_part_014",
+    "confidence": 0.62,
+    "evidence": "中心(-64.347, -139.666, 64.347)，尺寸(6.000, 6.000, 10.000)，三角面130；多个同尺寸小件沿圆周规则分布，疑似紧固或定位件，具体名称需人工确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL013",
+    "suggestedName": "candidate_part_015",
+    "confidence": 0.62,
+    "evidence": "中心(-91.000, -139.666, -0.000)，尺寸(6.000, 6.000, 10.000)，三角面142；多个同尺寸小件沿圆周规则分布，疑似紧固或定位件，具体名称需人工确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL014",
+    "suggestedName": "candidate_part_016",
+    "confidence": 0.62,
+    "evidence": "中心(-64.347, -139.666, -64.347)，尺寸(6.000, 6.000, 10.000)，三角面130；多个同尺寸小件沿圆周规则分布，疑似紧固或定位件，具体名称需人工确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL015",
+    "suggestedName": "candidate_part_017",
+    "confidence": 0.62,
+    "evidence": "中心(0.000, -139.666, -91.000)，尺寸(6.000, 6.000, 10.000)，三角面142；多个同尺寸小件沿圆周规则分布，疑似紧固或定位件，具体名称需人工确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL016",
+    "suggestedName": "candidate_part_018",
+    "confidence": 0.62,
+    "evidence": "中心(64.347, -139.666, -64.347)，尺寸(6.000, 6.000, 10.000)，三角面130；多个同尺寸小件沿圆周规则分布，疑似紧固或定位件，具体名称需人工确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL017",
+    "suggestedName": "candidate_part_019",
+    "confidence": 0.62,
+    "evidence": "中心(91.000, -139.666, -0.000)，尺寸(6.000, 6.000, 10.000)，三角面142；多个同尺寸小件沿圆周规则分布，疑似紧固或定位件，具体名称需人工确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL018",
+    "suggestedName": "candidate_part_020",
+    "confidence": 0.62,
+    "evidence": "中心(64.347, -139.666, 64.347)，尺寸(6.000, 6.000, 10.000)，三角面130；多个同尺寸小件沿圆周规则分布，疑似紧固或定位件，具体名称需人工确认",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL019",
+    "suggestedName": "candidate_part_021",
+    "confidence": 0.15,
+    "evidence": "中心(32.052, -59.166, 25.427)，尺寸(551.358, 599.145, 147.000)，三角面4420；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL020",
+    "suggestedName": "candidate_part_022",
+    "confidence": 0.2,
+    "evidence": "中心(317.676, -59.166, 167.742)，尺寸(0.000, 314.516, 147.000)，三角面2；对象为近零厚度面片，可能是隔板、封板或导入残留，无法可靠命名",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL021",
+    "suggestedName": "candidate_part_023",
+    "confidence": 0.15,
+    "evidence": "中心(32.056, -59.166, -28.839)，尺寸(561.352, 500.661, 147.000)，三角面4412；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL022",
+    "suggestedName": "candidate_part_024",
+    "confidence": 0.2,
+    "evidence": "中心(317.676, -59.166, 167.742)，尺寸(0.000, 314.516, 147.000)，三角面2；对象为近零厚度面片，可能是隔板、封板或导入残留，无法可靠命名",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL023",
+    "suggestedName": "candidate_part_025",
+    "confidence": 0.15,
+    "evidence": "中心(130.001, -59.166, 232.989)，尺寸(62.031, 184.023, 147.000)，三角面1866；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL024",
+    "suggestedName": "candidate_part_026",
+    "confidence": 0.15,
+    "evidence": "中心(113.203, -59.166, 171.928)，尺寸(28.434, 21.964, 147.000)，三角面22；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  },
+  {
+    "originalName": "SHELL025",
+    "suggestedName": "candidate_part_027",
+    "confidence": 0.15,
+    "evidence": "中心(115.629, -59.166, 175.091)，尺寸(28.961, 22.368, 147.000)，三角面22；原始名称缺少机械语义，多视角位置仍不足以可靠确认部件",
+    "requiresManualReview": true
+  }
+]

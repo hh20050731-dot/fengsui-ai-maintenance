@@ -1,0 +1,335 @@
+{
+  "version": "enhanced-v1",
+  "root": "Fan_Digital_Twin",
+  "keyNodeCount": 16,
+  "keyNodes": {
+    "Fan_Digital_Twin": {
+      "exists": true,
+      "type": "EMPTY",
+      "parent": null,
+      "children": [
+        "bearing_drive_housing",
+        "bearing_drive_locator",
+        "bearing_non_drive_housing",
+        "bearing_non_drive_locator",
+        "casing_group",
+        "coupling_element",
+        "coupling_guard",
+        "coupling_input",
+        "coupling_output",
+        "Cube",
+        "drive_base",
+        "impeller_group",
+        "main_shaft",
+        "motor",
+        "motor_shaft",
+        "rotation_axis",
+        "SHELL003",
+        "SHELL004",
+        "SHELL005",
+        "SHELL006",
+        "SHELL007",
+        "SHELL009",
+        "SHELL010",
+        "SHELL011",
+        "SHELL012",
+        "SHELL013",
+        "SHELL014",
+        "SHELL015",
+        "SHELL016",
+        "SHELL017",
+        "SHELL018",
+        "SHELL019",
+        "SHELL020",
+        "SHELL021",
+        "SHELL022",
+        "SHELL023",
+        "SHELL024",
+        "SHELL025"
+      ],
+      "materials": [],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "model_version": "enhanced-v1",
+        "rotation_axis_origin": [
+          0.0,
+          7.33389997,
+          -8e-06
+        ],
+        "rotation_axis_direction": [
+          0.000876,
+          0.99999934,
+          -0.000746
+        ]
+      }
+    },
+    "casing_group": {
+      "exists": true,
+      "type": "EMPTY",
+      "parent": "Fan_Digital_Twin",
+      "children": [
+        "SHELL",
+        "SHELL002"
+      ],
+      "materials": [],
+      "customProperties": {
+        "supports_transparency": true,
+        "supports_visibility_toggle": true,
+        "semantic_model": true,
+        "manufacturer_exact": false
+      }
+    },
+    "impeller_group": {
+      "exists": true,
+      "type": "EMPTY",
+      "parent": "Fan_Digital_Twin",
+      "children": [
+        "SHELL001",
+        "SHELL008"
+      ],
+      "materials": [],
+      "customProperties": {
+        "fault_type": "impeller_imbalance",
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization"
+      }
+    },
+    "motor": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_MOTOR"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "驱动电机（简化语义模型）"
+      }
+    },
+    "motor_shaft": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_SHAFT"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "电机轴（简化语义模型）"
+      }
+    },
+    "main_shaft": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_SHAFT"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "主轴（简化语义模型）",
+        "axis_origin": [
+          0.0,
+          7.3339,
+          -8e-06
+        ],
+        "axis_direction": [
+          0.000876,
+          0.999999,
+          -0.000746
+        ]
+      }
+    },
+    "coupling_input": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_COUPLING"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "联轴器（简化语义模型）",
+        "fault_type": "coupling_misalignment"
+      }
+    },
+    "coupling_element": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_COUPLING"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "联轴器（简化语义模型）",
+        "fault_type": "coupling_misalignment"
+      }
+    },
+    "coupling_output": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_COUPLING"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "联轴器（简化语义模型）",
+        "fault_type": "coupling_misalignment"
+      }
+    },
+    "coupling_guard": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_GUARD"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "联轴器防护罩（简化）",
+        "supports_visibility_toggle": true,
+        "supports_transparency": true,
+        "diagnostic_default_visible": false
+      }
+    },
+    "bearing_drive_housing": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_BEARING"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "驱动端轴承座（简化）"
+      }
+    },
+    "bearing_drive_locator": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_LOCATOR"
+      ],
+      "customProperties": {
+        "semantic_locator": true,
+        "physical_geometry": false,
+        "fault_type": "bearing_overheat",
+        "display_name_zh": "驱动端轴承"
+      }
+    },
+    "bearing_non_drive_housing": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_BEARING"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "非驱动端轴承座（简化）"
+      }
+    },
+    "bearing_non_drive_locator": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_LOCATOR"
+      ],
+      "customProperties": {
+        "semantic_locator": true,
+        "physical_geometry": false,
+        "fault_type": "bearing_overheat",
+        "display_name_zh": "非驱动端轴承"
+      }
+    },
+    "drive_base": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_BASE"
+      ],
+      "customProperties": {
+        "semantic_model": true,
+        "manufacturer_exact": false,
+        "purpose": "digital_twin_visualization",
+        "display_name_zh": "传动系统底座（简化）"
+      }
+    },
+    "rotation_axis": {
+      "exists": true,
+      "type": "MESH",
+      "parent": "Fan_Digital_Twin",
+      "children": [],
+      "materials": [
+        "MAT_LOCATOR"
+      ],
+      "customProperties": {
+        "semantic_locator": true,
+        "physical_geometry": false,
+        "semantic_id": "ROTATION_AXIS",
+        "display_name_zh": "叶轮旋转轴线"
+      }
+    }
+  },
+  "threeJsLookup": {
+    "Fan_Digital_Twin": "scene.getObjectByName(\"Fan_Digital_Twin\")",
+    "casing_group": "scene.getObjectByName(\"casing_group\")",
+    "impeller_group": "scene.getObjectByName(\"impeller_group\")",
+    "motor": "scene.getObjectByName(\"motor\")",
+    "motor_shaft": "scene.getObjectByName(\"motor_shaft\")",
+    "main_shaft": "scene.getObjectByName(\"main_shaft\")",
+    "coupling_input": "scene.getObjectByName(\"coupling_input\")",
+    "coupling_element": "scene.getObjectByName(\"coupling_element\")",
+    "coupling_output": "scene.getObjectByName(\"coupling_output\")",
+    "coupling_guard": "scene.getObjectByName(\"coupling_guard\")",
+    "bearing_drive_housing": "scene.getObjectByName(\"bearing_drive_housing\")",
+    "bearing_drive_locator": "scene.getObjectByName(\"bearing_drive_locator\")",
+    "bearing_non_drive_housing": "scene.getObjectByName(\"bearing_non_drive_housing\")",
+    "bearing_non_drive_locator": "scene.getObjectByName(\"bearing_non_drive_locator\")",
+    "drive_base": "scene.getObjectByName(\"drive_base\")",
+    "rotation_axis": "scene.getObjectByName(\"rotation_axis\")"
+  },
+  "validation": {
+    "allKeyNodesPresent": true,
+    "uniqueNames": true,
+    "customPropertiesPreserved": true
+  }
+}

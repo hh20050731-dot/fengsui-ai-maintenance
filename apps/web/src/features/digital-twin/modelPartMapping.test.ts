@@ -20,4 +20,19 @@ describe('GLB部件映射', () => {
     expect(findModelPartNodes(root, 'bearing')).toEqual([]);
     expect(findModelPartNodes(root, 'coupling')).toEqual([]);
   });
+
+  it('增强模型只按精确语义节点定位故障部件', () => {
+    const root = new Group();
+    const impellerGroup = new Group();
+    impellerGroup.name = 'impeller_group';
+    const impeller = new Mesh(new BoxGeometry(), new MeshBasicMaterial());
+    impeller.name = 'SHELL001';
+    impellerGroup.add(impeller);
+    const misleading = new Mesh(new BoxGeometry(), new MeshBasicMaterial());
+    misleading.name = 'bearing_like_but_not_mapped';
+    root.add(impellerGroup, misleading);
+
+    expect(findModelPartNodes(root, 'impeller', 'enhanced-v1')).toEqual([impeller]);
+    expect(findModelPartNodes(root, 'bearing', 'enhanced-v1')).toEqual([]);
+  });
 });

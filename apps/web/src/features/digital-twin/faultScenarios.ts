@@ -84,6 +84,10 @@ export function isFaultScenarioId(value: string | null): value is FaultScenarioI
   return Boolean(value && value in faultScenarios);
 }
 
+export function canCreateWorkOrderForScenario(value: FaultScenarioId) {
+  return value !== 'normal';
+}
+
 export function faultScenarioFromAlertIndicators(indicators: string[]): FaultScenarioId {
   const text = indicators.join('');
   if (/联轴|对中/.test(text)) return 'coupling-misalignment';

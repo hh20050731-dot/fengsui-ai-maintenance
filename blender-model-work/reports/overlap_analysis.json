@@ -1,0 +1,171 @@
+{
+  "analysisStatus": "complete",
+  "generatedAt": "2026-07-18T16:34:06.709396+00:00",
+  "input": "C:\\Users\\Fture\\Documents\\飞书Ai\\blender-model-work\\input\\induced-draft-fan.glb",
+  "tolerance": {
+    "coordinates": 1e-06,
+    "boundingBox": 1e-05
+  },
+  "pairs": [
+    {
+      "pair": [
+        "SHELL",
+        "SHELL002"
+      ],
+      "localVertexCoordinatesIdentical": false,
+      "faceTopologyIdentical": false,
+      "worldTransformIdentical": true,
+      "boundingBoxIdentical": true,
+      "worldVertexSetIdentical": false,
+      "worldFaceGeometryIdentical": false,
+      "coplanarOverlap": false,
+      "innerOuterAssessment": "可能：包围盒相同但顶点或拓扑不同，疑似内外表面；必须人工剖视确认",
+      "materials": {
+        "SHELL": [
+          "color_cccccc"
+        ],
+        "SHELL002": [
+          "color_cccccc"
+        ]
+      },
+      "onlyMaterialDifferent": false,
+      "completeDuplicate": false,
+      "deletionAuthorized": false,
+      "conclusion": "不是完全重复对象；保留并等待人工判断"
+    },
+    {
+      "pair": [
+        "SHELL001",
+        "SHELL008"
+      ],
+      "localVertexCoordinatesIdentical": true,
+      "faceTopologyIdentical": true,
+      "worldTransformIdentical": true,
+      "boundingBoxIdentical": true,
+      "worldVertexSetIdentical": true,
+      "worldFaceGeometryIdentical": true,
+      "coplanarOverlap": true,
+      "innerOuterAssessment": "否：世界坐标和面几何一致，不是可区分的内外表面",
+      "materials": {
+        "SHELL001": [
+          "color_c8c8c8"
+        ],
+        "SHELL008": [
+          "color_c8c8c8"
+        ]
+      },
+      "onlyMaterialDifferent": false,
+      "completeDuplicate": true,
+      "deletionAuthorized": false,
+      "conclusion": "几何与世界位置完全重复；本轮仅记录，不删除"
+    },
+    {
+      "pair": [
+        "SHELL009",
+        "SHELL019"
+      ],
+      "localVertexCoordinatesIdentical": false,
+      "faceTopologyIdentical": false,
+      "worldTransformIdentical": true,
+      "boundingBoxIdentical": true,
+      "worldVertexSetIdentical": true,
+      "worldFaceGeometryIdentical": false,
+      "coplanarOverlap": false,
+      "innerOuterAssessment": "可能：包围盒相同但顶点或拓扑不同，疑似内外表面；必须人工剖视确认",
+      "materials": {
+        "SHELL009": [
+          "color_cd843f"
+        ],
+        "SHELL019": [
+          "color_cd843f"
+        ]
+      },
+      "onlyMaterialDifferent": false,
+      "completeDuplicate": false,
+      "deletionAuthorized": false,
+      "conclusion": "不是完全重复对象；保留并等待人工判断"
+    },
+    {
+      "pair": [
+        "SHELL010",
+        "SHELL021"
+      ],
+      "localVertexCoordinatesIdentical": true,
+      "faceTopologyIdentical": true,
+      "worldTransformIdentical": true,
+      "boundingBoxIdentical": true,
+      "worldVertexSetIdentical": true,
+      "worldFaceGeometryIdentical": true,
+      "coplanarOverlap": true,
+      "innerOuterAssessment": "否：世界坐标和面几何一致，不是可区分的内外表面",
+      "materials": {
+        "SHELL010": [
+          "color_cd843f"
+        ],
+        "SHELL021": [
+          "color_adb5bd"
+        ]
+      },
+      "onlyMaterialDifferent": true,
+      "completeDuplicate": true,
+      "deletionAuthorized": false,
+      "conclusion": "几何与世界位置完全重复；本轮仅记录，不删除"
+    },
+    {
+      "pair": [
+        "SHELL020",
+        "SHELL022"
+      ],
+      "localVertexCoordinatesIdentical": false,
+      "faceTopologyIdentical": true,
+      "worldTransformIdentical": true,
+      "boundingBoxIdentical": true,
+      "worldVertexSetIdentical": true,
+      "worldFaceGeometryIdentical": false,
+      "coplanarOverlap": true,
+      "innerOuterAssessment": "无法认定为内外表面",
+      "materials": {
+        "SHELL020": [
+          "color_cd843f"
+        ],
+        "SHELL022": [
+          "color_adb5bd"
+        ]
+      },
+      "onlyMaterialDifferent": false,
+      "completeDuplicate": false,
+      "deletionAuthorized": false,
+      "conclusion": "不是完全重复对象；保留并等待人工判断"
+    },
+    {
+      "pair": [
+        "SHELL024",
+        "SHELL025"
+      ],
+      "localVertexCoordinatesIdentical": false,
+      "faceTopologyIdentical": false,
+      "worldTransformIdentical": true,
+      "boundingBoxIdentical": false,
+      "worldVertexSetIdentical": false,
+      "worldFaceGeometryIdentical": false,
+      "coplanarOverlap": false,
+      "innerOuterAssessment": "无法认定为内外表面",
+      "materials": {
+        "SHELL024": [
+          "color_cd843f"
+        ],
+        "SHELL025": [
+          "color_cd843f"
+        ]
+      },
+      "onlyMaterialDifferent": false,
+      "completeDuplicate": false,
+      "deletionAuthorized": false,
+      "conclusion": "不是完全重复对象；保留并等待人工判断"
+    }
+  ],
+  "safety": {
+    "objectsDeleted": false,
+    "modelModified": false
+  }
+}

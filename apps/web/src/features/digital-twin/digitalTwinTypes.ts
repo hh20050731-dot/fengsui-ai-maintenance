@@ -3,6 +3,7 @@ export type FaultScenarioId = 'normal' | 'impeller-imbalance' | 'bearing-overhea
 export type ModelPartKey = 'impeller' | 'bearing' | 'coupling' | 'motor' | 'casing' | 'rotor';
 export type TwinRiskLevel = '低' | '中高' | '高';
 export type CameraView = 'reset' | 'front' | 'side' | 'top';
+export type CasingDisplayMode = 'normal' | 'transparent' | 'hidden';
 
 export interface TwinSensorSnapshot {
   temperature: number;
@@ -43,6 +44,7 @@ export interface FaultScenario {
 export interface ModelNodeInfo {
   uuid: string;
   name: string;
+  displayName: string;
   type: string;
   isMesh: boolean;
   parentName: string;
@@ -55,6 +57,10 @@ export interface ModelInspection {
   meshCount: number;
   namedMeshCount: number;
   semanticPartCount: number;
+  keyNodeCount: number;
+  requiredKeyNodeCount: number;
+  missingKeyNodes: string[];
+  loadTimeMs: number;
 }
 
 export interface PartResolution {

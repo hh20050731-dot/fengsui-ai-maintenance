@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import type { Alert, WorkOrder } from '@fengsui/shared';
 import { api, idempotencyKey, postJson } from '../../../services/api';
 import type { FaultScenario } from '../digitalTwinTypes';
+import { canCreateWorkOrderForScenario } from '../faultScenarios';
 
 export function WorkOrderButton({ scenario, deviceId, deviceName }: { scenario: FaultScenario; deviceId: string; deviceName: string }) {
   const navigate = useNavigate();
@@ -27,8 +28,9 @@ export function WorkOrderButton({ scenario, deviceId, deviceName }: { scenario: 
     },
   });
   const relatedOrderId = alert?.relatedWorkOrderId;
-  const disabledReason = scenario.id === 'normal' ? '正常运行场景无需生成工单' : alertsQuery.isLoading ? '正在读取关联预警' : !alert ? '当前没有可关联的设备预警' : '';
+  const workOrderEnabled = canCreateWorkOrderForScenario(scenario.id);
+  const disabledReason = !workOrderEnabled ? '正常运行场景无需生成工单' : alertsQuery.isLoading ? '正在读取关联预警' : !alert ? '当前没有可关联的设备预警' : '';
   if (relatedOrderId) return <button type="button" className="twin-order-button twin-order-action" onClick={() => navigate(`/work-orders/${relatedOrderId}`)}><ExternalLink size={15} />查看关联工单</button>;
-  if (scenario.id === 'normal') return <div className="twin-order-help twin-order-action">当前运行状态正常，无需创建维修工单。</div>;
+  if (!workOrderEnabled) return <div className="twin-order-help twin-order-action">当前运行状态正常，无需创建维修工单。</div>;
   return <div className="twin-order-action"><button type="button" className={clsx('twin-order-button', scenario.risk === '高' && 'is-danger')} disabled={Boolean(disabledReason) || createOrder.isPending} title={disabledReason || undefined} onClick={() => createOrder.mutate()}><ClipboardPlus size={15} />{createOrder.isPending ? '正在生成…' : '生成维修工单'}</button>{disabledReason && <div className="twin-order-help">{disabledReason}</div>}{createOrder.isError && <div className="twin-order-error">{createOrder.error.message}</div>}</div>;
 }

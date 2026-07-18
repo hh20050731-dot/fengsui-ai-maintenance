@@ -126,7 +126,11 @@
 
 .twin-model-panel { display: grid; min-width: 0; min-height: 0; grid-template-rows: auto minmax(0, 1fr) auto; border: 1px solid var(--twin-border); border-radius: 4px; background: var(--twin-bg-deep); overflow: hidden; }
 .twin-model-header { display: flex; min-height: 62px; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--twin-border); padding: 10px 14px; background: var(--twin-surface); }
+.twin-model-heading-row { display: flex; min-width: 0; align-items: center; gap: 12px; }
 .twin-model-title { font-size: 15px; font-weight: 600; color: var(--twin-text); }
+.twin-model-version-control { display: inline-flex; flex: none; align-items: center; gap: 6px; color: var(--twin-text-muted); font-size: 11px; }
+.twin-model-version-control select { height: 28px; border: 1px solid var(--twin-border-strong); border-radius: 3px; background: var(--twin-bg-deep); padding: 0 24px 0 8px; color: var(--twin-text-secondary); font-size: 11px; outline: none; }
+.twin-model-version-control select:focus { border-color: var(--twin-success); }
 .twin-model-path { display: flex; min-width: 0; align-items: center; gap: 6px; margin-top: 4px; color: var(--twin-text-muted); font-size: 11px; }
 .twin-model-path span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .twin-model-state { color: var(--twin-success); font-size: 12px; font-weight: 600; }
@@ -213,6 +217,7 @@
 
 @media (min-width: 1101px) and (max-width: 1499px) {
   .twin-workbench { grid-template-columns: 188px minmax(0, 1fr) 320px; }
+  .twin-view-toolbar { max-width: calc(100% - 24px); }
 }
 
 @media (max-width: 1100px) {
@@ -230,6 +235,7 @@
   .twin-right-rail { display: block; }
   .twin-status-panel { margin-bottom: 12px; }
   .twin-model-panel { min-height: 560px; }
+  .twin-model-heading-row { align-items: flex-start; flex-direction: column; gap: 5px; }
   .twin-trend-grid,
   .twin-timeline-grid { grid-template-columns: 1fr; }
   .twin-timeline-event + .twin-timeline-event { border-top: 1px solid var(--twin-border); border-left: 0; }

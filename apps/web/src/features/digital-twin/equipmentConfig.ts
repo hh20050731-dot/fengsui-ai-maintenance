@@ -1,5 +1,9 @@
-export const FAN_MODEL_FILE = 'induced-draft-fan.glb';
-export const FAN_MODEL_URL = `${import.meta.env.BASE_URL}models/${FAN_MODEL_FILE}`;
+import { defaultFanModelVersion, fanModelVariants } from './modelVariants';
+
+const defaultFanModelVariant = fanModelVariants[defaultFanModelVersion];
+
+export const FAN_MODEL_FILE = defaultFanModelVariant.fileName;
+export const FAN_MODEL_URL = defaultFanModelVariant.url;
 
 export const digitalTwinEquipment = [
   {

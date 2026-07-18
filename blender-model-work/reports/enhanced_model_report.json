@@ -1,0 +1,140 @@
+{
+  "generatedAt": "2026-07-18T17:09:00.546869+00:00",
+  "analysisMode": "enhanced-preview-only",
+  "input": {
+    "path": "C:\\Users\\Fture\\Documents\\飞书Ai\\blender-model-work\\input\\induced-draft-fan.glb",
+    "sha256": "532E331BEA3E944798ACACB4165760CDB051C09A5D3B5949AE8009C478257D5D"
+  },
+  "outputBlend": "C:\\Users\\Fture\\Documents\\飞书Ai\\blender-model-work\\output\\induced-draft-fan-enhanced-preview.blend",
+  "impellerPair": {
+    "left": "SHELL001",
+    "right": "SHELL008",
+    "vertexCount": [
+      188126,
+      188126
+    ],
+    "triangleCount": [
+      119556,
+      119556
+    ],
+    "localVertexCoordinatesIdentical": true,
+    "faceTopologyIdentical": true,
+    "worldTransformIdentical": true,
+    "normalDirectionsIdentical": true,
+    "normalDirectionsOpposite": false,
+    "minimumNormalDot": 0.9999997,
+    "materials": {
+      "SHELL001": [
+        "color_c8c8c8"
+      ],
+      "SHELL008": [
+        "color_c8c8c8"
+      ]
+    },
+    "materialsIdentical": true,
+    "completelyCoplanar": true,
+    "innerOuterSurfacePair": false,
+    "completeDuplicate": true,
+    "objectsRetained": true,
+    "conclusion": "两对象顶点、面拓扑、世界变换、法线方向和材质完全一致；属于同位重复几何，不是可区分的叶轮内外表面。两个对象均保留并归入impeller_group。"
+  },
+  "rotationAxis": {
+    "method": "PCA最小方差轴 + 叶轮包围盒中心复核",
+    "sourceObjects": [
+      "SHELL001",
+      "SHELL008"
+    ],
+    "origin": [
+      0.0,
+      7.3339,
+      -8e-06
+    ],
+    "direction": [
+      0.00087616,
+      0.99999934,
+      -0.00074575
+    ],
+    "principalVariances": [
+      647.068554,
+      2978.296489,
+      3020.200606
+    ],
+    "smallestToNextVarianceRatio": 4.602753,
+    "angleToPositiveYDegrees": 0.06592223,
+    "confidence": "high",
+    "fallbackCandidatesRequired": false
+  },
+  "addedComponents": [
+    "drive_base",
+    "main_shaft",
+    "coupling_output",
+    "coupling_element",
+    "coupling_input",
+    "motor_shaft",
+    "bearing_non_drive_housing",
+    "bearing_drive_housing",
+    "motor"
+  ],
+  "semanticLocators": [
+    "bearing_drive_locator",
+    "bearing_non_drive_locator",
+    "rotation_axis"
+  ],
+  "triangleCounts": {
+    "original": 428042,
+    "addedPhysicalGeometry": 3400,
+    "semanticLocatorGeometry": 1068,
+    "enhancedTotal": 432510,
+    "addedUnder50000": true
+  },
+  "intersections": {
+    "method": "世界坐标BVH三角面相交检测",
+    "detectedPairs": [],
+    "unexpectedPairs": [],
+    "unintendedSevereInterpenetration": false,
+    "note": "轴、轴承孔、联轴器孔及底座接触属于设计装配关系；这里只把新增部件与现有机壳的非主轴相交列为潜在异常。"
+  },
+  "previews": {
+    "originalBounds": {
+      "min": [
+        -292.324188,
+        -1402.666504,
+        -325.000427
+      ],
+      "max": [
+        357.675812,
+        110.333946,
+        1110.0
+      ]
+    },
+    "enhancedBounds": {
+      "min": [
+        -292.324188,
+        -1402.666504,
+        -325.000427
+      ],
+      "max": [
+        357.675812,
+        800.0,
+        1110.0
+      ]
+    },
+    "rawFaultPanels": [
+      "fault_normal.png",
+      "fault_impeller.png",
+      "fault_bearing.png",
+      "fault_coupling.png"
+    ]
+  },
+  "limitations": [
+    "增强部件是比赛原型所需的低面数语义几何，不代表厂家精确结构或尺寸。",
+    "原模型没有可独立识别的motor、coupling、bearing、shaft实体。",
+    "两个叶轮候选属于同位重复几何，本轮全部保留。",
+    "未执行正式GLB导出，未替换网站模型。"
+  ],
+  "formalExportReadiness": {
+    "geometryPrepared": true,
+    "manualReviewRequired": true,
+    "recommendedNextGate": "人工确认传动系统位于机壳外侧、轴承语义位置和重复叶轮保留策略后，才能进入正式GLB导出。"
+  }
+}

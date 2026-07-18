@@ -1,0 +1,621 @@
+{
+  "analysisStatus": "complete",
+  "generatedAt": "2026-07-18T16:34:06.711035+00:00",
+  "input": "C:\\Users\\Fture\\Documents\\飞书Ai\\blender-model-work\\input\\induced-draft-fan.glb",
+  "objects": [
+    {
+      "originalName": "Cube",
+      "candidateCategory": "unknown",
+      "confidence": 0.08,
+      "visualEvidence": "中心(0.000, 0.000, 0.000)，尺寸(2.000, 2.000, 2.000)，三角面12；隔离视图仍不足以判断实体用途",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/001_Cube.png",
+      "metrics": {
+        "vertexCount": 24,
+        "triangleCount": 12,
+        "dimensions": [
+          2.0,
+          2.0,
+          2.0
+        ],
+        "center": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL",
+      "candidateCategory": "casing_or_duct",
+      "confidence": 0.72,
+      "visualEvidence": "中心(32.676, -685.166, 392.500)，尺寸(650.000, 1435.000, 1435.000)，三角面84166；多视图显示为跨越主体的长风道和大壳体轮廓，无法继续区分具体壳段",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/002_SHELL.png",
+      "metrics": {
+        "vertexCount": 120237,
+        "triangleCount": 84166,
+        "dimensions": [
+          650.0,
+          1435.000366,
+          1435.000366
+        ],
+        "center": [
+          32.675812,
+          -685.166199,
+          392.499939
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL001",
+      "candidateCategory": "impeller_or_rotor",
+      "confidence": 0.78,
+      "visualEvidence": "中心(0.000, 7.334, 0.000)，尺寸(325.000, 206.000, 325.000)，三角面119556；位于机壳内部中心，隔离图呈高细节圆盘/叶片状旋转体",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/003_SHELL001.png",
+      "metrics": {
+        "vertexCount": 188126,
+        "triangleCount": 119556,
+        "dimensions": [
+          325.0,
+          206.000061,
+          325.000061
+        ],
+        "center": [
+          0.0,
+          7.333904,
+          0.0
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL002",
+      "candidateCategory": "casing_or_duct",
+      "confidence": 0.72,
+      "visualEvidence": "中心(32.676, -685.166, 392.500)，尺寸(650.000, 1435.000, 1435.000)，三角面81994；多视图显示为跨越主体的长风道和大壳体轮廓，无法继续区分具体壳段",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/004_SHELL002.png",
+      "metrics": {
+        "vertexCount": 117093,
+        "triangleCount": 81994,
+        "dimensions": [
+          650.0,
+          1435.000366,
+          1435.000366
+        ],
+        "center": [
+          32.675812,
+          -685.166199,
+          392.499939
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL003",
+      "candidateCategory": "structural_frame",
+      "confidence": 0.58,
+      "visualEvidence": "中心(322.176, -59.166, 305.000)，尺寸(9.000, 147.000, 16.000)，三角面28；位于矩形边框四角或边缘，疑似框架/边条，仍需人工确认",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/005_SHELL003.png",
+      "metrics": {
+        "vertexCount": 26,
+        "triangleCount": 28,
+        "dimensions": [
+          9.0,
+          147.000031,
+          16.000031
+        ],
+        "center": [
+          322.175812,
+          -59.166153,
+          305.0
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL004",
+      "candidateCategory": "structural_frame",
+      "confidence": 0.58,
+      "visualEvidence": "中心(337.676, -59.166, 305.000)，尺寸(12.000, 147.000, 11.996)，三角面516；位于矩形边框四角或边缘，疑似框架/边条，仍需人工确认",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/006_SHELL004.png",
+      "metrics": {
+        "vertexCount": 764,
+        "triangleCount": 516,
+        "dimensions": [
+          12.0,
+          147.000031,
+          11.996307
+        ],
+        "center": [
+          337.675812,
+          -59.166153,
+          305.0
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL005",
+      "candidateCategory": "structural_frame",
+      "confidence": 0.58,
+      "visualEvidence": "中心(-272.324, -59.166, 305.000)，尺寸(12.000, 147.000, 11.996)，三角面516；位于矩形边框四角或边缘，疑似框架/边条，仍需人工确认",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/007_SHELL005.png",
+      "metrics": {
+        "vertexCount": 764,
+        "triangleCount": 516,
+        "dimensions": [
+          12.0,
+          147.000031,
+          11.996307
+        ],
+        "center": [
+          -272.324188,
+          -59.166153,
+          305.0
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL006",
+      "candidateCategory": "structural_frame",
+      "confidence": 0.58,
+      "visualEvidence": "中心(337.676, -59.166, -305.000)，尺寸(12.000, 147.000, 11.996)，三角面516；位于矩形边框四角或边缘，疑似框架/边条，仍需人工确认",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/008_SHELL006.png",
+      "metrics": {
+        "vertexCount": 764,
+        "triangleCount": 516,
+        "dimensions": [
+          12.0,
+          147.000015,
+          11.996307
+        ],
+        "center": [
+          337.675812,
+          -59.166065,
+          -305.000061
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL007",
+      "candidateCategory": "structural_frame",
+      "confidence": 0.58,
+      "visualEvidence": "中心(-272.324, -59.166, -305.000)，尺寸(12.000, 147.000, 11.996)，三角面516；位于矩形边框四角或边缘，疑似框架/边条，仍需人工确认",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/009_SHELL007.png",
+      "metrics": {
+        "vertexCount": 764,
+        "triangleCount": 516,
+        "dimensions": [
+          12.0,
+          147.000015,
+          11.996307
+        ],
+        "center": [
+          -272.324188,
+          -59.166065,
+          -305.000061
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL008",
+      "candidateCategory": "impeller_or_rotor",
+      "confidence": 0.78,
+      "visualEvidence": "中心(0.000, 7.334, 0.000)，尺寸(325.000, 206.000, 325.000)，三角面119556；位于机壳内部中心，隔离图呈高细节圆盘/叶片状旋转体",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/010_SHELL008.png",
+      "metrics": {
+        "vertexCount": 188126,
+        "triangleCount": 119556,
+        "dimensions": [
+          325.0,
+          206.000061,
+          325.000061
+        ],
+        "center": [
+          0.0,
+          7.333904,
+          0.0
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL009",
+      "candidateCategory": "internal_plate",
+      "confidence": 0.52,
+      "visualEvidence": "中心(32.052, -59.166, 25.427)，尺寸(551.358, 147.000, 599.145)，三角面4420；位于主体内部或侧壁，整体较薄，可能是内板、导流板或支撑片",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/011_SHELL009.png",
+      "metrics": {
+        "vertexCount": 5216,
+        "triangleCount": 4420,
+        "dimensions": [
+          551.358154,
+          147.000107,
+          599.145264
+        ],
+        "center": [
+          32.052246,
+          -59.166115,
+          25.427383
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL010",
+      "candidateCategory": "internal_plate",
+      "confidence": 0.52,
+      "visualEvidence": "中心(32.056, -59.166, -28.839)，尺寸(561.352, 147.000, 500.661)，三角面4412；位于主体内部或侧壁，整体较薄，可能是内板、导流板或支撑片",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/012_SHELL010.png",
+      "metrics": {
+        "vertexCount": 5230,
+        "triangleCount": 4412,
+        "dimensions": [
+          561.35199,
+          147.000092,
+          500.660858
+        ],
+        "center": [
+          32.056091,
+          -59.166107,
+          -28.838821
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL011",
+      "candidateCategory": "fastener",
+      "confidence": 0.86,
+      "visualEvidence": "中心(0.000, -139.666, 91.000)，尺寸(6.000, 10.000, 6.000)，三角面142；八个同尺寸小圆柱件沿圆周等角分布，视觉上符合紧固/定位件组",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/013_SHELL011.png",
+      "metrics": {
+        "vertexCount": 214,
+        "triangleCount": 142,
+        "dimensions": [
+          6.0,
+          10.0,
+          6.000008
+        ],
+        "center": [
+          0.0,
+          -139.666138,
+          90.999985
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL012",
+      "candidateCategory": "fastener",
+      "confidence": 0.86,
+      "visualEvidence": "中心(-64.347, -139.666, 64.347)，尺寸(6.000, 10.000, 6.000)，三角面130；八个同尺寸小圆柱件沿圆周等角分布，视觉上符合紧固/定位件组",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/014_SHELL012.png",
+      "metrics": {
+        "vertexCount": 194,
+        "triangleCount": 130,
+        "dimensions": [
+          6.0,
+          10.0,
+          6.000004
+        ],
+        "center": [
+          -64.346718,
+          -139.666138,
+          64.34671
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL013",
+      "candidateCategory": "fastener",
+      "confidence": 0.86,
+      "visualEvidence": "中心(-91.000, -139.666, -0.000)，尺寸(6.000, 10.000, 6.000)，三角面142；八个同尺寸小圆柱件沿圆周等角分布，视觉上符合紧固/定位件组",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/015_SHELL013.png",
+      "metrics": {
+        "vertexCount": 220,
+        "triangleCount": 142,
+        "dimensions": [
+          6.0,
+          10.0,
+          6.000002
+        ],
+        "center": [
+          -91.0,
+          -139.666122,
+          -1.9e-05
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL014",
+      "candidateCategory": "fastener",
+      "confidence": 0.86,
+      "visualEvidence": "中心(-64.347, -139.666, -64.347)，尺寸(6.000, 10.000, 6.000)，三角面130；八个同尺寸小圆柱件沿圆周等角分布，视觉上符合紧固/定位件组",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/016_SHELL014.png",
+      "metrics": {
+        "vertexCount": 194,
+        "triangleCount": 130,
+        "dimensions": [
+          6.0,
+          10.0,
+          6.000004
+        ],
+        "center": [
+          -64.346718,
+          -139.666107,
+          -64.346748
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL015",
+      "candidateCategory": "fastener",
+      "confidence": 0.86,
+      "visualEvidence": "中心(0.000, -139.666, -91.000)，尺寸(6.000, 10.000, 6.000)，三角面142；八个同尺寸小圆柱件沿圆周等角分布，视觉上符合紧固/定位件组",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/017_SHELL015.png",
+      "metrics": {
+        "vertexCount": 214,
+        "triangleCount": 142,
+        "dimensions": [
+          6.0,
+          10.0,
+          6.000008
+        ],
+        "center": [
+          0.0,
+          -139.666107,
+          -91.000031
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL016",
+      "candidateCategory": "fastener",
+      "confidence": 0.86,
+      "visualEvidence": "中心(64.347, -139.666, -64.347)，尺寸(6.000, 10.000, 6.000)，三角面130；八个同尺寸小圆柱件沿圆周等角分布，视觉上符合紧固/定位件组",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/018_SHELL016.png",
+      "metrics": {
+        "vertexCount": 194,
+        "triangleCount": 130,
+        "dimensions": [
+          6.0,
+          10.0,
+          6.000004
+        ],
+        "center": [
+          64.346718,
+          -139.666107,
+          -64.346748
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL017",
+      "candidateCategory": "fastener",
+      "confidence": 0.86,
+      "visualEvidence": "中心(91.000, -139.666, -0.000)，尺寸(6.000, 10.000, 6.000)，三角面142；八个同尺寸小圆柱件沿圆周等角分布，视觉上符合紧固/定位件组",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/019_SHELL017.png",
+      "metrics": {
+        "vertexCount": 220,
+        "triangleCount": 142,
+        "dimensions": [
+          6.0,
+          10.0,
+          6.000002
+        ],
+        "center": [
+          91.0,
+          -139.666122,
+          -1.9e-05
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL018",
+      "candidateCategory": "fastener",
+      "confidence": 0.86,
+      "visualEvidence": "中心(64.347, -139.666, 64.347)，尺寸(6.000, 10.000, 6.000)，三角面130；八个同尺寸小圆柱件沿圆周等角分布，视觉上符合紧固/定位件组",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/020_SHELL018.png",
+      "metrics": {
+        "vertexCount": 194,
+        "triangleCount": 130,
+        "dimensions": [
+          6.0,
+          10.0,
+          6.000004
+        ],
+        "center": [
+          64.346718,
+          -139.666138,
+          64.34671
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL019",
+      "candidateCategory": "internal_plate",
+      "confidence": 0.52,
+      "visualEvidence": "中心(32.052, -59.166, 25.427)，尺寸(551.358, 147.000, 599.145)，三角面4420；位于主体内部或侧壁，整体较薄，可能是内板、导流板或支撑片",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/021_SHELL019.png",
+      "metrics": {
+        "vertexCount": 5216,
+        "triangleCount": 4420,
+        "dimensions": [
+          551.358154,
+          147.000107,
+          599.145264
+        ],
+        "center": [
+          32.052246,
+          -59.166115,
+          25.427383
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL020",
+      "candidateCategory": "zero_thickness_surface",
+      "confidence": 0.99,
+      "visualEvidence": "中心(317.676, -59.166, 167.742)，尺寸(0.000, 147.000, 314.516)，三角面2；一个包围盒维度为零且仅2个三角面，属于零厚度面片",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/022_SHELL020.png",
+      "metrics": {
+        "vertexCount": 4,
+        "triangleCount": 2,
+        "dimensions": [
+          0.0,
+          147.000076,
+          314.516144
+        ],
+        "center": [
+          317.675812,
+          -59.166134,
+          167.741959
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL021",
+      "candidateCategory": "internal_plate",
+      "confidence": 0.52,
+      "visualEvidence": "中心(32.056, -59.166, -28.839)，尺寸(561.352, 147.000, 500.661)，三角面4412；位于主体内部或侧壁，整体较薄，可能是内板、导流板或支撑片",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/023_SHELL021.png",
+      "metrics": {
+        "vertexCount": 5230,
+        "triangleCount": 4412,
+        "dimensions": [
+          561.35199,
+          147.000092,
+          500.660858
+        ],
+        "center": [
+          32.056091,
+          -59.166107,
+          -28.838821
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL022",
+      "candidateCategory": "zero_thickness_surface",
+      "confidence": 0.99,
+      "visualEvidence": "中心(317.676, -59.166, 167.742)，尺寸(0.000, 147.000, 314.516)，三角面2；一个包围盒维度为零且仅2个三角面，属于零厚度面片",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/024_SHELL022.png",
+      "metrics": {
+        "vertexCount": 4,
+        "triangleCount": 2,
+        "dimensions": [
+          0.0,
+          147.000076,
+          314.516144
+        ],
+        "center": [
+          317.675812,
+          -59.166134,
+          167.741959
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL023",
+      "candidateCategory": "internal_plate",
+      "confidence": 0.52,
+      "visualEvidence": "中心(130.001, -59.166, 232.989)，尺寸(62.031, 147.000, 184.023)，三角面1866；位于主体内部或侧壁，整体较薄，可能是内板、导流板或支撑片",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/025_SHELL023.png",
+      "metrics": {
+        "vertexCount": 2025,
+        "triangleCount": 1866,
+        "dimensions": [
+          62.030701,
+          147.000046,
+          184.023026
+        ],
+        "center": [
+          130.001053,
+          -59.166142,
+          232.988525
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL024",
+      "candidateCategory": "internal_plate",
+      "confidence": 0.52,
+      "visualEvidence": "中心(113.203, -59.166, 171.928)，尺寸(28.434, 147.000, 21.964)，三角面22；位于主体内部或侧壁，整体较薄，可能是内板、导流板或支撑片",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/026_SHELL024.png",
+      "metrics": {
+        "vertexCount": 44,
+        "triangleCount": 22,
+        "dimensions": [
+          28.433998,
+          147.000031,
+          21.963608
+        ],
+        "center": [
+          113.202698,
+          -59.166138,
+          171.927704
+        ]
+      }
+    },
+    {
+      "originalName": "SHELL025",
+      "candidateCategory": "internal_plate",
+      "confidence": 0.52,
+      "visualEvidence": "中心(115.629, -59.166, 175.091)，尺寸(28.961, 147.000, 22.368)，三角面22；位于主体内部或侧壁，整体较薄，可能是内板、导流板或支撑片",
+      "requiresManualReview": true,
+      "isolationImage": "previews/object-isolation/027_SHELL025.png",
+      "metrics": {
+        "vertexCount": 44,
+        "triangleCount": 22,
+        "dimensions": [
+          28.960709,
+          147.000031,
+          22.367599
+        ],
+        "center": [
+          115.628716,
+          -59.166138,
+          175.090668
+        ]
+      }
+    }
+  ],
+  "physicalGeometry": {
+    "motor": "physical geometry not present",
+    "coupling": "physical geometry not present",
+    "bearing": "physical geometry not present",
+    "shaft": "physical geometry not present"
+  },
+  "faultScenarioSupport": {
+    "normalOperation": "supported by complete visible fan assembly",
+    "impellerImbalance": "partially supported by impeller_or_rotor candidates SHELL001/SHELL008",
+    "bearingOverheat": "not physically supported: bearing geometry not present",
+    "couplingMisalignment": "not physically supported: coupling and shaft geometry not present",
+    "overallAssessment": "insufficient for four physically accurate fault scenes"
+  },
+  "safety": {
+    "modelModified": false,
+    "objectsRenamed": false,
+    "splitPerformed": false,
+    "decimationPerformed": false,
+    "exportPerformed": false
+  }
+}
