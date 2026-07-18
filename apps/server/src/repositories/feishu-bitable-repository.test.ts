@@ -1,0 +1,110 @@
+import { createMockData } from '@fengsui/shared';
+import { describe, expect, it, vi } from 'vitest';
+import { buildFeishuCapabilities } from '../config/env.js';
+import { FeishuBitableRepository, fromFeishuWorkOrderFields, toFeishuWorkOrderFields } from './feishu-bitable-repository.js';
+
+const partialCapabilities = buildFeishuCapabilities({
+  FEISHU_APP_ID: 'configured-app-id',
+  FEISHU_APP_SECRET: 'configured-app-secret',
+  FEISHU_BITABLE_APP_TOKEN: 'configured-app-token',
+  FEISHU_WORK_ORDER_TABLE_ID: 'configured-work-order-table',
+}, 'feishu');
+
+describe('飞书多维表格混合 Repository', () => {
+  it('工单使用八个中文字段并将创建时间写为毫秒时间戳', async () => {
+    const createRecord = vi.fn(async (_appToken: string, _tableId: string, fields: Record<string, unknown>) => ({ record: { record_id: 'rec-test-work-order', fields } }));
+    const client = { listRecords: vi.fn(async () => []), createRecord, updateRecord: vi.fn(async () => ({})), getRecord: vi.fn() };
+    const repository = new FeishuBitableRepository({
+      client,
+      appToken: 'configured-app-token',
+      tableIds: { workOrders: 'configured-work-order-table' },
+      capabilities: partialCapabilities,
+    });
+    const order = createMockData().workOrders[0]!;
+
+    await repository.createWorkOrder(order);
+
+    const fields = createRecord.mock.calls[0]![2];
+    expect(Object.keys(fields)).toEqual(['工单编号', '设备名称', '设备编号', '故障部位', '故障类型', '风险等级', '工单状态', '创建时间']);
+    expect(fields.工单编号).toBe(order.workOrderId);
+    expect(fields.创建时间).toBe(Date.parse(order.createdTime));
+    expect(typeof fields.创建时间).toBe('number');
+  });
+
+  it('未配置设备表时设备模块继续使用 Mock，且不访问飞书', async () => {
+    const listRecords = vi.fn(async () => []);
+    const repository = new FeishuBitableRepository({
+      client: { listRecords, createRecord: vi.fn(async () => ({ record: { record_id: 'unused', fields: {} } })), updateRecord: vi.fn(async () => ({})), getRecord: vi.fn() },
+      appToken: 'configured-app-token',
+      tableIds: { workOrders: 'configured-work-order-table' },
+      capabilities: partialCapabilities,
+    });
+
+    expect(await repository.listEquipment()).toHaveLength(12);
+    expect(listRecords).not.toHaveBeenCalled();
+  });
+
+  it('飞书工单日期字段可按毫秒时间戳往返解析', () => {
+    const order = createMockData().workOrders[0]!;
+    const fields = toFeishuWorkOrderFields(order);
+    const restored = fromFeishuWorkOrderFields(fields);
+    expect(restored.workOrderId).toBe(order.workOrderId);
+    expect(restored.createdTime).toBe(new Date(Date.parse(order.createdTime)).toISOString());
+  });
+
+  it('更新成功后使用已定位的 record_id 读取单条记录', async () => {
+    const order = { ...createMockData().workOrders[0]!, workOrderId: 'WO-20260718-001', status: '待接单' as const };
+    const fields = toFeishuWorkOrderFields(order);
+    const listRecords = vi.fn(async () => [{ record_id: 'rec-work-order-001', fields }]);
+    const updateRecord = vi.fn(async () => ({}));
+    const getRecord = vi.fn(async () => ({ record: { record_id: 'rec-work-order-001', fields: { ...fields, 工单状态: '已接单' } } }));
+    const repository = new FeishuBitableRepository({
+      client: { listRecords, createRecord: vi.fn(), updateRecord, getRecord },
+      appToken: 'configured-app-token',
+      tableIds: { workOrders: 'configured-work-order-table' },
+      capabilities: partialCapabilities,
+    });
+
+    const updated = await repository.updateWorkOrder(order.workOrderId, { status: '已接单' });
+
+    expect(updateRecord).toHaveBeenCalledWith('configured-app-token', 'configured-work-order-table', 'rec-work-order-001', expect.objectContaining({ 工单编号: order.workOrderId, 工单状态: '已接单' }));
+    expect(getRecord).toHaveBeenCalledWith('configured-app-token', 'configured-work-order-table', 'rec-work-order-001');
+    expect(listRecords).toHaveBeenCalledTimes(1);
+    expect(updated.status).toBe('已接单');
+    expect(updated.syncStatus).toBe('synced');
+  });
+
+  it('更新已成功但按 record_id 回读失败时仍返回成功状态', async () => {
+    const order = { ...createMockData().workOrders[0]!, workOrderId: 'WO-20260718-001', status: '待接单' as const };
+    const listRecords = vi.fn(async () => [{ record_id: 'rec-work-order-001', fields: toFeishuWorkOrderFields(order) }]);
+    const updateRecord = vi.fn(async () => ({}));
+    const getRecord = vi.fn(async () => { throw new Error('飞书读取暂时不可用'); });
+    const repository = new FeishuBitableRepository({
+      client: { listRecords, createRecord: vi.fn(), updateRecord, getRecord },
+      appToken: 'configured-app-token',
+      tableIds: { workOrders: 'configured-work-order-table' },
+      capabilities: partialCapabilities,
+    });
+
+    const updated = await repository.updateWorkOrder(order.workOrderId, { status: '已接单' });
+
+    expect(updateRecord).toHaveBeenCalledTimes(1);
+    expect(updated).toMatchObject({ workOrderId: order.workOrderId, status: '已接单', syncStatus: 'pending', syncMessage: '数据同步刷新中' });
+  });
+
+  it('创建时间缺失时仍映射完整工单而不是过滤记录', () => {
+    const restored = fromFeishuWorkOrderFields({
+      工单编号: 'WO-20260718-001',
+      设备名称: '1号引风机',
+      设备编号: 'IDF-001',
+      故障部位: '轴承',
+      故障类型: '振动升高',
+      风险等级: '预警',
+      工单状态: '已接单',
+    });
+
+    expect(restored.workOrderId).toBe('WO-20260718-001');
+    expect(restored.status).toBe('已接单');
+    expect(Number.isNaN(Date.parse(restored.createdTime))).toBe(false);
+  });
+});

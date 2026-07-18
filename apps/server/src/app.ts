@@ -10,7 +10,7 @@ import {
   acknowledgeAlertSchema, createWorkOrderSchema, diagnosisRequestSchema, equipmentInputSchema,
   stockChangeSchema, transitionWorkOrderSchema, workOrderRecordSchema,
 } from '@fengsui/shared';
-import { effectiveMode, env, missingFeishuConfig } from './config/env.js';
+import { buildFeishuCapabilities, effectiveMode, env, feishuClientConfigured, missingFeishuConfig } from './config/env.js';
 import { AppError, errorHandler, notFound } from './middleware/errors.js';
 import { DemoAuthProvider, FeishuAuthProvider } from './providers/auth-provider.js';
 import { RuleBasedDiagnosisProvider } from './providers/ai-diagnosis-provider.js';
@@ -25,10 +25,12 @@ const success = <T>(data: T, meta?: Record<string, unknown>) => ({ success: true
 
 export function createApp(options?: { forceMock?: boolean }) {
   const mode = options?.forceMock ? 'mock' : effectiveMode;
-  const repository = mode === 'feishu' ? new FeishuBitableRepository() : new MockRepository();
+  const capabilities = buildFeishuCapabilities(env, mode);
+  const partialFeishu = mode === 'feishu' && Object.values(capabilities).some((capability) => capability.mode === 'mock');
+  const repository = mode === 'feishu' ? new FeishuBitableRepository({ capabilities }) : new MockRepository();
   const notificationProvider = mode === 'feishu' ? new FeishuBotNotificationProvider() : new MockNotificationProvider();
   const authProvider = mode === 'feishu' ? new FeishuAuthProvider() : new DemoAuthProvider();
-  const service = new OperationsService(repository, new RuleBasedDiagnosisProvider(), notificationProvider, { createKnowledgeCandidates: mode === 'mock' });
+  const service = new OperationsService(repository, new RuleBasedDiagnosisProvider(), notificationProvider, { createKnowledgeCandidates: capabilities.knowledge.mode === 'mock' });
   const demoPersistence = mode === 'mock' ? new DemoStatePersistence(repository as MockRepository, service) : undefined;
   const sessions = new Map<string, User>();
   const processedEvents = new Set<string>();
@@ -77,8 +79,13 @@ export function createApp(options?: { forceMock?: boolean }) {
 
   app.get('/api/health', (_req, res) => res.json(success({ status: 'ok', version: '1.0.2', mode, time: new Date().toISOString() })));
   app.get('/api/integration/status', (_req, res) => res.json(success({
-    requestedMode: env.APP_MODE, effectiveMode: mode, degraded: env.APP_MODE !== mode,
-    feishuClient: false, sso: mode === 'feishu' ? '等待端内登录' : '演示身份', bitable: mode === 'feishu' ? '已配置' : '模拟数据仓库',
+    requestedMode: env.APP_MODE, effectiveMode: mode,
+    degraded: env.APP_MODE !== mode,
+    partial: partialFeishu,
+    feishuClient: mode === 'feishu' && feishuClientConfigured,
+    capabilities,
+    sso: mode === 'feishu' ? '等待端内登录' : '演示身份',
+    bitable: mode === 'feishu' ? Object.values(capabilities).every((capability) => capability.mode === 'feishu') ? '已配置' : '已部分配置' : '模拟数据仓库',
     robot: mode === 'feishu' && env.FEISHU_NOTIFICATION_CHAT_ID ? '已配置' : mode === 'feishu' ? '缺少默认会话' : '卡片预览',
     aiProvider: 'RuleBasedDiagnosisProvider', version: '1.0.2', lastSyncAt: new Date().toISOString(), missingConfig: missingFeishuConfig,
   })));

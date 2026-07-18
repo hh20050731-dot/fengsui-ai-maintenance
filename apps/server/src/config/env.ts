@@ -19,16 +19,46 @@ const schema = z.object({
 
 export const env = schema.parse(process.env);
 
-export const requiredFeishuKeys = [
-  'FEISHU_APP_ID', 'FEISHU_APP_SECRET', 'FEISHU_BITABLE_APP_TOKEN', 'FEISHU_EQUIPMENT_TABLE_ID',
-  'FEISHU_TELEMETRY_TABLE_ID', 'FEISHU_HEALTH_TABLE_ID', 'FEISHU_ALERT_TABLE_ID', 'FEISHU_WORK_ORDER_TABLE_ID',
-  'FEISHU_SPARE_PART_TABLE_ID', 'FEISHU_SPARE_TRANSACTION_TABLE_ID', 'FEISHU_KNOWLEDGE_TABLE_ID',
-  'FEISHU_OPERATION_LOG_TABLE_ID',
-] as const;
+export const feishuClientKeys = ['FEISHU_APP_ID', 'FEISHU_APP_SECRET', 'FEISHU_BITABLE_APP_TOKEN'] as const;
+export const feishuCapabilityTableKeys = {
+  equipment: 'FEISHU_EQUIPMENT_TABLE_ID',
+  telemetry: 'FEISHU_TELEMETRY_TABLE_ID',
+  health: 'FEISHU_HEALTH_TABLE_ID',
+  alerts: 'FEISHU_ALERT_TABLE_ID',
+  workOrders: 'FEISHU_WORK_ORDER_TABLE_ID',
+  spareParts: 'FEISHU_SPARE_PART_TABLE_ID',
+  spareTransactions: 'FEISHU_SPARE_TRANSACTION_TABLE_ID',
+  knowledge: 'FEISHU_KNOWLEDGE_TABLE_ID',
+  operationLogs: 'FEISHU_OPERATION_LOG_TABLE_ID',
+} as const;
 
-export const missingFeishuConfig = requiredFeishuKeys.filter((key) => !env[key]);
-export const effectiveMode: 'mock' | 'feishu' = env.APP_MODE === 'feishu' && missingFeishuConfig.length === 0 ? 'feishu' : 'mock';
+export type FeishuCapabilityName = keyof typeof feishuCapabilityTableKeys;
+export type FeishuCapability = { mode: 'mock' | 'feishu'; configured: boolean };
+export type FeishuCapabilities = Record<FeishuCapabilityName, FeishuCapability>;
+type FeishuConfigKey = typeof feishuClientKeys[number] | typeof feishuCapabilityTableKeys[FeishuCapabilityName];
+type FeishuConfigSource = Partial<Record<FeishuConfigKey, string | undefined>>;
 
-if (env.APP_MODE === 'feishu' && effectiveMode === 'mock' && env.NODE_ENV !== 'test') {
-  console.warn(`[integration] 飞书配置不完整，已安全降级为 Mock 模式。缺失：${missingFeishuConfig.join(', ')}`);
+export function buildFeishuCapabilities(config: FeishuConfigSource, mode: 'mock' | 'feishu'): FeishuCapabilities {
+  const clientConfigured = feishuClientKeys.every((key) => Boolean(config[key]));
+  return Object.fromEntries(Object.entries(feishuCapabilityTableKeys).map(([name, key]) => {
+    const configured = clientConfigured && Boolean(config[key]);
+    return [name, { configured, mode: mode === 'feishu' && configured ? 'feishu' : 'mock' }];
+  })) as FeishuCapabilities;
+}
+
+export const missingFeishuClientConfig = feishuClientKeys.filter((key) => !env[key]);
+export const feishuClientConfigured = missingFeishuClientConfig.length === 0;
+export const effectiveMode: 'mock' | 'feishu' = env.APP_MODE === 'feishu' && feishuClientConfigured ? 'feishu' : 'mock';
+export const feishuCapabilities = buildFeishuCapabilities(env, effectiveMode);
+export const missingFeishuConfig = [
+  ...missingFeishuClientConfig,
+  ...Object.values(feishuCapabilityTableKeys).filter((key) => !env[key]),
+];
+
+if (env.APP_MODE === 'feishu' && env.NODE_ENV !== 'test') {
+  if (!feishuClientConfigured) {
+    console.warn(`[integration] 飞书客户端基础配置不完整，飞书能力暂不可用。缺失：${missingFeishuClientConfig.join(', ')}`);
+  } else if (feishuCapabilities.workOrders.mode === 'feishu' && Object.entries(feishuCapabilities).some(([name, capability]) => name !== 'workOrders' && capability.mode === 'mock')) {
+    console.info('[integration] 飞书已部分启用：维修工单使用飞书，未配置模块继续使用Mock');
+  }
 }

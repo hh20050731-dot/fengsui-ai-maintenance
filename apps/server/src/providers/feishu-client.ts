@@ -2,6 +2,7 @@ import { env } from '../config/env.js';
 import { AppError } from '../middleware/errors.js';
 
 interface FeishuEnvelope<T> { code: number; msg?: string; message?: string; data?: T; tenant_access_token?: string; app_access_token?: string; expire?: number }
+export interface FeishuBitableRecord { record_id: string; fields: Record<string, unknown> }
 
 export class FeishuClient {
   private tenantToken?: { value: string; expiresAt: number };
@@ -37,12 +38,12 @@ export class FeishuClient {
       ...init, headers: { 'content-type': 'application/json; charset=utf-8', authorization: `Bearer ${token}`, ...init.headers },
     });
     const result = await response.json() as FeishuEnvelope<T>;
-    if (!response.ok || result.code !== 0) throw new AppError(502, 'FEISHU_API_ERROR', `飞书接口调用失败：${result.msg ?? result.message ?? response.status}`);
+    if (!response.ok || result.code !== 0) throw new AppError(502, 'FEISHU_API_ERROR', `飞书接口调用失败（${result.code ?? response.status}）：${result.msg ?? result.message ?? response.status}`);
     return result.data as T;
   }
 
   async listRecords(appToken: string, tableId: string) {
-    const records: Array<{ record_id: string; fields: Record<string, unknown> }> = [];
+    const records: FeishuBitableRecord[] = [];
     let pageToken = '';
     do {
       const query = new URLSearchParams({ page_size: '500' });
@@ -54,11 +55,15 @@ export class FeishuClient {
   }
 
   async createRecord(appToken: string, tableId: string, fields: Record<string, unknown>) {
-    return this.request<{ record: { record_id: string; fields: Record<string, unknown> } }>(`/bitable/v1/apps/${appToken}/tables/${tableId}/records`, { method: 'POST', body: JSON.stringify({ fields }) });
+    return this.request<{ record: FeishuBitableRecord }>(`/bitable/v1/apps/${appToken}/tables/${tableId}/records`, { method: 'POST', body: JSON.stringify({ fields }) });
   }
 
   async updateRecord(appToken: string, tableId: string, recordId: string, fields: Record<string, unknown>) {
-    return this.request(`/bitable/v1/apps/${appToken}/tables/${tableId}/records/${recordId}`, { method: 'PUT', body: JSON.stringify({ fields }) });
+    return this.request<{ record?: FeishuBitableRecord }>(`/bitable/v1/apps/${appToken}/tables/${tableId}/records/${recordId}`, { method: 'PUT', body: JSON.stringify({ fields }) });
+  }
+
+  async getRecord(appToken: string, tableId: string, recordId: string) {
+    return this.request<{ record: FeishuBitableRecord }>(`/bitable/v1/apps/${appToken}/tables/${tableId}/records/${recordId}`);
   }
 
   async exchangeLoginCode(code: string) {

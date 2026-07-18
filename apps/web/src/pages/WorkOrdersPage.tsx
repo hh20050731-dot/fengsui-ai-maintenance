@@ -7,6 +7,7 @@ import { getNextWorkOrderActions } from '@fengsui/shared';
 import { PageHeader } from '../components/PageHeader';
 import { DemoDisclaimer, Empty, ErrorState, Loading, Modal, Panel, RiskBadge, StatusBadge, Toast } from '../components/ui';
 import { api, idempotencyKey, postJson } from '../services/api';
+import { mergeUpdatedWorkOrder, resolveWorkOrderDetail, workOrderTransitionMessage } from './work-order-state';
 
 const stages: WorkOrderStatus[] = ['待接单', '已接单', '检修中', '待验证', '已完成'];
 
@@ -26,7 +27,24 @@ function TransitionForm({ order, target, parts, onClose, onSuccess }: { order: W
 
 function WorkOrderDetail({ order, parts, onClose }: { order: WorkOrder; parts: SparePart[]; onClose: () => void }) {
   const queryClient = useQueryClient(); const navigate = useNavigate(); const [target, setTarget] = useState<WorkOrderStatus | null>(null); const [toast, setToast] = useState('');
-  const onSuccess = async (updated: WorkOrder) => { setTarget(null); setToast(`工单已推进为“${updated.status}”`); await Promise.all([queryClient.invalidateQueries({ queryKey: ['work-orders'] }), queryClient.invalidateQueries({ queryKey: ['work-order', order.workOrderId] }), queryClient.invalidateQueries({ queryKey: ['equipment'] }), queryClient.invalidateQueries({ queryKey: ['spare-parts'] }), queryClient.invalidateQueries({ queryKey: ['alerts'] })]); };
+  const onSuccess = (updated: WorkOrder) => {
+    const completedTarget = target;
+    setTarget(null);
+    queryClient.setQueryData<WorkOrder>(['work-order', order.workOrderId], (current) => ({ ...(current ?? order), ...updated }));
+    queryClient.setQueryData<WorkOrder[]>(['work-orders'], (current) => mergeUpdatedWorkOrder(current, updated));
+    setToast(workOrderTransitionMessage(updated, completedTarget));
+    void Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['equipment'] }),
+      queryClient.invalidateQueries({ queryKey: ['spare-parts'] }),
+      queryClient.invalidateQueries({ queryKey: ['alerts'] }),
+    ]);
+    window.setTimeout(() => {
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['work-orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['work-order', order.workOrderId] }),
+      ]);
+    }, 500);
+  };
   const actions = getNextWorkOrderActions(order.status);
   return <><Modal title="维修工单详情" onClose={onClose} width="max-w-5xl"><div className="flex flex-col justify-between gap-4 border-b border-[#E5E6EB] pb-4 sm:flex-row sm:items-center"><div><div className="flex items-center gap-3"><h3 className="font-mono text-lg font-semibold text-[#1F2329]">{order.workOrderId}</h3><StatusBadge status={order.status} /><RiskBadge level={order.riskLevel} /></div><button className="mt-2 text-sm font-semibold text-[#3A3F47] hover:underline" onClick={() => navigate(`/equipment/${order.deviceId}`)}>{order.deviceName}</button></div><div className="text-right"><div className="text-xs text-[#8F959E]">负责人</div><div className="mt-1 font-medium">{order.assignee}</div></div></div>
       <div className="mt-5 grid gap-4 lg:grid-cols-3"><Panel title="故障描述"><div className="p-4 text-sm leading-6 text-slate-600">{order.faultDescription}</div></Panel><Panel title="检修建议"><ul className="space-y-2 p-4 text-sm text-slate-600">{order.maintenanceSuggestion.map((item) => <li key={item}>· {item}</li>)}</ul></Panel><Panel title="工单信息"><div className="space-y-2 p-4 text-sm"><div className="flex justify-between"><span className="text-slate-400">创建人</span><span>{order.createdBy}</span></div><div className="flex justify-between"><span className="text-slate-400">创建时间</span><span>{new Date(order.createdTime).toLocaleString('zh-CN')}</span></div><div className="flex justify-between"><span className="text-slate-400">截止时间</span><span>{new Date(order.deadline).toLocaleString('zh-CN')}</span></div><div className="flex justify-between"><span className="text-slate-400">维修前健康度</span><strong>{order.healthScoreBefore}</strong></div>{order.healthScoreAfter !== undefined && <div className="flex justify-between"><span className="text-slate-400">维修后健康度</span><strong className="text-emerald-600">{order.healthScoreAfter}</strong></div>}</div></Panel></div>
@@ -43,11 +61,12 @@ export function WorkOrdersPage() {
   const partsQuery = useQuery({ queryKey: ['spare-parts'], queryFn: () => api<SparePart[]>('/spare-parts') });
   const detailQuery = useQuery({ queryKey: ['work-order', workOrderId], queryFn: () => api<WorkOrder>(`/work-orders/${workOrderId}`), enabled: Boolean(workOrderId) });
   const rows = useMemo(() => (query.data ?? []).filter((item) => (!status || item.status === status) && (!search || `${item.workOrderId}${item.deviceName}${item.assignee}`.toLowerCase().includes(search.toLowerCase()))), [query.data, status, search]);
+  const selectedDetail = resolveWorkOrderDetail(detailQuery.data, query.data, workOrderId);
   if (query.isLoading || partsQuery.isLoading) return <Loading />; if (query.isError || partsQuery.isError) return <ErrorState error={query.error ?? partsQuery.error} />;
   return <div><PageHeader title="维修工单" description="按标准状态机推进维修任务，并联动设备、预警和备件库存" /><DemoDisclaimer compact />
     <div className="panel mt-4 grid grid-cols-2 overflow-hidden sm:grid-cols-5">{stages.map((item, index) => { const count = query.data?.filter((order) => order.status === item).length ?? 0; return <button key={item} className={`p-4 text-left transition-colors hover:bg-[#FAFAFA] ${index > 0 ? 'border-l border-[#E5E6EB]' : ''} ${status === item ? 'bg-[#F2F3F5]' : ''}`} onClick={() => setStatus(status === item ? '' : item)}><div className={`text-xl font-semibold tabular-nums ${item === '已完成' ? 'text-emerald-700' : 'text-[#1F2329]'}`}>{count}</div><div className="mt-1 text-xs text-[#646A73]">{item}</div></button>; })}</div>
     <div className="panel mt-4 p-4"><div className="flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search className="absolute left-3 top-2.5 text-slate-400" size={17} /><input className="input pl-9" placeholder="搜索工单、设备或负责人" value={search} onChange={(event) => setSearch(event.target.value)} /></div><select className="input sm:w-44" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">全部状态</option>{[...stages, '已取消'].map((item) => <option key={item}>{item}</option>)}</select></div></div>
     <div className="panel mt-4 table-wrap">{rows.length ? <table className="data-table"><thead><tr><th>工单编号 / 创建时间</th><th>设备</th><th>风险等级</th><th>故障描述</th><th>负责人</th><th>截止时间</th><th>状态</th><th>操作</th></tr></thead><tbody>{rows.map((order) => <tr key={order.workOrderId} className="cursor-pointer" onClick={() => navigate(`/work-orders/${order.workOrderId}`)}><td><div className="font-mono text-xs font-semibold">{order.workOrderId}</div><div className="subtle mt-1">{new Date(order.createdTime).toLocaleString('zh-CN')}</div></td><td className="font-semibold text-slate-800">{order.deviceName}</td><td><RiskBadge level={order.riskLevel} /></td><td><div className="max-w-xs truncate">{order.faultDescription}</div></td><td>{order.assignee}</td><td className={new Date(order.deadline) < new Date() && !['已完成', '已取消'].includes(order.status) ? 'font-medium text-red-600' : ''}>{new Date(order.deadline).toLocaleString('zh-CN')}</td><td><StatusBadge status={order.status} /></td><td><button className="btn-secondary min-h-8 px-2.5 py-1.5">查看处理</button></td></tr>)}</tbody></table> : <Empty />}</div>
-    {workOrderId && (detailQuery.isLoading ? <Modal title="维修工单详情" onClose={() => navigate('/work-orders')}><Loading /></Modal> : detailQuery.data ? <WorkOrderDetail order={detailQuery.data} parts={partsQuery.data ?? []} onClose={() => navigate('/work-orders')} /> : <Modal title="维修工单详情" onClose={() => navigate('/work-orders')}><ErrorState error={detailQuery.error} /></Modal>)}
+    {workOrderId && (detailQuery.isLoading && !selectedDetail ? <Modal title="维修工单详情" onClose={() => navigate('/work-orders')}><Loading /></Modal> : selectedDetail ? <WorkOrderDetail order={selectedDetail} parts={partsQuery.data ?? []} onClose={() => navigate('/work-orders')} /> : <Modal title="维修工单详情" onClose={() => navigate('/work-orders')}><ErrorState error={detailQuery.error} /></Modal>)}
   </div>;
 }

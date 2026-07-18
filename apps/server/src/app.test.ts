@@ -20,6 +20,9 @@ describe('Mock API', () => {
     const equipment = await request(app).get('/api/equipment').expect(200);
     expect(equipment.body.success).toBe(true); expect(equipment.body.data).toHaveLength(12);
     expect(equipment.body.data[0].deviceName).toBe('1号引风机');
+    const integration = await request(app).get('/api/integration/status').expect(200);
+    expect(integration.body.data.capabilities.workOrders.mode).toBe('mock');
+    expect(integration.body.data.capabilities.equipment.mode).toBe('mock');
     const notification = await request(app).post('/api/notifications/test').send({}).expect(200);
     expect(notification.body.data.delivered).toBe(true); expect(notification.body.data.messageId).toContain('mock');
   });

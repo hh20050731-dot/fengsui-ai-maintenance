@@ -5,6 +5,7 @@ import type { AiDiagnosis, Equipment } from '@fengsui/shared';
 import { PageHeader } from '../components/PageHeader';
 import { DemoDisclaimer, ErrorState, Loading, RiskBadge } from '../components/ui';
 import { api, postJson } from '../services/api';
+import { generateUuid } from '../utils/generateUuid';
 
 const presets = ['当前风险最高的设备是什么？', '为什么1号引风机健康度下降？', '这条预警最可能是什么原因？', '建议优先检查哪些部位？', '是否建议立即停机？', '当前备件库存是否满足维修需求？', '最近有哪些重复发生的设备异常？', '哪些工单即将超期？'];
 interface ChatMessage { id: string; role: 'user' | 'assistant'; text?: string; diagnosis?: AiDiagnosis }
@@ -17,8 +18,8 @@ export function AiAssistantPage() {
   const equipmentQuery = useQuery({ queryKey: ['equipment'], queryFn: () => api<Equipment[]>('/equipment') });
   const [deviceId, setDeviceId] = useState('IDF-001'); const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([{ id: 'welcome', role: 'assistant', text: '这里是烽燧辅助研判。当前使用比赛演示规则库，并会引用设备工况、监测趋势和知识条目辅助判断。请选择设备或直接点击预置问题。' }]);
-  const mutation = useMutation({ mutationFn: ({ question, id }: { question: string; id: string }) => postJson<AiDiagnosis>('/ai/diagnose', { deviceId: id, question }), onSuccess: (result) => setMessages((items) => [...items, { id: crypto.randomUUID(), role: 'assistant', diagnosis: result }]) });
-  const send = (question: string) => { const text = question.trim(); if (!text || mutation.isPending) return; setMessages((items) => [...items, { id: crypto.randomUUID(), role: 'user', text }]); mutation.mutate({ question: text, id: deviceId }); setInput(''); };
+  const mutation = useMutation({ mutationFn: ({ question, id }: { question: string; id: string }) => postJson<AiDiagnosis>('/ai/diagnose', { deviceId: id, question }), onSuccess: (result) => setMessages((items) => [...items, { id: generateUuid(), role: 'assistant', diagnosis: result }]) });
+  const send = (question: string) => { const text = question.trim(); if (!text || mutation.isPending) return; setMessages((items) => [...items, { id: generateUuid(), role: 'user', text }]); mutation.mutate({ question: text, id: deviceId }); setInput(''); };
   if (equipmentQuery.isLoading) return <Loading />; if (equipmentQuery.isError) return <ErrorState error={equipmentQuery.error} />;
   const current = equipmentQuery.data?.find((item) => item.deviceId === deviceId);
   return <div><PageHeader title="辅助研判" description="基于工况、趋势证据与运维知识库的规则辅助判断" /><DemoDisclaimer />

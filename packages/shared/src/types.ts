@@ -118,6 +118,8 @@ export interface WorkOrder {
   completedAt?: string;
   verificationResult?: string;
   completionIdempotencyKey?: string;
+  syncStatus?: 'synced' | 'pending';
+  syncMessage?: string;
 }
 
 export interface SparePart {

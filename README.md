@@ -22,6 +22,7 @@
 - 后端：Node.js、TypeScript、Express 5、Zod、原生 Fetch 飞书 OpenAPI 适配。
 - 测试与质量：Vitest、Supertest、Playwright、ESLint、Prettier、TypeScript strict。
 - 部署：Vercel Serverless 或普通 Node 服务器。
+- 备用部署：腾讯云 EdgeOne Makers 静态站点（浏览器离线演示数据适配器）。
 
 ## 目录
 
@@ -62,6 +63,17 @@ Mock 模式会把成功的设备、预警、工单和库存操作记录保存在
 
 Feishu 真实模式不会把 `localStorage` 作为数据源，也不会重放浏览器演示日志；设备、工单和库存仍由 `FeishuBitableRepository` 读写飞书多维表格。
 
+### 无外网演示与生产预览
+
+完全离线演示不需要启动 Node API。`build:edgeone` 会固定使用 Vite 的 `edgeone` 模式并直接启用浏览器本地模拟仓库，不会先尝试 `/api` 或飞书 SDK：
+
+```powershell
+npm run build:edgeone
+npm run preview -- --host 0.0.0.0
+```
+
+本机访问 `http://localhost:4173`；同一局域网内的其他设备访问 `http://<演示电脑局域网IP>:4173`。首次使用局域网访问时，Windows 防火墙可能要求允许 Node.js 在“专用网络”通信。GLB、图标和全部前端脚本均由 `apps/web/dist` 本地提供。详细验证和外部资源清单见 [离线演示保障](docs/13-离线演示保障与外部资源清单.md)。
+
 质量命令：
 
 ```bash
@@ -82,7 +94,7 @@ npm run test:e2e
 - 前端公开的 `VITE_FEISHU_APP_ID`
 - 发送机器人消息时的 `FEISHU_NOTIFICATION_CHAT_ID`
 
-任一必要项缺失时，服务端只记录缺失变量名并自动使用 Mock，不会输出 Secret/Token，也不会导致页面白屏。详细来源和后台操作见 [飞书自建应用创建指南](docs/03-飞书自建应用创建指南.md) 与 [本地运行指南](docs/02-本地运行指南.md)。
+飞书客户端基础能力只要求 `FEISHU_APP_ID`、`FEISHU_APP_SECRET` 和 `FEISHU_BITABLE_APP_TOKEN`。各业务模块按自身表 ID 独立启用：例如只配置 `FEISHU_WORK_ORDER_TABLE_ID` 时，维修工单真实读写飞书，设备、遥测、预警和备件等未配置模块继续使用 Mock，不会触发全局降级。服务端只记录缺失变量名，不会输出 Secret/Token。详细来源和后台操作见 [飞书自建应用创建指南](docs/03-飞书自建应用创建指南.md) 与 [本地运行指南](docs/02-本地运行指南.md)。
 
 ## 环境变量速查
 
@@ -96,13 +108,14 @@ npm run test:e2e
 | `FEISHU_VERIFICATION_TOKEN` | 事件来源校验 | 开启事件回调时 | 否 | 事件订阅配置 |
 | `FEISHU_ENCRYPT_KEY` | 加密事件预留 | 使用加密事件时 | 否 | 事件订阅配置 |
 | `FEISHU_BITABLE_APP_TOKEN` | 多维表格 App Token | 是 | 否 | 多维表格 URL |
-| `FEISHU_*_TABLE_ID` | 九张表的 table_id | 是 | 否 | 多维表格 URL / 初始化脚本输出 |
+| `FEISHU_*_TABLE_ID` | 各业务表的 table_id；按启用模块分别配置 | 对应模块启用时 | 否 | 多维表格 URL / 初始化脚本输出 |
 | `FEISHU_NOTIFICATION_CHAT_ID` | 机器人默认会话 | 发送群消息时 | 否 | 目标会话 ID |
 | `AI_PROVIDER` | `rule` / 预留真实 Provider | 否 | 否 | 自行设置 |
 | `OPENAI_API_KEY`、`OPENAI_MODEL` | 预留真实大模型 | 选择相应 Provider 时 | 否 | 模型服务商 |
 | `VITE_API_BASE_URL` | 浏览器 API 地址 | 视部署方式 | 可选 | 部署 API 地址；同域留空/`/api` |
 | `VITE_APP_MODE` | 前端显示模式提示 | 是 | 否 | 与服务端一致 |
 | `VITE_FEISHU_APP_ID` | 端内免登 App ID（可公开） | 是 | 否 | 开发者后台 |
+| `VITE_OFFLINE_DEMO` | `true` 时强制使用浏览器本地演示仓库；未设置时接口故障也会自动降级 | 否 | 静态备用部署建议 | 自行设置 |
 | `DRY_RUN` | 初始化脚本只检查/写入 | 首次建议 `true` | 否 | 自行设置 |
 
 严禁创建 `VITE_FEISHU_APP_SECRET`。所有 Secret、访问令牌和 API Key 只允许进入服务端环境变量。
@@ -115,6 +128,8 @@ NODE_ENV=production npm run start -w @fengsui/server
 ```
 
 普通 Node 服务器会从 `apps/web/dist` 提供前端并托管 `/api`。Vercel 配置见 `vercel.json` 和 [Vercel 部署指南](docs/09-Vercel部署指南.md)。生产飞书网页应用必须使用 HTTPS。
+
+腾讯云 EdgeOne Makers 备用站点保持仓库根目录构建，使用 `npm ci`、`npm run build:edgeone`、输出 `apps/web/dist`；该构建命令已强制启用离线演示模式，平台可额外设置 `VITE_OFFLINE_DEMO=true` 作为显式标识。仓库已提供 `edgeone.json` 与只处理 HTML 导航的 `middleware.js`，用于 `/digital-twin` 等 SPA 路由刷新回退；不会影响现有 Vercel 配置。完整控制台填写项见 [EdgeOne Pages 备用部署指南](docs/14-EdgeOne-Pages备用部署指南.md)。
 
 ## 需要用户完成
 
@@ -133,3 +148,4 @@ NODE_ENV=production npm run start -w @fengsui/server
 - [免登配置](docs/04-飞书网页应用免登配置.md) · [多维表格字段](docs/05-多维表格字段模板.md) · [初始化](docs/06-多维表格初始化指南.md)
 - [机器人](docs/07-机器人配置指南.md) · [权限](docs/08-权限清单.md) · [Vercel](docs/09-Vercel部署指南.md)
 - [比赛演示脚本](docs/10-比赛演示脚本.md) · [排错](docs/11-常见问题与排错.md) · [真实数据接入](docs/12-真实数据接入说明.md)
+- [离线演示与外部资源清单](docs/13-离线演示保障与外部资源清单.md) · [EdgeOne Pages 备用部署](docs/14-EdgeOne-Pages备用部署指南.md)
