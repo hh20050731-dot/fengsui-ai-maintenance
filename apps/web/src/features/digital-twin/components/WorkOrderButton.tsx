@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClipboardPlus, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import clsx from 'clsx';
 import type { Alert, WorkOrder } from '@fengsui/shared';
 import { api, idempotencyKey, postJson } from '../../../services/api';
 import type { FaultScenario } from '../digitalTwinTypes';
@@ -27,6 +28,7 @@ export function WorkOrderButton({ scenario, deviceId, deviceName }: { scenario: 
   });
   const relatedOrderId = alert?.relatedWorkOrderId;
   const disabledReason = scenario.id === 'normal' ? '正常运行场景无需生成工单' : alertsQuery.isLoading ? '正在读取关联预警' : !alert ? '当前没有可关联的设备预警' : '';
-  if (relatedOrderId) return <button type="button" className="btn-primary mt-4 w-full" onClick={() => navigate(`/work-orders/${relatedOrderId}`)}><ExternalLink size={15} />查看关联工单</button>;
-  return <div className="mt-4"><button type="button" className="btn-primary w-full" disabled={Boolean(disabledReason) || createOrder.isPending} title={disabledReason || undefined} onClick={() => createOrder.mutate()}><ClipboardPlus size={15} />{createOrder.isPending ? '正在生成…' : '生成运维工单'}</button>{disabledReason && <div className="mt-1.5 text-center text-[11px] text-[#8F959E]">{disabledReason}</div>}{createOrder.isError && <div className="mt-2 rounded border border-red-200 bg-red-50 p-2 text-xs text-red-700">{createOrder.error.message}</div>}</div>;
+  if (relatedOrderId) return <button type="button" className="twin-order-button twin-order-action" onClick={() => navigate(`/work-orders/${relatedOrderId}`)}><ExternalLink size={15} />查看关联工单</button>;
+  if (scenario.id === 'normal') return <div className="twin-order-help twin-order-action">当前运行状态正常，无需创建维修工单。</div>;
+  return <div className="twin-order-action"><button type="button" className={clsx('twin-order-button', scenario.risk === '高' && 'is-danger')} disabled={Boolean(disabledReason) || createOrder.isPending} title={disabledReason || undefined} onClick={() => createOrder.mutate()}><ClipboardPlus size={15} />{createOrder.isPending ? '正在生成…' : '生成维修工单'}</button>{disabledReason && <div className="twin-order-help">{disabledReason}</div>}{createOrder.isError && <div className="twin-order-error">{createOrder.error.message}</div>}</div>;
 }

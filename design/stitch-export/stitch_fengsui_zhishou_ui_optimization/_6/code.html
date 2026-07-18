@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Device Overview - Fengsui Zhishou</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ffb4ab",
+                      "surface-dim": "#1e293b",
+                      "inverse-primary": "#0353da",
+                      "on-tertiary-fixed": "#390c00",
+                      "on-error-container": "#ffdad6",
+                      "primary-container": "#0052d9",
+                      "surface-tint": "#b4c5ff",
+                      "tertiary-container": "#aa3500",
+                      "on-surface": "#dae2fd",
+                      "surface-container": "#171f33",
+                      "on-secondary-fixed": "#021848",
+                      "on-tertiary-container": "#ffccbc",
+                      "on-surface-variant": "#c3c6d7",
+                      "on-background": "#dae2fd",
+                      "on-secondary-fixed-variant": "#334576",
+                      "primary-fixed": "#dbe1ff",
+                      "surface-bright": "#31394d",
+                      "secondary": "#b4c5ff",
+                      "on-error": "#690005",
+                      "inverse-surface": "#dae2fd",
+                      "surface-container-highest": "#2d3449",
+                      "secondary-container": "#364779",
+                      "risk-medium": "#f59e0b",
+                      "on-primary-fixed": "#00174b",
+                      "secondary-fixed-dim": "#b4c5ff",
+                      "secondary-fixed": "#dbe1ff",
+                      "lum-border": "rgba(255, 255, 255, 0.1)",
+                      "on-primary": "#002a78",
+                      "surface-container-high": "#222a3d",
+                      "outline-variant": "#434654",
+                      "on-tertiary": "#5c1900",
+                      "on-secondary-container": "#a6b7f0",
+                      "on-primary-container": "#cbd6ff",
+                      "primary": "#b4c5ff",
+                      "background": "#0b1326",
+                      "surface-container-lowest": "#060e20",
+                      "error-container": "#93000a",
+                      "risk-low": "#10b981",
+                      "on-tertiary-fixed-variant": "#832700",
+                      "tertiary-fixed-dim": "#ffb59c",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "risk-high": "#E34D59",
+                      "surface-container-low": "#131b2e",
+                      "inverse-on-surface": "#283044",
+                      "tertiary-fixed": "#ffdbd0",
+                      "surface": "#0b1326",
+                      "tertiary": "#ffb59c",
+                      "outline": "#8d90a0",
+                      "surface-variant": "#2d3449",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "on-secondary": "#1c2e5e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "sm": "8px",
+                      "gutter": "16px",
+                      "xl": "32px",
+                      "margin": "24px",
+                      "lg": "24px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "body-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-caps": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "title-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "body-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .panel-border { border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glow-critical { box-shadow: 0 0 15px rgba(227, 77, 89, 0.2); }
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .status-bar-low { border-left: 4px solid theme('colors.risk-low'); }
+        .status-bar-med { border-left: 4px solid theme('colors.risk-medium'); }
+        .status-bar-high { border-left: 4px solid theme('colors.risk-high'); }
+
+        @media (prefers-reduced-motion: no-preference) {
+            /* Scanning Shimmer */
+            .shimmer-card::before {
+                content: '';
+                position: absolute;
+                top: 0; left: -150%; width: 50%; height: 100%;
+                background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
+                transform: skewX(-20deg);
+                animation: scan-shimmer 4s infinite linear;
+                pointer-events: none;
+                z-index: 1;
+            }
+            @keyframes scan-shimmer {
+                0% { left: -150%; }
+                50% { left: 200%; }
+                100% { left: 200%; }
+            }
+
+            /* Value Pulse */
+            .value-pulse {
+                display: inline-block;
+                animation: value-pulse 0.5s ease-out;
+            }
+            @keyframes value-pulse {
+                0% { transform: scale(1); text-shadow: none; color: inherit; }
+                30% { transform: scale(1.05); text-shadow: 0 0 10px currentColor; color: theme('colors.primary'); }
+                100% { transform: scale(1); text-shadow: none; color: inherit; }
+            }
+
+            /* SVG Dash Flow */
+            .path-flow {
+                stroke-dasharray: 20;
+                animation: dash-flow 2s linear infinite;
+                filter: drop-shadow(0 0 4px theme('colors.primary'));
+            }
+            @keyframes dash-flow {
+                to { stroke-dashoffset: -40; }
+            }
+
+            /* Radar Sweep */
+            .radar-sweep {
+                position: absolute;
+                inset: -10%;
+                border-radius: 50%;
+                background: conic-gradient(from 0deg, transparent 70%, rgba(255,255,255,0.1) 100%);
+                animation: radar-sweep 4s linear infinite;
+                pointer-events: none;
+                z-index: 10;
+            }
+            @keyframes radar-sweep {
+                to { transform: rotate(360deg); }
+            }
+
+            /* Critical Pulse */
+            .critical-pulse {
+                animation: critical-pulse 2s infinite ease-in-out;
+            }
+            @keyframes critical-pulse {
+                0%, 100% { filter: drop-shadow(0 0 2px theme('colors.risk-high')); opacity: 0.8; transform: scale(0.95); }
+                50% { filter: drop-shadow(0 0 10px theme('colors.risk-high')); opacity: 1; transform: scale(1.05); }
+            }
+
+            /* Live Blinker */
+            .live-blinker {
+                animation: blink 1.5s infinite ease-in-out;
+            }
+            @keyframes blink {
+                0%, 100% { opacity: 0.4; box-shadow: 0 0 0 transparent; }
+                50% { opacity: 1; box-shadow: 0 0 6px theme('colors.risk-low'); }
+            }
+
+            /* Entry Animations */
+            .entry-fade-up {
+                opacity: 0;
+                transform: translateY(20px);
+                animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @keyframes fade-up {
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .delay-1 { animation-delay: 0.1s; }
+            .delay-2 { animation-delay: 0.2s; }
+            .delay-3 { animation-delay: 0.3s; }
+            .delay-4 { animation-delay: 0.4s; }
+            .delay-5 { animation-delay: 0.5s; }
+            .delay-6 { animation-delay: 0.6s; }
+        }
+
+        /* Hover States for Health Ranking */
+        .health-item {
+            border-left: 2px solid transparent;
+            transition: all 0.2s ease-out;
+        }
+        .health-item:hover {
+            border-left: 4px solid theme('colors.primary');
+            background: linear-gradient(to right, rgba(180,197,255,0.1), transparent);
+            padding-left: theme('spacing.sm');
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-hidden flex h-screen">
+<!-- Side Navigation -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low dark:bg-surface-dim shadow-sm flex flex-col py-lg z-50">
+<div class="px-md mb-xl flex items-center gap-sm">
+<div class="h-8 w-8 rounded-DEFAULT bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary leading-none">Fengsui Zhishou</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">O&amp;M Platform</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto space-y-xs px-sm">
+<!-- Active: Overview -->
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-primary dark:text-inverse-primary font-bold border-l-4 border-primary dark:border-inverse-primary bg-primary-container/20 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined">factory</span>
+<span>Assets</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined">notifications_active</span>
+<span>Alert Center</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined">engineering</span>
+<span>Work Orders</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+<span>Diagnostics</span>
+</a>
+</div>
+<div class="mt-auto px-sm pt-md border-t border-lum-border">
+<a class="flex items-center gap-md px-md py-sm rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col ml-64 bg-background">
+<!-- Top Navigation -->
+<header class="h-16 w-full sticky top-0 z-40 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flex justify-between items-center px-lg">
+<div class="flex items-center gap-sm">
+<span class="font-title-sm text-title-sm text-on-surface-variant">Dashboards</span>
+<span class="material-symbols-outlined text-outline text-sm">chevron_right</span>
+<span class="font-title-sm text-title-sm text-primary">Device Overview</span>
+<div class="flex items-center gap-xs ml-4 px-2 py-1 bg-surface-container rounded-full border border-lum-border">
+<div class="w-2 h-2 rounded-full bg-risk-low live-blinker"></div>
+<span class="text-[10px] font-label-caps text-risk-low uppercase">Live</span>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">schedule</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">health_metrics</span>
+</button>
+<div class="h-8 w-[1px] bg-lum-border mx-sm"></div>
+<button class="flex items-center gap-xs px-md py-xs rounded-DEFAULT border border-primary/30 text-primary hover:bg-primary/10 transition-colors">
+<span class="font-label-caps text-label-caps">Feishu Sync</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden ml-sm border border-lum-border">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A detailed headshot portrait of an industrial operations manager wearing safety gear, illuminated by cool blue control room screens. Deep shadows, modern cyberpunk aesthetic, high contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwrLRufZFxe4qwjadIgfYZ7c0qxAhcuuAlXZfIyAr1y9SOwFC9toN5AgI38uoAkOdIyRt1IDcGIIOYsics0Uxw8_OyPB8UAKSb4qJl1SHbyHJv_ChRy-kkPa_1GeQ_piZIvIkiPhr7ngMRDiB_Xr6EWcsIL7SdUjH7HKgUKeX4L-8olQV98zG1b-d7LlGG6qnn381EGf0gnGha8ZgmrfYnhvGp-E7xftLgejWRzjMEbi-BqMQglcRUpg"/>
+</div>
+</div>
+</header>
+<!-- Viewport Workspace -->
+<main class="flex-1 overflow-y-auto p-lg space-y-margin bg-grid-pattern">
+<!-- Top Row: Metrics -->
+<div class="grid grid-cols-4 gap-md">
+<!-- Metric 1 -->
+<div class="bg-surface-dim panel-border rounded-lg p-md flex flex-col justify-between hover:bg-white/5 transition-colors group cursor-pointer relative overflow-hidden shimmer-card entry-fade-up delay-1">
+<div class="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+<div class="flex justify-between items-start mb-md relative z-10">
+<span class="font-title-sm text-title-sm text-on-surface-variant">Total Assets</span>
+<span class="material-symbols-outlined text-outline">dns</span>
+</div>
+<div class="flex items-end justify-between relative z-10">
+<div class="flex items-baseline gap-xs">
+<span class="font-data-mono text-display-lg text-on-surface" id="val-1">1,248</span>
+</div>
+<div class="h-8 w-16 bg-surface-container rounded flex items-end overflow-hidden">
+<div class="w-1/4 h-1/2 bg-outline/30 mx-[1px]"></div>
+<div class="w-1/4 h-3/4 bg-outline/30 mx-[1px]"></div>
+<div class="w-1/4 h-2/3 bg-outline/30 mx-[1px]"></div>
+<div class="w-1/4 h-full bg-primary mx-[1px]"></div>
+</div>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="bg-surface-dim panel-border rounded-lg p-md flex flex-col justify-between hover:bg-white/5 transition-colors status-bar-low relative overflow-hidden shimmer-card entry-fade-up delay-2">
+<div class="flex justify-between items-start mb-md relative z-10">
+<span class="font-title-sm text-title-sm text-on-surface-variant">Healthy</span>
+<span class="material-symbols-outlined text-risk-low">check_circle</span>
+</div>
+<div class="flex items-end justify-between relative z-10">
+<div class="flex items-baseline gap-xs">
+<span class="font-data-mono text-display-lg text-on-surface" id="val-2">1,092</span>
+<span class="font-data-mono text-body-sm text-risk-low flex items-center"><span class="material-symbols-outlined text-[14px]">arrow_upward</span>87.5%</span>
+</div>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="bg-surface-dim panel-border rounded-lg p-md flex flex-col justify-between hover:bg-white/5 transition-colors status-bar-med relative overflow-hidden shimmer-card entry-fade-up delay-3">
+<div class="flex justify-between items-start mb-md relative z-10">
+<span class="font-title-sm text-title-sm text-on-surface-variant">Under Maintenance</span>
+<span class="material-symbols-outlined text-risk-medium">build</span>
+</div>
+<div class="flex items-end justify-between relative z-10">
+<div class="flex items-baseline gap-xs">
+<span class="font-data-mono text-display-lg text-on-surface" id="val-3">124</span>
+</div>
+</div>
+</div>
+<!-- Metric 4 -->
+<div class="bg-surface-dim panel-border rounded-lg p-md flex flex-col justify-between hover:bg-white/5 transition-colors status-bar-high glow-critical relative overflow-hidden shimmer-card entry-fade-up delay-4">
+<div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-risk-high animate-pulse"></div>
+<div class="flex justify-between items-start mb-md relative z-10">
+<span class="font-title-sm text-title-sm text-on-surface-variant">High Risk</span>
+<span class="material-symbols-outlined text-risk-high">warning</span>
+</div>
+<div class="flex items-end justify-between relative z-10">
+<div class="flex items-baseline gap-xs">
+<span class="font-data-mono text-display-lg text-risk-high" id="val-4">32</span>
+<span class="font-data-mono text-body-sm text-risk-high flex items-center"><span class="material-symbols-outlined text-[14px]">arrow_upward</span>+4</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Middle Row -->
+<div class="grid grid-cols-12 gap-md h-[400px]">
+<!-- Left: Line Chart Placeholder (Health Trend) -->
+<div class="col-span-8 bg-surface-dim panel-border rounded-lg p-md flex flex-col relative overflow-hidden entry-fade-up delay-5">
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-title-sm text-title-sm text-on-surface">Overall Health Trend (Last 24h)</h2>
+<div class="flex gap-sm">
+<span class="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant"><div class="w-3 h-3 rounded-sm bg-primary"></div> Average</span>
+<span class="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant"><div class="w-3 h-3 rounded-sm border border-lum-border border-dashed"></div> Forecast</span>
+</div>
+</div>
+<div class="flex-1 relative w-full h-full bg-surface-container rounded-DEFAULT border border-lum-border overflow-hidden flex items-end">
+<!-- Abstract Chart Representation using CSS -->
+<div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)]" style="background-size: 100% 25%;"></div>
+<svg class="w-full h-full absolute bottom-0" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M0,80 Q10,70 20,85 T40,60 T60,75 T80,50 T100,40 L100,100 L0,100 Z" fill="url(#grad1)" opacity="0.3"></path>
+<path class="path-flow" d="M0,80 Q10,70 20,85 T40,60 T60,75 T80,50 T100,40" fill="none" stroke="theme('colors.primary')" stroke-width="2"></path>
+<path d="M80,50 T100,40" fill="none" stroke="theme('colors.primary')" stroke-dasharray="4,4" stroke-width="2"></path>
+<circle cx="80" cy="50" fill="theme('colors.primary')" r="2"></circle>
+<defs>
+<lineargradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:theme('colors.primary');stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:theme('colors.primary');stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+</div>
+<!-- Right: Pie/Bar Combo -->
+<div class="col-span-4 flex flex-col gap-md">
+<div class="flex-1 bg-surface-dim panel-border rounded-lg p-md flex flex-col entry-fade-up delay-6">
+<h2 class="font-title-sm text-title-sm text-on-surface mb-md">Risk Distribution</h2>
+<div class="flex-1 flex items-center justify-center relative">
+<!-- Abstract Donut Chart -->
+<div class="w-32 h-32 rounded-full border-8 border-surface-container relative overflow-hidden radar-container">
+<div class="radar-sweep"></div>
+<div class="absolute inset-0 rounded-full border-8 border-risk-high" style="clip-path: polygon(50% 50%, 100% 0, 100% 30%, 50% 50%); transform: rotate(-45deg);"></div>
+<div class="absolute inset-0 rounded-full border-8 border-risk-medium" style="clip-path: polygon(50% 50%, 100% 30%, 100% 100%, 0 100%, 50% 50%); transform: rotate(15deg);"></div>
+<div class="absolute inset-0 rounded-full border-8 border-risk-low" style="clip-path: polygon(50% 50%, 0 100%, 0 0, 100% 0, 50% 50%); transform: rotate(-135deg);"></div>
+<div class="absolute inset-0 flex items-center justify-center flex-col z-20 critical-pulse bg-surface-container/50 rounded-full backdrop-blur-[2px]">
+<span class="font-data-mono text-title-sm text-on-surface">32</span>
+<span class="font-body-sm text-body-sm text-risk-high font-bold">Critical</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex-1 bg-surface-dim panel-border rounded-lg p-md flex flex-col entry-fade-up delay-6">
+<h2 class="font-title-sm text-title-sm text-on-surface mb-sm">Health Ranking</h2>
+<div class="flex-1 space-y-xs">
+<div class="flex items-center gap-sm health-item p-1 -ml-1 rounded-r-sm">
+<span class="font-data-mono text-body-sm text-on-surface-variant w-12 truncate">Boiler A</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-risk-low" style="width: 95%;"></div></div>
+<span class="font-data-mono text-body-sm text-on-surface w-8 text-right">95</span>
+</div>
+<div class="flex items-center gap-sm health-item p-1 -ml-1 rounded-r-sm">
+<span class="font-data-mono text-body-sm text-on-surface-variant w-12 truncate">Turb 02</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-risk-medium" style="width: 72%;"></div></div>
+<span class="font-data-mono text-body-sm text-on-surface w-8 text-right">72</span>
+</div>
+<div class="flex items-center gap-sm health-item p-1 -ml-1 rounded-r-sm">
+<span class="font-data-mono text-body-sm text-on-surface-variant w-12 truncate">Conv 01</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-risk-high" style="width: 45%;"></div></div>
+<span class="font-data-mono text-body-sm text-on-surface w-8 text-right">45</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const metrics = [
+            { id: 'val-1', base: 1248, variance: 5 },
+            { id: 'val-2', base: 1092, variance: 3 },
+            { id: 'val-3', base: 124, variance: 2 },
+            { id: 'val-4', base: 32, variance: 1 }
+        ];
+
+        // Ensure user prefers motion before starting random updates
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (!prefersReducedMotion) {
+            setInterval(() => {
+                // Randomly trigger updates
+                if (Math.random() > 0.4) {
+                    const metric = metrics[Math.floor(Math.random() * metrics.length)];
+                    const el = document.getElementById(metric.id);
+                    
+                    if (el) {
+                        const change = Math.floor(Math.random() * (metric.variance * 2 + 1)) - metric.variance;
+                        const newValue = Math.max(0, metric.base + change); // Keep positive
+                        
+                        // Reset animation
+                        el.classList.remove('value-pulse');
+                        void el.offsetWidth; // Trigger reflow
+                        
+                        el.textContent = newValue.toLocaleString();
+                        el.classList.add('value-pulse');
+                        
+                        // Slowly drift base value
+                        if (Math.random() > 0.8) {
+                            metric.base = newValue;
+                        }
+                    }
+                }
+            }, 1800);
+        }
+    });
+</script>
+</body></html>

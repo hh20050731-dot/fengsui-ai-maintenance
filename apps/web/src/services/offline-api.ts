@@ -2,6 +2,8 @@ import {
   assertWorkOrderTransition,
   createMockData,
   getStockStatus,
+  matchesWorkOrderIdentifier,
+  normalizeWorkOrderIdentity,
   type AiDiagnosis,
   type Alert,
   type DashboardData,
@@ -53,6 +55,15 @@ function initialState(): OfflineDemoState {
   return { version: STATE_VERSION, ...createMockData(), idempotency: {} };
 }
 
+function hydrateOfflineWorkOrder(order: WorkOrder): WorkOrder {
+  const [derivedPart = '待现场确认', ...derivedType] = order.faultDescription.split('·').map((item) => item.trim()).filter(Boolean);
+  return {
+    ...normalizeWorkOrderIdentity(order),
+    faultPart: order.faultPart || derivedPart,
+    faultType: order.faultType || derivedType.join(' · ') || order.faultDescription,
+  } as WorkOrder;
+}
+
 function isOfflineState(value: unknown): value is OfflineDemoState {
   if (!value || typeof value !== 'object') return false;
   const state = value as Partial<OfflineDemoState>;
@@ -72,7 +83,11 @@ function readState(): OfflineDemoState {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) as unknown : undefined;
-      if (isOfflineState(parsed)) { memoryState = parsed; return memoryState; }
+      if (isOfflineState(parsed)) {
+        parsed.workOrders = parsed.workOrders.map(hydrateOfflineWorkOrder);
+        memoryState = parsed;
+        return memoryState;
+      }
     } catch { /* 损坏的数据会由固定种子重新生成 */ }
   }
   memoryState = initialState();
@@ -96,13 +111,19 @@ function addLog(state: OfflineDemoState, entityType: string, entityId: string, a
 
 function getDevice(state: OfflineDemoState, id: string) { return state.equipment.find((item) => item.deviceId === id) ?? fail('DEVICE_NOT_FOUND', '未找到设备'); }
 function getAlert(state: OfflineDemoState, id: string) { return state.alerts.find((item) => item.alertId === id) ?? fail('ALERT_NOT_FOUND', '未找到预警'); }
-function getWorkOrder(state: OfflineDemoState, id: string) { return state.workOrders.find((item) => item.workOrderId === id) ?? fail('WORK_ORDER_NOT_FOUND', '未找到维修工单'); }
+function getWorkOrder(state: OfflineDemoState, id: string) { return state.workOrders.find((item) => matchesWorkOrderIdentifier(item, id)) ?? fail('WORK_ORDER_NOT_FOUND', '未找到维修工单'); }
 function getPart(state: OfflineDemoState, id: string) { return state.spareParts.find((item) => item.partId === id) ?? fail('PART_NOT_FOUND', '未找到备件'); }
 
 function replaceById<T>(rows: T[], key: keyof T, id: string, value: T) {
   const index = rows.findIndex((item) => String(item[key]) === id);
   if (index < 0) fail('ENTITY_NOT_FOUND', '未找到要更新的数据');
   rows[index] = value;
+}
+
+function replaceWorkOrder(state: OfflineDemoState, identifier: string, value: WorkOrder) {
+  const index = state.workOrders.findIndex((item) => matchesWorkOrderIdentifier(item, identifier));
+  if (index < 0) fail('WORK_ORDER_NOT_FOUND', `未找到维修工单：${identifier}`);
+  state.workOrders[index] = normalizeWorkOrderIdentity(value) as WorkOrder;
 }
 
 function telemetryInRange(state: OfflineDemoState, deviceId: string, range: string) {
@@ -178,11 +199,15 @@ function createWorkOrder(state: OfflineDemoState, alertId: string, body: CreateW
   const partNames = twin?.faultType === '联轴器不对中' ? ['联轴器'] : twin?.faultType === '轴承温升' ? ['风机轴承', '通用润滑油'] : alert.deviceId === 'IDF-001' ? ['风机轴承', '通用润滑油'] : [];
   const required = state.spareParts.filter((part) => partNames.includes(part.partName)).slice(0, 2);
   const riskLevel: WorkOrder['riskLevel'] = twin ? twin.riskLevel === '高' ? '高风险' : twin.riskLevel === '中高' ? '二级预警' : '关注' : alert.riskLevel;
+  const workOrderNo = `WO-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String(state.workOrders.length + 1).padStart(3, '0')}`;
+  const createdAt = twin?.createdAt ?? nowIso();
   const order: WorkOrder = {
-    workOrderId: `WO-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String(state.workOrders.length + 1).padStart(3, '0')}`,
+    id: workOrderNo, workOrderNo, workOrderId: workOrderNo,
     sourceAlertId: alert.alertId, deviceId: alert.deviceId, deviceName: alert.deviceName, riskLevel,
+    faultPart: twin?.faultPart ?? (alert.abnormalIndicators.join('、') || '待现场确认'),
+    faultType: twin?.faultType ?? alert.suspectedCause,
     faultDescription: twin ? `${twin.faultPart} · ${twin.faultType}；故障概率 ${twin.failureProbability}%；温度 ${twin.temperature}℃、振动 ${twin.vibration} mm/s；辅助研判：${twin.diagnosis}` : `${alert.abnormalIndicators.join('、')}异常：${alert.suspectedCause}`,
-    maintenanceSuggestion: twin?.advice ?? alert.maintenanceSuggestion, assignee: body.assignee, assigneeUserId: body.assigneeUserId, createdBy: '黄浩', createdTime: twin?.createdAt ?? nowIso(),
+    maintenanceSuggestion: twin?.advice ?? alert.maintenanceSuggestion, assignee: body.assignee, assigneeUserId: body.assigneeUserId, createdBy: '黄浩', createdAt, createdTime: createdAt,
     deadline: body.deadline ?? new Date(Date.now() + 24 * 3_600_000).toISOString(), requiredSpareParts: required.map((part) => ({ partId: part.partId, partName: part.partName, quantity: 1, unit: part.unit })), consumedSpareParts: [],
     processingRecord: [{ id: uid('REC'), time: nowIso(), operator: '黄浩', action: '创建工单', detail: twin ? `由预警 ${alert.alertId} 和3D数字孪生“${twin.faultType}”场景生成（离线演示）` : `由预警 ${alert.alertId} 生成（离线演示）` }],
     healthScoreBefore: twin?.healthScore ?? alert.healthScore, status: '待接单',
@@ -234,7 +259,7 @@ function transitionWorkOrder(state: OfflineDemoState, id: string, body: Transiti
     processingRecord: [...order.processingRecord, { id: uid('REC'), time: nowIso(), operator: body.operator, action: `状态推进：${order.status} → ${body.targetStatus}`, detail: body.note || '按标准流程推进' }],
     ...(body.targetStatus === '已完成' ? { completedAt: nowIso(), completionIdempotencyKey: body.idempotencyKey } : {}) };
   if (body.targetStatus === '已完成') completeWorkOrder(state, updated, body);
-  replaceById(state.workOrders, 'workOrderId', id, updated);
+  replaceWorkOrder(state, id, updated);
   if (updated.sourceAlertId && body.targetStatus !== '已完成') { const alert = getAlert(state, updated.sourceAlertId); replaceById(state.alerts, 'alertId', alert.alertId, { ...alert, alertStatus: body.targetStatus === '待接单' ? '已生成工单' : '处理中' }); }
   addLog(state, 'work-order', id, '推进工单状态', body.operator, `${order.status} → ${body.targetStatus}；${body.note}`);
   state.idempotency[body.idempotencyKey] = { entity: 'work-order', id }; writeState(state); return clone(updated);

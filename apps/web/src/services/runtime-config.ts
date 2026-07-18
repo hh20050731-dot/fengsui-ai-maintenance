@@ -8,5 +8,6 @@ export const runtimeConfig = {
   requestedMode,
   forceOfflineDemo: edgeOneStaticDemo || offlineDemoFlag === 'true',
   allowOfflineFallback: true,
-  apiTimeoutMs: 2_500,
+  apiReadTimeoutMs: 5_000,
+  apiWriteTimeoutMs: 15_000,
 } as const;

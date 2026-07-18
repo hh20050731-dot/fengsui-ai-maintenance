@@ -35,7 +35,11 @@ describe('Mock API', () => {
     const created = await request(app).post(`/api/alerts/${alertId}/create-work-order`).send({ assignee: '张工', assigneeUserId: 'zhang-gong', idempotencyKey: 'api-create-order-001' }).expect(201);
     const order = created.body.data as WorkOrder; expect(order.status).toBe('待接单');
     const advance = async (targetStatus: string, extra = {}, key = targetStatus) => request(app).post(`/api/work-orders/${order.workOrderId}/transition`).send({ targetStatus, operator: '黄浩', note: '接口测试推进', idempotencyKey: `api-${key}-001`, ...extra }).expect(200);
-    expect((await advance('已接单')).body.data.status).toBe('已接单');
+    const accepted = await advance('已接单');
+    expect(accepted.body.data.status).toBe('已接单');
+    const duplicateAccepted = await advance('已接单');
+    expect(duplicateAccepted.body.data.status).toBe('已接单');
+    expect(duplicateAccepted.body.data.processingRecord.filter((item: { action: string }) => item.action.includes('待接单 → 已接单'))).toHaveLength(1);
     expect((await advance('检修中')).body.data.status).toBe('检修中');
     expect((await advance('待验证', { inspectionResult: '发现轴承润滑状态异常', repairResult: '更换轴承与润滑油', consumedSpareParts: [{ partId: 'SP-001', quantity: 1 }, { partId: 'SP-002', quantity: 1 }] })).body.data.status).toBe('待验证');
     const stockBefore = (await request(app).get('/api/spare-parts').expect(200)).body.data.find((item: any) => item.partId === 'SP-001').currentStock;
@@ -55,6 +59,13 @@ describe('Mock API', () => {
     const { app } = createApp({ forceMock: true });
     const result = await request(app).post('/api/spare-parts/outbound').send({ partId: 'SP-001', quantity: -2 }).expect(400);
     expect(result.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('不存在的工单状态更新返回明确404', async () => {
+    const { app } = createApp({ forceMock: true });
+    const result = await request(app).post('/api/work-orders/WO-NOT-EXISTS/transition').send({ targetStatus: '已接单', operator: '黄浩', note: '不存在工单', idempotencyKey: 'missing-order-001' }).expect(404);
+    expect(result.body.error.code).toBe('WORK_ORDER_NOT_FOUND');
+    expect(result.body.error.message).toContain('未找到维修工单');
   });
 
   it('浏览器演示日志可在新实例恢复闭环状态，重复完成不重复扣库存，重置后回到初始状态', async () => {

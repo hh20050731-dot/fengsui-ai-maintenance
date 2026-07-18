@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Maintenance Work Orders - Fengsui Zhishou</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Brand Anchors -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ffb4ab",
+                        "surface-dim": "#1e293b",
+                        "inverse-primary": "#0353da",
+                        "on-tertiary-fixed": "#390c00",
+                        "on-error-container": "#ffdad6",
+                        "primary-container": "#0052d9",
+                        "surface-tint": "#b4c5ff",
+                        "tertiary-container": "#aa3500",
+                        "on-surface": "#dae2fd",
+                        "surface-container": "#171f33",
+                        "on-secondary-fixed": "#021848",
+                        "on-tertiary-container": "#ffccbc",
+                        "on-surface-variant": "#c3c6d7",
+                        "on-background": "#dae2fd",
+                        "on-secondary-fixed-variant": "#334576",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-bright": "#31394d",
+                        "secondary": "#b4c5ff",
+                        "on-error": "#690005",
+                        "inverse-surface": "#dae2fd",
+                        "surface-container-highest": "#2d3449",
+                        "secondary-container": "#364779",
+                        "risk-medium": "#f59e0b",
+                        "on-primary-fixed": "#00174b",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "secondary-fixed": "#dbe1ff",
+                        "lum-border": "rgba(255, 255, 255, 0.1)",
+                        "on-primary": "#002a78",
+                        "surface-container-high": "#222a3d",
+                        "outline-variant": "#434654",
+                        "on-tertiary": "#5c1900",
+                        "on-secondary-container": "#a6b7f0",
+                        "on-primary-container": "#cbd6ff",
+                        "primary": "#b4c5ff",
+                        "background": "#0b1326",
+                        "surface-container-lowest": "#060e20",
+                        "error-container": "#93000a",
+                        "risk-low": "#10b981",
+                        "on-tertiary-fixed-variant": "#832700",
+                        "tertiary-fixed-dim": "#ffb59c",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "risk-high": "#E34D59",
+                        "surface-container-low": "#131b2e",
+                        "inverse-on-surface": "#283044",
+                        "tertiary-fixed": "#ffdbd0",
+                        "surface": "#0b1326",
+                        "tertiary": "#ffb59c",
+                        "outline": "#8d90a0",
+                        "surface-variant": "#2d3449",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-secondary": "#1c2e5e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "xl": "32px",
+                        "margin": "24px",
+                        "lg": "24px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Hanken Grotesk"],
+                        "label-caps": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "title-sm": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "data-mono": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+                        "title-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "data-mono": ["13px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for data tables */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md overflow-hidden flex h-screen">
+<!-- Shared Component: SideNavBar -->
+<nav class="bg-surface-container-low dark:bg-surface-dim h-screen w-64 fixed left-0 top-0 shadow-sm flex flex-col h-full py-lg z-50 border-r border-lum-border">
+<!-- Brand Logo -->
+<div class="px-md mb-xl flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">domain</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary leading-tight">Fengsui Zhishou</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">O&amp;M Platform</div>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 overflow-y-auto px-sm flex flex-col gap-xs">
+<!-- Overview (Inactive) -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Overview</span>
+</a>
+<!-- Assets (Inactive) -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">factory</span>
+<span class="font-body-md text-body-md">Assets</span>
+</a>
+<!-- Alert Center (Inactive) -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">notifications_active</span>
+<span class="font-body-md text-body-md">Alert Center</span>
+</a>
+<!-- Work Orders (Active) -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary dark:text-inverse-primary font-bold border-l-4 border-primary dark:border-inverse-primary bg-primary-container/20 opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">engineering</span>
+<span class="font-body-md text-body-md">Work Orders</span>
+</a>
+<!-- Diagnostics (Inactive) -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="font-body-md text-body-md">Diagnostics</span>
+</a>
+<!-- Settings (Inactive) -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors mt-auto" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-64 flex flex-col h-screen relative">
+<!-- Shared Component: TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim h-16 w-full sticky top-0 z-40 border-b border-outline-variant dark:border-outline flex justify-between items-center px-lg">
+<!-- Left Side: Breadcrumb / Title (Implicit context from active nav) -->
+<div class="flex items-center gap-md">
+<span class="font-title-sm text-title-sm text-on-surface">Work Order Management</span>
+</div>
+<!-- Right Side: Actions & Profile -->
+<div class="flex items-center gap-lg">
+<div class="flex gap-sm">
+<button class="p-2 rounded text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors">
+<span class="material-symbols-outlined">schedule</span>
+</button>
+<button class="p-2 rounded text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors relative">
+<span class="material-symbols-outlined">health_metrics</span>
+<span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-risk-high animate-pulse"></span>
+</button>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary-container/10 border border-primary/30 rounded text-primary text-body-sm font-body-sm hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+                    Feishu Sync
+                </button>
+<div class="h-8 w-8 rounded-full bg-surface-container-highest border border-lum-border overflow-hidden cursor-pointer">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional headshot of an industrial operations manager in a high-tech control room environment, dramatic dark industrial lighting with subtle blue ambient rim light, confident expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdBHJlTWCuar8Zy_0hC3bnLqhUKCN3hfNYxck9dpd2baj3aW9v-KPdzIO44_VLrsI0JKOzAcm85_l0agRqlojtVPPSIKVraNcMCVI2Vu-w8IMfTntJsibFekmBVyWsTjleUW-dBkbOthu2zvPJTUcIPn76Fgt97rAv0eLzjfXakpfN-JADeVJIy7_loL0xCGEZTcEnmK1FH-dM4hdjDIXi3rEtMP3fVfUMO1PBJf3D6zAY-cV1eNeEhg"/>
+</div>
+</div>
+</header>
+<!-- Page Viewport -->
+<main class="flex-1 overflow-y-auto p-lg flex flex-col gap-lg relative z-0">
+<!-- Statistics Row -->
+<div class="grid grid-cols-5 gap-md">
+<!-- Stat Card: Pending -->
+<div class="bg-surface-dim border border-lum-border rounded p-md flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-risk-high/80"></div>
+<div class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-sm">Pending Approval</div>
+<div class="flex items-end justify-between">
+<div class="font-display-lg text-display-lg font-data-mono text-risk-high">12</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-20 text-4xl transform translate-x-2 translate-y-2 group-hover:scale-110 transition-transform">pending_actions</span>
+</div>
+</div>
+<!-- Stat Card: Accepted -->
+<div class="bg-surface-dim border border-lum-border rounded p-md flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-risk-medium/80"></div>
+<div class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-sm">Accepted</div>
+<div class="flex items-end justify-between">
+<div class="font-display-lg text-display-lg font-data-mono text-risk-medium">08</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-20 text-4xl transform translate-x-2 translate-y-2 group-hover:scale-110 transition-transform">assignment_turned_in</span>
+</div>
+</div>
+<!-- Stat Card: Repairing -->
+<div class="bg-surface-dim border border-lum-border rounded p-md flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary/80"></div>
+<div class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-sm">In Progress</div>
+<div class="flex items-end justify-between">
+<div class="font-display-lg text-display-lg font-data-mono text-primary">24</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-20 text-4xl transform translate-x-2 translate-y-2 group-hover:scale-110 transition-transform">build_circle</span>
+</div>
+</div>
+<!-- Stat Card: Validating -->
+<div class="bg-surface-dim border border-lum-border rounded p-md flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary/80"></div>
+<div class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-sm">Validating</div>
+<div class="flex items-end justify-between">
+<div class="font-display-lg text-display-lg font-data-mono text-secondary">05</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-20 text-4xl transform translate-x-2 translate-y-2 group-hover:scale-110 transition-transform">fact_check</span>
+</div>
+</div>
+<!-- Stat Card: Completed -->
+<div class="bg-surface-dim border border-lum-border rounded p-md flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-risk-low/80"></div>
+<div class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-sm">Completed (7d)</div>
+<div class="flex items-end justify-between">
+<div class="font-display-lg text-display-lg font-data-mono text-risk-low">142</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-20 text-4xl transform translate-x-2 translate-y-2 group-hover:scale-110 transition-transform">check_circle</span>
+</div>
+</div>
+</div>
+<!-- Toolbar / Filters -->
+<div class="flex items-center justify-between bg-surface-dim border border-lum-border rounded p-sm">
+<div class="flex items-center gap-sm">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2 text-on-surface-variant text-[20px]">search</span>
+<input class="bg-background border border-lum-border rounded pl-10 pr-3 py-2 text-body-sm font-body-sm text-on-surface placeholder-on-surface-variant focus:outline-none focus:border-primary w-64" placeholder="Search Order # or Device..." type="text"/>
+</div>
+<select class="bg-background border border-lum-border rounded px-3 py-2 text-body-sm font-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none">
+<option>All Statuses</option>
+<option>Pending</option>
+<option>Repairing</option>
+</select>
+<select class="bg-background border border-lum-border rounded px-3 py-2 text-body-sm font-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none">
+<option>All Risks</option>
+<option>Critical</option>
+<option>High</option>
+<option>Medium</option>
+</select>
+</div>
+<div class="flex gap-sm">
+<button class="px-4 py-2 bg-transparent border border-lum-border rounded text-body-sm font-body-sm text-on-surface hover:bg-surface-container-highest transition-colors">Reset</button>
+<button class="px-4 py-2 bg-primary text-on-primary font-bold rounded text-body-sm font-body-sm hover:bg-primary-fixed transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        Create Work Order
+                    </button>
+</div>
+</div>
+<!-- Data Table (Bento/Card style rows) -->
+<div class="flex-1 bg-surface-dim border border-lum-border rounded overflow-hidden flex flex-col">
+<!-- Header -->
+<div class="grid grid-cols-12 gap-4 px-md py-3 bg-surface-container-low border-b border-lum-border text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider sticky top-0">
+<div class="col-span-1">Order #</div>
+<div class="col-span-2">Created Time</div>
+<div class="col-span-2">Associated Device</div>
+<div class="col-span-3">Fault Description</div>
+<div class="col-span-1">Assignee</div>
+<div class="col-span-1">Deadline</div>
+<div class="col-span-1">Status</div>
+<div class="col-span-1 text-right">Actions</div>
+</div>
+<!-- Table Body -->
+<div class="flex-1 overflow-y-auto flex flex-col">
+<!-- Row 1: High Risk -->
+<div class="grid grid-cols-12 gap-4 px-md py-4 border-b border-lum-border hover:bg-surface-variant/50 transition-colors relative group items-center bg-risk-high/5">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-risk-high"></div>
+<div class="col-span-1 font-data-mono text-data-mono text-on-surface">WO-8921</div>
+<div class="col-span-2 font-data-mono text-data-mono text-on-surface-variant">2023-10-27 14:32</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">Centrifugal Pump A1</div>
+<div class="col-span-3 font-body-sm text-body-sm text-on-surface">Drive-end Bearing Vibration Anomaly detected. Exceeds ISO limits.</div>
+<div class="col-span-1 flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest border border-lum-border overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small circular avatar showing a stern-looking maintenance technician in protective gear, dark background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArwuRhdi4yXf_ktfS6RTz89JJgu9bM80aaD-lN_O6swwt1Z2565saSUgYr7gwl80A32vXpsTMlAAc6gM74muP9JkRBEJb9fOENIvifw00WXEl3Zd5mzxIM7_t9fM93OI7BddysvDKBqy0InmC2g_8GvI4pdfOOIiVtSzDGUYGbImUx3xIRJLoJmZ5EjDa4IKKTC3igFDRZCuXtipjPawwvv4c3LsaXeadDNIfYjR4kvgLYfMw8GbycQQ"/>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Chen L.</span>
+</div>
+<div class="col-span-1 font-data-mono text-data-mono text-risk-high">Today 18:00</div>
+<div class="col-span-1">
+<span class="inline-block px-2 py-1 rounded bg-risk-high/20 border border-risk-high/30 text-risk-high font-label-caps text-[10px] uppercase tracking-wide">Pending</span>
+</div>
+<div class="col-span-1 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors" title="Sync to Feishu">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors" title="View Process">
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Row 2: Medium Risk -->
+<div class="grid grid-cols-12 gap-4 px-md py-4 border-b border-lum-border hover:bg-surface-variant/50 transition-colors relative group items-center">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-risk-medium"></div>
+<div class="col-span-1 font-data-mono text-data-mono text-on-surface">WO-8919</div>
+<div class="col-span-2 font-data-mono text-data-mono text-on-surface-variant">2023-10-27 10:15</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">HVAC Chiller Unit 3</div>
+<div class="col-span-3 font-body-sm text-body-sm text-on-surface">Coolant pressure drop. Suspected minor leak in secondary loop.</div>
+<div class="col-span-1 flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest border border-lum-border overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Avatar portrait of a female industrial engineer in a dark cybernetic setting, professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2Qw8T9VMtFK06g_6U93R8P8kIwSAQasDFRBQAXeNAcItOotV0Alvs-uqjFsww8CjEqmmlGF_-BiW8d_NZah5zoMiddnubMx_hH8LzRmCJm7bx2q-awW-prsQh7Z_p9oM21vHQXvOzziqZGhWpmeB2kR2yd3q2-8cepNunusS3DHn9OyTWFXW-ZoGTUzvfcbRVp2msdBichwz50fbapagZ3DA3enR0uAvISrEj7PXaYR-YRbW5z_nlGg"/>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Wang S.</span>
+</div>
+<div class="col-span-1 font-data-mono text-data-mono text-on-surface-variant">Oct 28 12:00</div>
+<div class="col-span-1">
+<span class="inline-block px-2 py-1 rounded bg-primary/20 border border-primary/30 text-primary font-label-caps text-[10px] uppercase tracking-wide">Repairing</span>
+</div>
+<div class="col-span-1 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors" title="Sync to Feishu">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors" title="View Process">
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Row 3: Low Risk / Completed -->
+<div class="grid grid-cols-12 gap-4 px-md py-4 border-b border-lum-border hover:bg-surface-variant/50 transition-colors relative group items-center opacity-70">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-risk-low"></div>
+<div class="col-span-1 font-data-mono text-data-mono text-on-surface">WO-8910</div>
+<div class="col-span-2 font-data-mono text-data-mono text-on-surface-variant">2023-10-26 08:30</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">Conveyor Belt Motor B</div>
+<div class="col-span-3 font-body-sm text-body-sm text-on-surface">Scheduled maintenance: Lubrication and thermal imaging check.</div>
+<div class="col-span-1 flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Auto Assign</span>
+</div>
+<div class="col-span-1 font-data-mono text-data-mono text-on-surface-variant">--</div>
+<div class="col-span-1">
+<span class="inline-block px-2 py-1 rounded bg-risk-low/20 border border-risk-low/30 text-risk-low font-label-caps text-[10px] uppercase tracking-wide">Completed</span>
+</div>
+<div class="col-span-1 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors" title="View Process">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

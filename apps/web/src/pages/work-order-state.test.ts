@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { mergeUpdatedWorkOrder, resolveWorkOrderDetail, workOrderTransitionMessage } from './work-order-state.js';
 
 describe('工单状态更新后的前端映射', () => {
-  const original = { ...createMockData().workOrders[0]!, workOrderId: 'WO-20260718-001', status: '待接单' as const };
+  const original = { ...createMockData().workOrders[0]!, id: 'internal-001', workOrderNo: 'WO-20260718-001', workOrderId: 'WO-20260718-001', recordId: 'rec-frontend-001', status: '待接单' as const };
   const accepted = { ...original, status: '已接单' as const };
 
   it('立即把列表中的工单状态更新为已接单', () => {
@@ -11,7 +11,13 @@ describe('工单状态更新后的前端映射', () => {
   });
 
   it('详情请求短暂失败时使用列表中的已更新工单而不是显示未找到', () => {
-    expect(resolveWorkOrderDetail(undefined, [accepted], accepted.workOrderId)).toEqual(accepted);
+    expect(resolveWorkOrderDetail(undefined, [accepted], accepted.workOrderNo)).toEqual(accepted);
+  });
+
+  it('详情对象与列表对象合并后保留 recordId 和完整标识', () => {
+    const detailWithoutRecordId = { ...accepted, recordId: undefined };
+    const resolved = resolveWorkOrderDetail(detailWithoutRecordId, [accepted], accepted.workOrderNo);
+    expect(resolved).toMatchObject({ id: 'internal-001', workOrderNo: 'WO-20260718-001', recordId: 'rec-frontend-001', status: '已接单' });
   });
 
   it('接单成功使用明确提示，回读失败时提示同步刷新中', () => {

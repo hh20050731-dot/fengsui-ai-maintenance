@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fengsui Command Center - Spare Parts Inventory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#ffcc89",
+                      "inverse-on-surface": "#263140",
+                      "error-container": "#93000a",
+                      "on-background": "#d8e3f7",
+                      "secondary-fixed-dim": "#33dfae",
+                      "on-tertiary-container": "#674200",
+                      "surface-container-highest": "#2b3545",
+                      "on-surface": "#d8e3f7",
+                      "primary-fixed": "#b9eaff",
+                      "on-tertiary-fixed": "#291800",
+                      "error": "#ffb4ab",
+                      "on-primary-fixed-variant": "#004d61",
+                      "surface-bright": "#2f3a49",
+                      "on-primary": "#003544",
+                      "primary-container": "#28c8f5",
+                      "inverse-surface": "#d8e3f7",
+                      "tertiary-fixed": "#ffddb4",
+                      "on-secondary-fixed-variant": "#00513c",
+                      "surface": "#091422",
+                      "surface-variant": "#2b3545",
+                      "surface-container-high": "#202b3a",
+                      "on-tertiary-fixed-variant": "#633f00",
+                      "secondary-fixed": "#5bfcc9",
+                      "background": "#091422",
+                      "on-primary-container": "#005065",
+                      "surface-tint": "#55d5ff",
+                      "on-tertiary": "#452b00",
+                      "primary": "#8fe0ff",
+                      "surface-container": "#15202f",
+                      "primary-fixed-dim": "#55d5ff",
+                      "secondary-container": "#03ce9e",
+                      "secondary": "#44ebb8",
+                      "on-primary-fixed": "#001f29",
+                      "surface-container-low": "#111c2b",
+                      "surface-container-lowest": "#040f1d",
+                      "tertiary-container": "#f8a926",
+                      "outline": "#869399",
+                      "surface-dim": "#091422",
+                      "on-secondary-fixed": "#002116",
+                      "inverse-primary": "#006780",
+                      "on-surface-variant": "#bcc8cf",
+                      "on-secondary-container": "#00523d",
+                      "tertiary-fixed-dim": "#ffb955",
+                      "on-secondary": "#003829",
+                      "on-error": "#690005",
+                      "on-error-container": "#ffdad6",
+                      "outline-variant": "#3d494e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "margin-page": "24px",
+                      "panel-padding": "20px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "notoSans"
+                      ],
+                      "data-display": [
+                              "jetbrainsMono"
+                      ],
+                      "body-lg": [
+                              "notoSans"
+                      ],
+                      "body-sm": [
+                              "notoSans"
+                      ],
+                      "headline-md": [
+                              "notoSans"
+                      ],
+                      "data-label": [
+                              "jetbrainsMono"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-display": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-label": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #06111F;
+            background-image: 
+                linear-gradient(rgba(134, 147, 153, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(134, 147, 153, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        .panel {
+            background-color: rgba(12, 32, 52, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(72, 183, 226, 0.18);
+            transition: border-color 0.3s ease;
+        }
+        
+        .panel:hover {
+            border-color: rgba(68, 235, 184, 0.5); /* Secondary fixed dim equivalent */
+        }
+        
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: -1;
+            position: absolute;
+            pointer-events: none;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(68,235,184,0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            animation: scanline 8s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { transform: translateY(-100vh); }
+            100% { transform: translateY(100vh); }
+        }
+
+        .pulse-critical {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 180, 171, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 180, 171, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 180, 171, 0); }
+        }
+
+        .data-input {
+            background: rgba(4, 15, 29, 0.6);
+            border-bottom: 1px solid rgba(134, 147, 153, 0.3);
+            transition: all 0.2s ease;
+        }
+        .data-input:focus-within {
+            border-bottom-color: #8fe0ff; /* Primary */
+            background: linear-gradient(0deg, rgba(143,224,255,0.05) 0%, rgba(4,15,29,0.6) 100%);
+        }
+        
+        /* Custom Scrollbar for data tables */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(12, 32, 52, 0.5); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(134, 147, 153, 0.3); 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(68, 235, 184, 0.5); 
+        }
+    </style>
+</head>
+<body class="text-on-background font-body-sm min-h-screen flex flex-col antialiased overflow-x-hidden selection:bg-primary selection:text-on-primary">
+<div class="scanline"></div>
+<!-- TopNavBar (hidden on mobile, flex on desktop) -->
+<nav class="hidden md:flex fixed top-0 w-full z-50 justify-between items-center px-gutter h-16 bg-surface-container/90 backdrop-blur-xl border-b border-outline-variant/30 flat no shadows">
+<div class="flex items-center gap-6">
+<div class="font-display-lg text-display-lg font-bold text-primary tracking-tighter text-[28px] leading-[32px]">Fengsui Command Center</div>
+<div class="flex items-center gap-1 data-input px-3 py-1.5 rounded-t">
+<span class="material-symbols-outlined text-outline text-[18px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm text-on-surface placeholder:text-outline-variant w-48 outline-none" placeholder="Search Inventory..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<a class="text-on-surface-variant font-medium hover:text-secondary-fixed-dim transition-colors px-2 py-4" href="#">Plant Alpha-7</a>
+<a class="text-on-surface-variant font-medium hover:text-secondary-fixed-dim transition-colors px-2 py-4" href="#">Status: Online</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 hover:text-secondary-fixed-dim transition-colors px-2 py-4 mt-1 opacity-80 scale-95 transition-all" href="#">Sync: Active</a> <!-- Adjusted alignment for active state border -->
+</div>
+<div class="h-6 w-px bg-outline-variant/50"></div>
+<div class="flex gap-3">
+<button class="bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1.5 rounded font-data-label text-data-label border border-primary/30 transition-colors flex items-center gap-1">Alert Center</button>
+<button class="text-on-surface-variant hover:text-on-surface px-3 py-1.5 rounded font-data-label text-data-label border border-outline-variant/30 hover:border-outline-variant/80 transition-colors flex items-center gap-1">Feishu Link</button>
+</div>
+<div class="flex gap-2 text-outline">
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span></button>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span></button>
+</div>
+<img alt="Operator Profile" class="w-8 h-8 rounded-full border border-primary/30 object-cover" data-alt="A macro shot of a sleek, dark metallic industrial sensor array with glowing cyan LED accents. The lighting is cinematic and moody, emphasizing the high-tech, precision engineering of the device against a deep space background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzvV5_u0qHvHDscRenE5sqpDZghF9PyAYKalduWc3mwhsqTsv9bcgbruS3R04OXC8Vj9VUKCTpnwdiQoFvbb3j25qPYpEChOoMEcitkyMMQxPYU9scZpG0ZwltbOv0gu3qTWNmC5-hUpoksQfaSoNp3VChgFLVqq3lYVz94q2QrCaRTWm6OMXi3TsecrWdWjZHnLkhX1W0zyL-F6LEhzKAzMQzJJ30XrqcXPI-BboIG0VhGznvU6W7rg"/>
+</div>
+</nav>
+<div class="flex flex-1 pt-16"> <!-- Padding top for TopAppBar -->
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full flex flex-col py-6 z-40 bg-surface-container-lowest/95 backdrop-blur-2xl border-r border-outline-variant/20 shadow-lg shadow-primary/5 docked h-screen w-20 hover:w-64 transition-all duration-300 group overflow-hidden">
+<div class="px-4 mb-8 flex items-center gap-4 whitespace-nowrap">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high border border-outline-variant/30 flex items-center justify-center shrink-0 overflow-hidden relative">
+<div class="absolute inset-0 bg-primary/5 animate-pulse"></div>
+<span class="material-symbols-outlined text-primary text-[24px] relative z-10">memory</span>
+</div>
+<div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+<div class="font-headline-md text-headline-md text-on-surface text-[18px]">F-SCC</div>
+<div class="font-data-label text-data-label text-outline">V2.4.0-Stable</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-2 px-2">
+<a class="flex items-center gap-4 px-3 py-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap" href="#">
+<span class="material-symbols-outlined text-[20px] shrink-0">dashboard</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-3 py-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap" href="#">
+<span class="material-symbols-outlined text-[20px] shrink-0">hub</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Topology</span>
+</a>
+<a class="flex items-center gap-4 px-3 py-3 rounded-lg bg-secondary-container/20 text-secondary-fixed shadow-[0_0_15px_rgba(68,235,184,0.3)] border-r-4 border-secondary translate-x-1 duration-200 whitespace-nowrap" href="#">
+<span class="material-symbols-outlined text-[20px] shrink-0">build_circle</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Maintenance</span>
+</a>
+<a class="flex items-center gap-4 px-3 py-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap" href="#">
+<span class="material-symbols-outlined text-[20px] shrink-0">analytics</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Analytics</span>
+</a>
+<a class="flex items-center gap-4 px-3 py-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap" href="#">
+<span class="material-symbols-outlined text-[20px] shrink-0">history</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Logs</span>
+</a>
+</nav>
+<div class="px-2 mt-auto flex flex-col gap-2">
+<a class="flex items-center gap-4 px-3 py-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap" href="#">
+<span class="material-symbols-outlined text-[20px] shrink-0">help</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Support</span>
+</a>
+<a class="flex items-center gap-4 px-3 py-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap" href="#">
+<span class="material-symbols-outlined text-[20px] shrink-0">terminal</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Terminal</span>
+</a>
+<div class="px-2 pt-4 pb-2 mt-2 border-t border-outline-variant/20">
+<button class="w-full bg-error/10 text-error hover:bg-error/20 border border-error/30 py-2 rounded font-data-label text-data-label transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">stop_circle</span>
+<span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden group-hover:inline">Emergency Stop</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-20 p-margin-page overflow-y-auto">
+<!-- Header Section -->
+<header class="flex justify-between items-end mb-6">
+<div>
+<h1 class="font-display-lg text-display-lg text-on-surface text-[32px] leading-[40px]">Spare Parts Inventory</h1>
+<p class="font-data-label text-data-label text-outline mt-1 uppercase tracking-wider">Facility: Alpha-7 | Last Sync: 2 min ago</p>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 bg-transparent border border-primary text-primary hover:bg-primary/5 rounded font-data-label text-data-label transition-all shadow-[0_0_10px_rgba(143,224,255,0)] hover:shadow-[0_0_10px_rgba(143,224,255,0.2)]">Generate Report</button>
+<button class="px-4 py-2 bg-primary text-on-primary border border-primary rounded font-data-label text-data-label font-bold transition-all hover:bg-primary-fixed-dim">Order Parts</button>
+</div>
+</header>
+<!-- Grid Layout -->
+<div class="grid grid-cols-24 gap-gutter">
+<!-- KPI Row -->
+<div class="col-span-24 grid grid-cols-4 gap-gutter mb-2">
+<div class="panel p-panel-padding rounded-lg relative overflow-hidden group">
+<div class="absolute top-2 right-2 font-data-display text-data-display text-[10px] text-outline opacity-60">ID:KPI-01</div>
+<div class="font-data-label text-data-label text-outline mb-1">TOTAL PARTS LOGGED</div>
+<div class="font-display-lg text-display-lg text-primary text-[36px] leading-[44px]">14,285</div>
+<div class="flex items-center gap-1 text-secondary-fixed text-body-sm mt-2">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span>+2.4% vs last mo</span>
+</div>
+<!-- Subtle background visual -->
+<div class="absolute -bottom-4 -right-4 text-[100px] text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none">
+<span class="material-symbols-outlined font-thin">inventory_2</span>
+</div>
+</div>
+<div class="panel p-panel-padding rounded-lg relative overflow-hidden group">
+<div class="absolute top-2 right-2 font-data-display text-data-display text-[10px] text-outline opacity-60">ID:KPI-02</div>
+<div class="font-data-label text-data-label text-tertiary-fixed mb-1">LOW STOCK ALERTS</div>
+<div class="font-display-lg text-display-lg text-tertiary-fixed text-[36px] leading-[44px]">42</div>
+<div class="flex items-center gap-1 text-outline text-body-sm mt-2">
+<span>Requires review</span>
+</div>
+<div class="absolute top-0 left-0 w-1 h-full bg-tertiary-container/50"></div>
+</div>
+<div class="panel p-panel-padding rounded-lg relative overflow-hidden group border-error/30 shadow-[0_0_15px_rgba(255,180,171,0.1)]">
+<div class="absolute top-2 right-2 font-data-display text-data-display text-[10px] text-outline opacity-60">ID:KPI-03</div>
+<div class="font-data-label text-data-label text-error mb-1 flex items-center gap-2">
+<div class="w-2 h-2 bg-error rounded-full pulse-critical"></div>
+                            OUT OF STOCK
+                        </div>
+<div class="font-display-lg text-display-lg text-error text-[36px] leading-[44px]">7</div>
+<div class="flex items-center gap-1 text-error text-body-sm mt-2">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span>Impacting 3 orders</span>
+</div>
+<div class="absolute top-0 left-0 w-1 h-full bg-error"></div>
+</div>
+<div class="panel p-panel-padding rounded-lg relative overflow-hidden group">
+<div class="absolute top-2 right-2 font-data-display text-data-display text-[10px] text-outline opacity-60">ID:KPI-04</div>
+<div class="font-data-label text-data-label text-outline mb-1">FORECASTED USAGE (7D)</div>
+<div class="font-display-lg text-display-lg text-on-surface text-[36px] leading-[44px]">850</div>
+<div class="flex items-center gap-1 text-outline text-body-sm mt-2">
+<span>Units expected</span>
+</div>
+</div>
+</div>
+<!-- Main Content Row -->
+<div class="col-span-24 grid grid-cols-24 gap-gutter h-[500px]">
+<!-- Inventory Water Levels (Left Column) -->
+<div class="col-span-16 panel rounded-lg p-panel-padding flex flex-col relative">
+<div class="absolute top-3 right-3 font-data-display text-data-display text-[10px] text-outline opacity-60">ID:PNL-LVL</div>
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-md text-headline-md text-on-surface text-[18px]">Category Water Levels vs Safety Stock</h2>
+<div class="flex gap-2">
+<span class="flex items-center gap-1 text-[12px] text-outline"><div class="w-3 h-1 border-t border-dashed border-error w-4"></div> Safety Min</span>
+<span class="flex items-center gap-1 text-[12px] text-outline"><div class="w-3 h-1 border-t border-dashed border-primary w-4"></div> Optimal</span>
+</div>
+</div>
+<!-- Bar Chart Area (Simulated) -->
+<div class="flex-1 flex items-end gap-6 pb-8 border-b border-outline-variant/30 relative mt-4">
+<!-- Safety Line -->
+<div class="absolute bottom-8 w-full border-t border-dashed border-error/50 z-10 flex justify-end">
+<span class="text-[10px] text-error bg-surface px-1 -translate-y-1/2">MIN THRESHOLD</span>
+</div>
+<!-- Bars -->
+<div class="flex-1 flex flex-col justify-end items-center group relative h-full">
+<div class="w-full bg-surface-container-high h-[10%] rounded-t mb-1 relative border border-outline-variant/30"></div>
+<div class="w-full bg-gradient-to-t from-primary/20 to-primary/80 h-[85%] rounded-t relative border-t border-x border-primary/50 group-hover:shadow-[0_0_15px_rgba(143,224,255,0.3)] transition-all">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-display text-data-display text-[12px] opacity-0 group-hover:opacity-100 transition-opacity">85%</div>
+</div>
+<div class="absolute -bottom-6 font-data-label text-data-label text-[10px] text-outline truncate w-full text-center">MOTORS</div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center group relative h-full">
+<div class="w-full bg-gradient-to-t from-tertiary-fixed/20 to-tertiary-fixed/80 h-[35%] rounded-t relative border-t border-x border-tertiary-fixed/50 group-hover:shadow-[0_0_15px_rgba(255,221,180,0.3)] transition-all">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-display text-data-display text-[12px] text-tertiary-fixed opacity-0 group-hover:opacity-100 transition-opacity">35%</div>
+</div>
+<div class="absolute -bottom-6 font-data-label text-data-label text-[10px] text-outline truncate w-full text-center">SENSORS</div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center group relative h-full">
+<div class="w-full bg-gradient-to-t from-error/20 to-error/80 h-[15%] rounded-t relative border-t border-x border-error/50 group-hover:shadow-[0_0_15px_rgba(255,180,171,0.3)] transition-all z-20">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 font-data-display text-data-display text-[12px] text-error opacity-100 transition-opacity">15%</div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-error rounded-full pulse-critical"></div>
+</div>
+<div class="absolute -bottom-6 font-data-label text-data-label text-[10px] text-error truncate w-full text-center font-bold">BEARINGS</div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center group relative h-full">
+<div class="w-full bg-gradient-to-t from-primary/20 to-primary/80 h-[65%] rounded-t relative border-t border-x border-primary/50 group-hover:shadow-[0_0_15px_rgba(143,224,255,0.3)] transition-all">
+</div>
+<div class="absolute -bottom-6 font-data-label text-data-label text-[10px] text-outline truncate w-full text-center">CABLES</div>
+</div>
+<div class="flex-1 flex flex-col justify-end items-center group relative h-full">
+<div class="w-full bg-gradient-to-t from-primary/20 to-primary/80 h-[95%] rounded-t relative border-t border-x border-primary/50 group-hover:shadow-[0_0_15px_rgba(143,224,255,0.3)] transition-all">
+</div>
+<div class="absolute -bottom-6 font-data-label text-data-label text-[10px] text-outline truncate w-full text-center">VALVES</div>
+</div>
+</div>
+</div>
+<!-- Critical Parts List (Right Column) -->
+<div class="col-span-8 panel rounded-lg p-0 flex flex-col relative overflow-hidden">
+<div class="absolute top-3 right-3 font-data-display text-data-display text-[10px] text-outline opacity-60 z-10">ID:PNL-CRT</div>
+<div class="p-4 border-b border-outline-variant/30 bg-surface-container-highest/50 flex justify-between items-center sticky top-0">
+<h2 class="font-headline-md text-headline-md text-on-surface text-[16px] flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-[18px]">gpp_maybe</span>
+                                High Risk Shortages
+                            </h2>
+</div>
+<div class="flex-1 overflow-y-auto p-2">
+<!-- List Item 1 -->
+<div class="p-3 mb-2 bg-surface-container/50 border border-error/20 rounded hover:border-error/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<div>
+<div class="font-data-display text-data-display text-[14px] text-on-surface">BRG-774-Z</div>
+<div class="font-data-label text-data-label text-outline text-[10px]">High-Temp Ball Bearing</div>
+</div>
+<div class="bg-error/10 text-error px-2 py-0.5 rounded text-[10px] font-bold border border-error/20">OOS</div>
+</div>
+<div class="bg-surface-container-lowest p-2 rounded text-[12px] border border-outline-variant/20 mb-2">
+<div class="text-outline text-[10px] mb-1">IMPACTING ORDERS</div>
+<div class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-[14px] text-tertiary-fixed">manufacturing</span>
+<span>WO-2994 (T-Minus 4h)</span>
+</div>
+</div>
+<div class="flex justify-end">
+<button class="text-primary text-[11px] hover:text-primary-fixed uppercase tracking-wider font-bold">Expedite Order &gt;</button>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="p-3 mb-2 bg-surface-container/50 border border-tertiary-fixed/20 rounded hover:border-tertiary-fixed/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<div>
+<div class="font-data-display text-data-display text-[14px] text-on-surface">SNS-THM-02</div>
+<div class="font-data-label text-data-label text-outline text-[10px]">Thermal Probe</div>
+</div>
+<div class="bg-tertiary-fixed/10 text-tertiary-fixed px-2 py-0.5 rounded text-[10px] font-bold border border-tertiary-fixed/20">LOW: 2</div>
+</div>
+<div class="bg-surface-container-lowest p-2 rounded text-[12px] border border-outline-variant/20 mb-2">
+<div class="text-outline text-[10px] mb-1">IMPACTING ORDERS</div>
+<div class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-[14px] text-outline">manufacturing</span>
+<span>WO-3012 (T-Minus 18h)</span>
+</div>
+</div>
+</div>
+<!-- List Item 3 -->
+<div class="p-3 mb-2 bg-surface-container/50 border border-tertiary-fixed/20 rounded hover:border-tertiary-fixed/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<div>
+<div class="font-data-display text-data-display text-[14px] text-on-surface">VLV-PNU-X</div>
+<div class="font-data-label text-data-label text-outline text-[10px]">Pneumatic Control Valve</div>
+</div>
+<div class="bg-tertiary-fixed/10 text-tertiary-fixed px-2 py-0.5 rounded text-[10px] font-bold border border-tertiary-fixed/20">LOW: 5</div>
+</div>
+<div class="bg-surface-container-lowest p-2 rounded text-[12px] border border-outline-variant/20 mb-2">
+<div class="text-outline text-[10px] mb-1">IMPACTING ORDERS</div>
+<div class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-[14px] text-outline">manufacturing</span>
+<span>WO-3055 (T-Minus 24h)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

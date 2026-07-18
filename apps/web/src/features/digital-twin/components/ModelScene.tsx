@@ -7,6 +7,7 @@ import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { countSemanticParts, findModelPartNodes } from '../modelPartMapping';
 import { FAN_MODEL_URL } from '../equipmentConfig';
 import type { FaultScenario, ModelInspection, ModelNodeInfo, PartResolution } from '../digitalTwinTypes';
+import { digitalTwinTheme } from '../digitalTwinTheme';
 
 interface MaterialSnapshot {
   material: Material;
@@ -134,7 +135,7 @@ export function ModelScene({ modelUrl, scenario, selectedNodeUuid, onSelectNode,
     activeFaultMaterials.current = faultMaterials;
     if (selectedNodeUuid) {
       const selected = prepared.root.getObjectByProperty('uuid', selectedNodeUuid) as Mesh | undefined;
-      if (selected?.isMesh) materialList(selected.material).forEach((material) => setMaterialHighlight(material, '#315a78', 1));
+      if (selected?.isMesh) materialList(selected.material).forEach((material) => setMaterialHighlight(material, digitalTwinTheme.scene.selectionHighlight, 1));
     }
     onPartResolution({ targetPart: scenario.targetPart, matchedNodeNames: matchedNodes.map((node) => node.name || node.type), fallbackToWholeModel });
   }, [onPartResolution, prepared, restoreMaterials, scenario, selectedNodeUuid]);
@@ -168,7 +169,7 @@ export function ModelScene({ modelUrl, scenario, selectedNodeUuid, onSelectNode,
     <group ref={effectGroup} scale={prepared.scale}>
       <primitive object={prepared.root} position={prepared.center} onPointerDown={handlePointerDown} />
     </group>
-    {scenario.id === 'bearing-overheat' && <Html position={[0, 2.75, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}><div className="whitespace-nowrap rounded border border-red-300 bg-white/95 px-2 py-1 text-xs font-semibold text-red-700">轴承温度 {scenario.sensors.temperature}℃{activeFaultMaterials.current.length === prepared.snapshots.length ? ' · 整机定位' : ''}</div></Html>}
+    {scenario.id === 'bearing-overheat' && <Html position={[0, 2.75, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}><div className="twin-model-alert">轴承温度 {scenario.sensors.temperature}℃{activeFaultMaterials.current.length === prepared.snapshots.length ? ' · 整机定位' : ''}</div></Html>}
   </>;
 }
 

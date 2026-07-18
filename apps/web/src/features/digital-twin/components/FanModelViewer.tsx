@@ -7,6 +7,7 @@ import { AlertCircle, Box } from 'lucide-react';
 import type { CameraView, FanModelViewerHandle, FaultScenario, ModelInspection, ModelNodeInfo, PartResolution } from '../digitalTwinTypes';
 import { ModelScene } from './ModelScene';
 import { ViewToolbar } from './ViewToolbar';
+import { digitalTwinTheme } from '../digitalTwinTheme';
 
 class ModelErrorBoundary extends Component<PropsWithChildren<{ resetKey: number; fallback: (error: Error) => React.ReactNode }>, { error: Error | null }> {
   override state: { error: Error | null } = { error: null };
@@ -18,7 +19,7 @@ class ModelErrorBoundary extends Component<PropsWithChildren<{ resetKey: number;
 
 function ModelLoading({ modelUrl }: { modelUrl: string }) {
   const { progress } = useProgress();
-  return <Html center><div className="w-56 rounded border border-[#D9DADC] bg-white/95 p-4 text-center text-sm text-[#3A3F47]"><div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded border border-[#E5E6EB] text-[#646A73]"><Box className="animate-pulse" size={18} /></div><div>正在加载引风机模型</div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#E5E6EB]"><div className="h-full bg-[#64798f] transition-[width]" style={{ width: `${Math.max(4, progress)}%` }} /></div><div className="mt-2 font-mono text-[10px] text-[#8F959E]">{Math.round(progress)}% · {modelUrl}</div></div></Html>;
+  return <Html center><div className="twin-viewer__loading"><div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center text-[var(--twin-text-secondary)]"><Box className="animate-pulse" size={18} /></div><div>正在加载引风机模型</div><div className="twin-viewer__progress"><div className="twin-viewer__progress-bar" style={{ width: `${Math.max(4, progress)}%` }} /></div><div className="twin-data twin-muted mt-2 text-[10px]">{Math.round(progress)}% · {modelUrl}</div></div></Html>;
 }
 
 function CameraController({ radius, apiRef }: { radius: number; apiRef: RefObject<FanModelViewerHandle | null> }) {
@@ -81,24 +82,24 @@ export const FanModelViewer = forwardRef<FanModelViewerHandle, {
     }
   };
   const retry = () => { useGLTF.clear(modelUrl); setReloadKey((value) => value + 1); };
-  return <div ref={container} className={`relative h-[520px] min-h-[420px] overflow-hidden rounded-sm bg-[#E9ECEF] xl:h-[620px] ${pageFullscreen ? 'fixed inset-0 z-[80] h-screen xl:h-screen' : ''}`} data-testid="digital-twin-viewer">
+  return <div ref={container} className={`twin-viewer ${pageFullscreen ? 'fixed inset-0 z-[80] h-screen' : ''}`} data-testid="digital-twin-viewer">
     <ViewToolbar onView={(view) => cameraApi.current?.setView(view)} onFullscreen={() => void toggleFullscreen()} fullscreen={fullscreen || pageFullscreen} />
-    <ModelErrorBoundary resetKey={reloadKey} fallback={(error) => <div className="flex h-full items-center justify-center p-8"><div className="max-w-lg rounded border border-red-200 bg-white p-6 text-center"><AlertCircle className="mx-auto text-red-600" size={28} /><h3 className="mt-3 font-semibold text-[#1F2329]">3D模型加载失败</h3><p className="mt-2 text-sm text-[#646A73]">实际请求路径：<span className="break-all font-mono">{modelUrl}</span></p><p className="mt-2 text-xs leading-5 text-[#8F959E]">请确认模型位于前端 public/models 目录，并检查 Vite 基础路径或网络请求是否可用。{error.message ? ` 错误：${error.message}` : ''}</p><button className="btn-secondary mt-4" onClick={retry}>重新加载</button></div></div>}>
+    <ModelErrorBoundary resetKey={reloadKey} fallback={(error) => <div className="flex h-full items-center justify-center p-8"><div className="twin-viewer__error"><AlertCircle className="mx-auto text-red-400" size={28} /><h3 className="mt-3 font-semibold text-[var(--twin-text)]">3D模型加载失败</h3><p className="mt-2 text-sm">实际请求路径：<span className="twin-data break-all">{modelUrl}</span></p><p className="twin-muted mt-2 text-xs leading-5">请确认模型位于前端 public/models 目录，并检查 Vite 基础路径或网络请求是否可用。{error.message ? ` 错误：${error.message}` : ''}</p><button className="twin-order-button mt-4" onClick={retry}>重新加载</button></div></div>}>
       <Canvas key={reloadKey} shadows="basic" dpr={[1, 1.5]} camera={{ fov: 38, position: [6, 3.6, 6], near: 0.05, far: 500 }} gl={{ antialias: true, powerPreference: 'high-performance' }} onPointerMissed={() => onSelectNode(null)}>
-        <color attach="background" args={['#E9ECEF']} />
-        <fog attach="fog" args={['#E9ECEF', 11, 25]} />
+        <color attach="background" args={[digitalTwinTheme.scene.background]} />
+        <fog attach="fog" args={[digitalTwinTheme.scene.fog, 11, 25]} />
         <ambientLight intensity={0.48} />
-        <hemisphereLight args={['#f8fafc', '#66717b', 0.88]} />
+        <hemisphereLight args={[digitalTwinTheme.scene.hemisphereSky, digitalTwinTheme.scene.hemisphereGround, 0.88]} />
         <directionalLight position={[6, 9, 7]} intensity={1.45} castShadow shadow-mapSize={[1024, 1024]} />
         <directionalLight position={[-5, 3, -4]} intensity={0.48} />
         <Suspense fallback={<ModelLoading modelUrl={modelUrl} />}>
           <ModelScene modelUrl={modelUrl} scenario={scenario} selectedNodeUuid={selectedNode?.uuid ?? null} onSelectNode={onSelectNode} onInspection={onInspection} onFit={setRadius} onPartResolution={onPartResolution} />
         </Suspense>
-        <Grid position={[0, -2.55, 0]} args={[24, 24]} cellSize={0.5} cellThickness={0.5} cellColor="#c9cdd4" sectionSize={2.5} sectionThickness={0.8} sectionColor="#aeb4bb" fadeDistance={18} fadeStrength={1} infiniteGrid />
+        <Grid position={[0, -2.55, 0]} args={[24, 24]} cellSize={0.5} cellThickness={0.5} cellColor={digitalTwinTheme.scene.gridCell} sectionSize={2.5} sectionThickness={0.8} sectionColor={digitalTwinTheme.scene.gridSection} fadeDistance={18} fadeStrength={1} infiniteGrid />
         <ContactShadows position={[0, -2.48, 0]} opacity={0.25} scale={12} blur={2.5} far={8} />
         <CameraController radius={radius} apiRef={cameraApi} />
       </Canvas>
     </ModelErrorBoundary>
-    <div className="pointer-events-none absolute bottom-3 left-3 rounded border border-[#D9DADC] bg-white/90 px-2.5 py-1.5 text-[11px] text-[#646A73]">左键旋转 · 滚轮缩放 · 右键平移 · 点击部件查看节点</div>
+    <div className="twin-viewer__helper">左键旋转 · 滚轮缩放 · 右键平移 · 点击部件查看节点</div>
   </div>;
 });

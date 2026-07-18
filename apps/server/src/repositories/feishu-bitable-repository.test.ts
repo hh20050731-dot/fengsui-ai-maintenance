@@ -22,13 +22,16 @@ describe('飞书多维表格混合 Repository', () => {
     });
     const order = createMockData().workOrders[0]!;
 
-    await repository.createWorkOrder(order);
+    const created = await repository.createWorkOrder(order);
 
     const fields = createRecord.mock.calls[0]![2];
     expect(Object.keys(fields)).toEqual(['工单编号', '设备名称', '设备编号', '故障部位', '故障类型', '风险等级', '工单状态', '创建时间']);
     expect(fields.工单编号).toBe(order.workOrderId);
     expect(fields.创建时间).toBe(Date.parse(order.createdTime));
     expect(typeof fields.创建时间).toBe('number');
+    expect(created.recordId).toBe('rec-test-work-order');
+    expect(created.id).toBe(order.id);
+    expect(created.workOrderNo).toBe(order.workOrderNo);
   });
 
   it('未配置设备表时设备模块继续使用 Mock，且不访问飞书', async () => {
@@ -49,11 +52,13 @@ describe('飞书多维表格混合 Repository', () => {
     const fields = toFeishuWorkOrderFields(order);
     const restored = fromFeishuWorkOrderFields(fields);
     expect(restored.workOrderId).toBe(order.workOrderId);
+    expect(restored.workOrderNo).toBe(order.workOrderNo);
+    expect(restored.id).toBe(order.id);
     expect(restored.createdTime).toBe(new Date(Date.parse(order.createdTime)).toISOString());
   });
 
   it('更新成功后使用已定位的 record_id 读取单条记录', async () => {
-    const order = { ...createMockData().workOrders[0]!, workOrderId: 'WO-20260718-001', status: '待接单' as const };
+    const order = { ...createMockData().workOrders[0]!, id: 'WO-20260718-001', workOrderNo: 'WO-20260718-001', workOrderId: 'WO-20260718-001', status: '待接单' as const };
     const fields = toFeishuWorkOrderFields(order);
     const listRecords = vi.fn(async () => [{ record_id: 'rec-work-order-001', fields }]);
     const updateRecord = vi.fn(async () => ({}));
@@ -72,10 +77,34 @@ describe('飞书多维表格混合 Repository', () => {
     expect(listRecords).toHaveBeenCalledTimes(1);
     expect(updated.status).toBe('已接单');
     expect(updated.syncStatus).toBe('synced');
+    expect(updated.recordId).toBe('rec-work-order-001');
+  });
+
+  it('使用 recordId 更新时直接读取和更新单条记录，不执行全表搜索', async () => {
+    const order = { ...createMockData().workOrders[0]!, id: 'internal-work-order-001', workOrderNo: 'WO-20260718-101', workOrderId: 'WO-20260718-101', status: '待接单' as const };
+    let fields = toFeishuWorkOrderFields(order);
+    const listRecords = vi.fn(async () => []);
+    const updateRecord = vi.fn(async (_token: string, _tableId: string, _recordId: string, nextFields: Record<string, unknown>) => {
+      fields = nextFields;
+      return {};
+    });
+    const getRecord = vi.fn(async () => ({ record: { record_id: 'rec-direct-101', fields } }));
+    const repository = new FeishuBitableRepository({
+      client: { listRecords, createRecord: vi.fn(), updateRecord, getRecord },
+      appToken: 'configured-app-token',
+      tableIds: { workOrders: 'configured-work-order-table' },
+      capabilities: partialCapabilities,
+    });
+
+    const updated = await repository.updateWorkOrder('rec-direct-101', { status: '已接单' });
+
+    expect(updated).toMatchObject({ id: 'WO-20260718-101', workOrderNo: 'WO-20260718-101', recordId: 'rec-direct-101', status: '已接单' });
+    expect(updateRecord).toHaveBeenCalledWith('configured-app-token', 'configured-work-order-table', 'rec-direct-101', expect.objectContaining({ 工单状态: '已接单' }));
+    expect(listRecords).not.toHaveBeenCalled();
   });
 
   it('更新已成功但按 record_id 回读失败时仍返回成功状态', async () => {
-    const order = { ...createMockData().workOrders[0]!, workOrderId: 'WO-20260718-001', status: '待接单' as const };
+    const order = { ...createMockData().workOrders[0]!, id: 'WO-20260718-001', workOrderNo: 'WO-20260718-001', workOrderId: 'WO-20260718-001', status: '待接单' as const };
     const listRecords = vi.fn(async () => [{ record_id: 'rec-work-order-001', fields: toFeishuWorkOrderFields(order) }]);
     const updateRecord = vi.fn(async () => ({}));
     const getRecord = vi.fn(async () => { throw new Error('飞书读取暂时不可用'); });
@@ -104,7 +133,21 @@ describe('飞书多维表格混合 Repository', () => {
     });
 
     expect(restored.workOrderId).toBe('WO-20260718-001');
+    expect(restored.workOrderNo).toBe('WO-20260718-001');
     expect(restored.status).toBe('已接单');
     expect(Number.isNaN(Date.parse(restored.createdTime))).toBe(false);
+  });
+
+  it('工单确实不存在时返回未找到且不调用更新接口', async () => {
+    const updateRecord = vi.fn();
+    const repository = new FeishuBitableRepository({
+      client: { listRecords: vi.fn(async () => []), createRecord: vi.fn(), updateRecord, getRecord: vi.fn() },
+      appToken: 'configured-app-token',
+      tableIds: { workOrders: 'configured-work-order-table' },
+      capabilities: partialCapabilities,
+    });
+
+    await expect(repository.updateWorkOrder('WO-NOT-EXISTS', { status: '已接单' })).rejects.toMatchObject({ status: 404, code: 'WORK_ORDER_NOT_FOUND' });
+    expect(updateRecord).not.toHaveBeenCalled();
   });
 });

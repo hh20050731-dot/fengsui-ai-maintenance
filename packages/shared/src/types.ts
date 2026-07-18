@@ -95,16 +95,27 @@ export interface ProcessingRecord {
 }
 
 export interface WorkOrder {
+  /** 前端与 API 内部使用的稳定标识。 */
+  id: string;
+  /** 用户可见的工单编号，例如 WO-20260718-001。 */
+  workOrderNo: string;
+  /** 飞书多维表格 record_id，仅飞书模式存在。 */
+  recordId?: string;
+  /** @deprecated 兼容既有业务代码；值始终与 workOrderNo 一致。 */
   workOrderId: string;
   sourceAlertId?: string;
   deviceId: string;
   deviceName: string;
   riskLevel: RiskLevel;
+  faultPart: string;
+  faultType: string;
   faultDescription: string;
   maintenanceSuggestion: string[];
   assignee: string;
   assigneeUserId: string;
   createdBy: string;
+  /** 统一的新字段名；值始终与 createdTime 一致。 */
+  createdAt: string;
   createdTime: string;
   deadline: string;
   requiredSpareParts: SparePartUsage[];

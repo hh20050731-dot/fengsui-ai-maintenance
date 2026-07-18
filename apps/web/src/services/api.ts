@@ -23,9 +23,19 @@ function isTransportFailure(error: unknown) {
 }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  if (transportMode === 'offline') return handleOfflineApi<T>(path, init);
+  const method = (init?.method ?? 'GET').toUpperCase();
+  const isWrite = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+  const isFeishuWorkOrderWrite = isWrite
+    && /^\/work-orders(?:\/|$)/.test(path)
+    && (effectiveServerMode === 'feishu' || runtimeConfig.requestedMode === 'feishu');
+  if (transportMode === 'offline') {
+    if (isFeishuWorkOrderWrite) {
+      throw new ApiClientError('FEISHU_WRITE_UNAVAILABLE', '当前无法连接飞书工单服务，请恢复连接并刷新工单后重试；该操作未写入Mock');
+    }
+    return handleOfflineApi<T>(path, init);
+  }
   const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), runtimeConfig.apiTimeoutMs);
+  const timer = window.setTimeout(() => controller.abort(), isWrite ? runtimeConfig.apiWriteTimeoutMs : runtimeConfig.apiReadTimeoutMs);
   try {
     const response = await fetch(`${runtimeConfig.apiBase}${path}`, {
       credentials: 'include', ...init, signal: controller.signal,
@@ -47,6 +57,9 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     if (effectiveServerMode === 'mock') persistDemoMutation(path, init, payload.data);
     return payload.data;
   } catch (error) {
+    if (isFeishuWorkOrderWrite && isTransportFailure(error)) {
+      throw new ApiClientError('FEISHU_WRITE_STATUS_UNKNOWN', '飞书写入请求未在限定时间内返回，请刷新工单列表确认状态，系统不会将该写操作重放到Mock');
+    }
     if (!runtimeConfig.allowOfflineFallback || !isTransportFailure(error)) throw error;
     transportMode = 'offline';
     effectiveServerMode = 'mock';

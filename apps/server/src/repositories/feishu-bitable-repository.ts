@@ -1,4 +1,7 @@
-import type { Alert, Equipment, KnowledgeEntry, OperationLog, SparePart, SparePartTransaction, TelemetryPoint, WorkOrder } from '@fengsui/shared';
+import {
+  getWorkOrderIdentifiers, getWorkOrderNo, isFeishuRecordId, matchesWorkOrderIdentifier, normalizeWorkOrderIdentity,
+  type Alert, type Equipment, type KnowledgeEntry, type OperationLog, type SparePart, type SparePartTransaction, type TelemetryPoint, type WorkOrder,
+} from '@fengsui/shared';
 import { env, feishuCapabilities, type FeishuCapabilities, type FeishuCapabilityName } from '../config/env.js';
 import { AppError } from '../middleware/errors.js';
 import { FeishuClient, type FeishuBitableRecord } from '../providers/feishu-client.js';
@@ -51,11 +54,13 @@ export function deriveWorkOrderFaultFields(faultDescription: string) {
 
 /** WorkOrders 表只写入当前已确认存在的八个中文字段。日期字段使用 Unix 毫秒时间戳。 */
 export function toFeishuWorkOrderFields(order: WorkOrder): Record<string, unknown> {
-  const createdTime = Date.parse(order.createdTime);
+  const createdTime = Date.parse(order.createdAt || order.createdTime);
   if (!Number.isFinite(createdTime)) throw new AppError(400, 'INVALID_WORK_ORDER_DATE', '工单创建时间必须是可识别的 ISO 日期');
-  const { faultPart, faultType } = deriveWorkOrderFaultFields(order.faultDescription);
+  const derived = deriveWorkOrderFaultFields(order.faultDescription);
+  const faultPart = order.faultPart || derived.faultPart;
+  const faultType = order.faultType || derived.faultType;
   return {
-    工单编号: order.workOrderId,
+    工单编号: getWorkOrderNo(order),
     设备名称: order.deviceName,
     设备编号: order.deviceId,
     故障部位: faultPart,
@@ -74,18 +79,24 @@ export function fromFeishuWorkOrderFields(fields: Record<string, unknown>, fallb
   const timestamp = Number.isFinite(numericTimestamp) ? numericTimestamp : Number.isFinite(stringTimestamp) ? stringTimestamp : Number.isFinite(fallbackTimestamp) ? fallbackTimestamp : Date.now();
   const createdTime = new Date(timestamp).toISOString();
   const fallbackFault = deriveWorkOrderFaultFields(fallback.faultDescription ?? '待现场确认');
-  const faultPart = textValue(fields.故障部位) || fallbackFault.faultPart;
-  const faultType = textValue(fields.故障类型) || fallbackFault.faultType;
+  const faultPart = textValue(fields.故障部位) || fallbackFault.faultPart || '待现场确认';
+  const faultType = textValue(fields.故障类型) || fallbackFault.faultType || '待现场确认';
+  const workOrderNo = textValue(fields.工单编号) || getWorkOrderNo(fallback);
   return {
     maintenanceSuggestion: [], assignee: '待分配', assigneeUserId: '', createdBy: '飞书多维表格',
     requiredSpareParts: [], consumedSpareParts: [], processingRecord: [], healthScoreBefore: 0,
     ...fallback,
-    workOrderId: textValue(fields.工单编号) || fallback.workOrderId || '',
+    id: fallback.id || workOrderNo,
+    workOrderNo,
+    workOrderId: workOrderNo,
     deviceName: textValue(fields.设备名称) || fallback.deviceName || '未命名设备',
     deviceId: textValue(fields.设备编号) || fallback.deviceId || 'UNKNOWN',
+    faultPart,
+    faultType,
     faultDescription: `${faultPart} · ${faultType}`,
     riskLevel: (textValue(fields.风险等级) || fallback.riskLevel || '关注') as WorkOrder['riskLevel'],
     status: (textValue(fields.工单状态) || fallback.status || '待接单') as WorkOrder['status'],
+    createdAt: createdTime,
     createdTime,
     deadline: fallback.deadline ?? new Date(timestamp + 24 * 3_600_000).toISOString(),
   };
@@ -123,25 +134,35 @@ export class FeishuBitableRepository extends MockRepository {
   }
   private recordKey(tableId: string, id: string) { return `${tableId}:${id}`; }
 
-  private mapWorkOrderRecord(record: FeishuBitableRecord, expectedWorkOrderId?: string) {
+  private cacheWorkOrder(order: WorkOrder) {
     const tableId = this.tableId('workOrders');
-    const fieldWorkOrderId = textValue(record.fields.工单编号);
-    if (expectedWorkOrderId && fieldWorkOrderId && fieldWorkOrderId !== expectedWorkOrderId) {
+    for (const identifier of getWorkOrderIdentifiers(order)) {
+      this.workOrderCache.set(identifier, order);
+      if (order.recordId) this.recordIds.set(this.recordKey(tableId, identifier), order.recordId);
+    }
+  }
+
+  private mapWorkOrderRecord(record: FeishuBitableRecord, expectedIdentifier?: string) {
+    const fieldWorkOrderNo = textValue(record.fields.工单编号);
+    if (expectedIdentifier?.startsWith('WO-') && fieldWorkOrderNo && fieldWorkOrderNo !== expectedIdentifier) {
       throw new AppError(409, 'WORK_ORDER_ID_MISMATCH', '飞书记录的“工单编号”与当前工单不一致');
     }
-    const workOrderId = fieldWorkOrderId || expectedWorkOrderId || '';
-    const fallback = workOrderId ? this.workOrderCache.get(workOrderId) : undefined;
-    const mapped = { ...fromFeishuWorkOrderFields(record.fields, { ...fallback, workOrderId }), syncStatus: 'synced' as const, syncMessage: undefined };
-    if (mapped.workOrderId) {
-      this.recordIds.set(this.recordKey(tableId, mapped.workOrderId), record.record_id);
-      this.workOrderCache.set(mapped.workOrderId, mapped);
-    }
+    const fallback = this.workOrderCache.get(record.record_id)
+      ?? (expectedIdentifier ? this.workOrderCache.get(expectedIdentifier) : undefined)
+      ?? (fieldWorkOrderNo ? this.workOrderCache.get(fieldWorkOrderNo) : undefined);
+    const mapped = {
+      ...normalizeWorkOrderIdentity(fromFeishuWorkOrderFields(record.fields, fallback)),
+      recordId: record.record_id,
+      syncStatus: 'synced' as const,
+      syncMessage: undefined,
+    };
+    this.cacheWorkOrder(mapped);
     return mapped;
   }
 
-  private async getWorkOrderByRecordId(workOrderId: string, recordId: string) {
+  private async getWorkOrderByRecordId(recordId: string, expectedIdentifier?: string) {
     const result = await this.client.getRecord(this.token, this.tableId('workOrders'), recordId);
-    return { ...this.mapWorkOrderRecord(result.record, workOrderId), syncStatus: 'synced' as const, syncMessage: undefined };
+    return this.mapWorkOrderRecord(result.record, expectedIdentifier);
   }
 
   private async listRemote<T>(module: FeishuCapabilityName, primaryKey: string): Promise<T[]> {
@@ -199,44 +220,50 @@ export class FeishuBitableRepository extends MockRepository {
   override async listWorkOrders() {
     if (!this.usesFeishu('workOrders')) return super.listWorkOrders();
     const records = await this.client.listRecords(this.token, this.tableId('workOrders'));
-    return records.map((record) => this.mapWorkOrderRecord(record)).filter((order) => Boolean(order.workOrderId));
+    return records.map((record) => this.mapWorkOrderRecord(record)).filter((order) => Boolean(order.workOrderNo));
   }
-  override async getWorkOrder(id: string) {
-    if (!this.usesFeishu('workOrders')) return super.getWorkOrder(id);
+  override async getWorkOrder(identifier: string) {
+    if (!this.usesFeishu('workOrders')) return super.getWorkOrder(identifier);
     const tableId = this.tableId('workOrders');
-    const recordId = this.recordIds.get(this.recordKey(tableId, id));
-    if (recordId) {
-      try { return await this.getWorkOrderByRecordId(id, recordId); }
+    if (isFeishuRecordId(identifier)) {
+      try { return await this.getWorkOrderByRecordId(identifier); }
       catch (error) {
-        const cached = this.workOrderCache.get(id);
+        const cached = this.workOrderCache.get(identifier);
         if (cached) return { ...cached, syncStatus: 'pending' as const, syncMessage: '数据同步刷新中' };
         throw error;
       }
     }
-    return (await this.listWorkOrders()).find((item) => item.workOrderId === id);
+    const cached = this.workOrderCache.get(identifier);
+    const recordId = cached?.recordId ?? this.recordIds.get(this.recordKey(tableId, identifier));
+    if (recordId) {
+      try { return await this.getWorkOrderByRecordId(recordId, identifier); }
+      catch (error) {
+        if (cached) return { ...cached, syncStatus: 'pending' as const, syncMessage: '数据同步刷新中' };
+        throw error;
+      }
+    }
+    return (await this.listWorkOrders()).find((item) => matchesWorkOrderIdentifier(item, identifier));
   }
   override async createWorkOrder(value: WorkOrder) {
     if (!this.usesFeishu('workOrders')) return super.createWorkOrder(value);
-    const tableId = this.tableId('workOrders');
-    const result = await this.client.createRecord(this.token, tableId, toFeishuWorkOrderFields(value));
-    this.recordIds.set(this.recordKey(tableId, value.workOrderId), result.record.record_id);
-    this.workOrderCache.set(value.workOrderId, value);
-    return value;
+    const normalized = normalizeWorkOrderIdentity(value) as WorkOrder;
+    const result = await this.client.createRecord(this.token, this.tableId('workOrders'), toFeishuWorkOrderFields(normalized));
+    this.cacheWorkOrder({ ...normalized, recordId: result.record.record_id });
+    return this.mapWorkOrderRecord(result.record, normalized.workOrderNo);
   }
-  override async updateWorkOrder(id: string, patch: Partial<WorkOrder>) {
-    if (!this.usesFeishu('workOrders')) return super.updateWorkOrder(id, patch);
-    const current = await this.getWorkOrder(id);
+  override async updateWorkOrder(identifier: string, patch: Partial<WorkOrder>) {
+    if (!this.usesFeishu('workOrders')) return super.updateWorkOrder(identifier, patch);
+    const current = await this.getWorkOrder(identifier);
     if (!current) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', '未找到维修工单');
-    const value = { ...current, ...patch };
-    const tableId = this.tableId('workOrders');
-    const key = this.recordKey(tableId, id);
-    const recordId = this.recordIds.get(key);
+    const value = normalizeWorkOrderIdentity({ ...current, ...patch }) as WorkOrder;
+    const recordId = current.recordId ?? (isFeishuRecordId(identifier) ? identifier : undefined);
     if (!recordId) throw new AppError(404, 'WORK_ORDER_RECORD_NOT_FOUND', '未找到维修工单对应的飞书记录');
-    const updateResult = await this.client.updateRecord(this.token, tableId, recordId, toFeishuWorkOrderFields(value));
-    this.workOrderCache.set(id, value);
-    if (updateResult?.record) return { ...this.mapWorkOrderRecord(updateResult.record, id), syncStatus: 'synced' as const, syncMessage: undefined };
-    try { return await this.getWorkOrderByRecordId(id, recordId); }
-    catch { return { ...value, syncStatus: 'pending' as const, syncMessage: '数据同步刷新中' }; }
+    const updateResult = await this.client.updateRecord(this.token, this.tableId('workOrders'), recordId, toFeishuWorkOrderFields(value));
+    const cachedValue = { ...value, recordId };
+    this.cacheWorkOrder(cachedValue);
+    if (updateResult?.record) return this.mapWorkOrderRecord(updateResult.record, value.workOrderNo);
+    try { return await this.getWorkOrderByRecordId(recordId, value.workOrderNo); }
+    catch { return { ...cachedValue, syncStatus: 'pending' as const, syncMessage: '数据同步刷新中' }; }
   }
 
   override async listSpareParts() { return this.usesFeishu('spareParts') ? this.listRemote<SparePart>('spareParts', 'partId') : super.listSpareParts(); }

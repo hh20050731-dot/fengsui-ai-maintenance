@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fengsui Zhishou - Alert Center</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS & Config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#171f33",
+                    "secondary": "#b4c5ff",
+                    "surface-bright": "#31394d",
+                    "background": "#0b1326",
+                    "surface": "#0b1326",
+                    "secondary-fixed": "#dbe1ff",
+                    "inverse-surface": "#dae2fd",
+                    "primary": "#b4c5ff",
+                    "tertiary-fixed-dim": "#ffb59c",
+                    "tertiary-fixed": "#ffdbd0",
+                    "outline": "#8d90a0",
+                    "surface-dim": "#0b1326",
+                    "tertiary": "#ffb59c",
+                    "on-secondary": "#1c2e5e",
+                    "on-tertiary-container": "#ffccbc",
+                    "on-primary": "#002a78",
+                    "on-secondary-container": "#a6b7f0",
+                    "surface-variant": "#2d3449",
+                    "on-tertiary-fixed-variant": "#832700",
+                    "on-primary-container": "#cbd6ff",
+                    "tertiary-container": "#aa3500",
+                    "secondary-fixed-dim": "#b4c5ff",
+                    "inverse-on-surface": "#283044",
+                    "surface-container-lowest": "#060e20",
+                    "on-surface-variant": "#c3c6d7",
+                    "on-primary-fixed": "#00174b",
+                    "lum-border": "rgba(255, 255, 255, 0.1)",
+                    "surface-container-highest": "#2d3449",
+                    "outline-variant": "#434654",
+                    "error": "#ffb4ab",
+                    "on-error": "#690005",
+                    "primary-container": "#0052d9",
+                    "surface-container-low": "#131b2e",
+                    "secondary-container": "#364779",
+                    "on-tertiary": "#5c1900",
+                    "risk-high": "#E34D59",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary-fixed": "#390c00",
+                    "surface-container-high": "#222a3d",
+                    "inverse-primary": "#0353da",
+                    "on-background": "#dae2fd",
+                    "on-surface": "#dae2fd",
+                    "error-container": "#93000a",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "risk-low": "#10b981",
+                    "on-secondary-fixed-variant": "#334576",
+                    "surface-tint": "#b4c5ff",
+                    "on-secondary-fixed": "#021848",
+                    "risk-medium": "#f59e0b",
+                    "primary-fixed": "#dbe1ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "gutter": "16px",
+                    "margin": "24px",
+                    "xl": "32px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "body-sm": [
+                            "Hanken Grotesk"
+                    ],
+                    "title-sm": [
+                            "Hanken Grotesk"
+                    ],
+                    "headline-md": [
+                            "Hanken Grotesk"
+                    ],
+                    "body-md": [
+                            "Hanken Grotesk"
+                    ],
+                    "label-caps": [
+                            "Hanken Grotesk"
+                    ],
+                    "data-mono": [
+                            "JetBrains Mono"
+                    ],
+                    "display-lg": [
+                            "Hanken Grotesk"
+                    ]
+            },
+            "fontSize": {
+                    "body-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "18px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "title-sm": [
+                            "18px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "22px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-caps": [
+                            "11px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "data-mono": [
+                            "13px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-lg": [
+                            "40px",
+                            {
+                                    "lineHeight": "48px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Base styles to ensure consistency with design system */
+        body { background-color: #0b1326; color: #dae2fd; }
+        
+        /* Custom scrollbar for industrial feel */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #060e20; }
+        ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #434654; }
+
+        /* Glowing effect for critical alerts */
+        .glow-critical {
+            animation: breathe-critical 2s infinite ease-in-out;
+        }
+
+        @keyframes breathe-critical {
+            0%, 100% { box-shadow: 0 0 10px rgba(227, 77, 89, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(227, 77, 89, 0.5); }
+        }
+        
+        /* Input styling override for dark theme */
+        input[type="text"], input[type="date"], select {
+            background-color: #131b2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #dae2fd;
+        }
+        input:focus, select:focus {
+            border-color: #0052d9;
+            outline: none;
+            box-shadow: 0 0 0 1px #0052d9;
+        }
+
+        /* Live Blinker */
+        .live-blinker {
+            animation: blink 1.5s infinite ease-in-out;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 0.4; box-shadow: 0 0 0 transparent; }
+            50% { opacity: 1; box-shadow: 0 0 6px #10b981; }
+        }
+
+        /* Entry Animations */
+        .entry-fade-right {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: fade-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fade-right {
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+
+        /* Chart Flow */
+        .chart-flow {
+            background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            background-size: 200% 100%;
+            animation: flow 2s linear infinite;
+        }
+        @keyframes flow {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        /* Interaction Feedback */
+        .hover-expand {
+            transition: all 0.2s ease-out;
+        }
+        .hover-expand:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(0, 82, 217, 0.3);
+            border-color: #0052d9;
+        }
+        
+        .row-hover {
+            transition: all 0.2s ease-out;
+        }
+        .row-hover:hover {
+            transform: translateX(4px);
+            background-color: rgba(255,255,255,0.05);
+            border-left-width: 4px;
+        }
+
+    </style>
+</head>
+<body class="font-body-md text-body-md flex h-screen overflow-hidden antialiased">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low dark:bg-surface-dim shadow-sm flex flex-col h-full py-lg z-50 border-r border-lum-border">
+<div class="px-lg mb-xl">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">Fengsui Zhishou</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs tracking-wider">O&amp;M Platform</p>
+</div>
+<ul class="flex-1 flex flex-col gap-sm px-sm">
+<!-- Overview (Inactive) -->
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors group hover-expand" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
+<span>Overview</span>
+</a>
+</li>
+<!-- Assets (Inactive) -->
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors group hover-expand" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">factory</span>
+<span>Assets</span>
+</a>
+</li>
+<!-- Alert Center (Active) -->
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded text-primary dark:text-inverse-primary font-bold border-l-4 border-primary dark:border-inverse-primary bg-primary-container/20 opacity-90 transition-all duration-150 hover-expand" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+<span>Alert Center</span>
+</a>
+</li>
+<!-- Work Orders (Inactive) -->
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors group hover-expand" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">engineering</span>
+<span>Work Orders</span>
+</a>
+</li>
+<!-- Diagnostics (Inactive) -->
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors group hover-expand" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">query_stats</span>
+<span>Diagnostics</span>
+</a>
+</li>
+<!-- Settings (Inactive) -->
+<li class="mt-auto">
+<a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors group hover-expand" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+<div class="px-lg mt-lg pt-lg border-t border-lum-border flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border border-lum-border">
+<img alt="User avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnw6H5IHfOzKVwyQhMWFcPGvtm9UA2qEfc1sEMkGRL3G-PPyukVkF2N448n9tvQcMz-ADwXcSgDWTs_BzBT72Ul_dsJRWPjvx8iH0CverktLcUl5QAu7gWHeQTC0flvJfKT6lBO7ZLZxHB5RVkzk03yTUh8a40PZiThO8tM-pfN-bWw75O9GRC75nptMVezsdi9yKoC0BL0zkx0QlHOE4Out9f-KxL_zeMfIUFzFC3f2NN8cMjpUmMBg"/>
+</div>
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">Operator 04</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Active Session</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-64 flex flex-col bg-background relative z-0">
+<!-- TopNavBar -->
+<header class="h-16 w-full sticky top-0 z-40 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flex justify-between items-center px-lg">
+<div class="flex items-center gap-md">
+<h2 class="font-title-sm text-title-sm text-on-surface">Alert Management Engine</h2>
+<div class="flex items-center gap-xs ml-4 px-2 py-1 bg-surface-container rounded-full border border-lum-border">
+<div class="w-2 h-2 rounded-full bg-risk-low live-blinker"></div>
+<span class="text-[10px] font-label-caps text-risk-low uppercase">Live</span>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<!-- Trailing Actions -->
+<button class="p-2 rounded text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors flex items-center justify-center hover-expand">
+<span class="material-symbols-outlined">schedule</span>
+</button>
+<button class="p-2 rounded text-on-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors flex items-center justify-center hover-expand">
+<span class="material-symbols-outlined">health_metrics</span>
+</button>
+<div class="w-px h-6 bg-lum-border mx-sm"></div>
+<!-- Primary Action -->
+<button class="px-md py-2 bg-surface-container-highest border border-lum-border rounded text-on-surface font-title-sm text-title-sm hover:bg-surface-variant transition-colors flex items-center gap-2 hover-expand">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+                    Feishu Sync
+                </button>
+</div>
+</header>
+<!-- Viewport Canvas -->
+<main class="flex-1 overflow-y-auto p-lg flex flex-col gap-lg">
+<!-- Dashboard Context Row -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-md">
+<!-- Total Metric -->
+<div class="bg-surface-dim border border-lum-border rounded-lg p-md flex flex-col justify-between hover-expand">
+<div class="flex justify-between items-center mb-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Active Alerts</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">monitoring</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface font-data-mono">142</div>
+</div>
+<!-- High Risk Metric -->
+<div class="bg-surface-dim border border-lum-border rounded-lg p-md flex flex-col justify-between glow-critical relative overflow-hidden hover-expand">
+<div class="absolute top-0 left-0 w-1 h-full bg-risk-high"></div>
+<div class="flex justify-between items-center mb-sm pl-sm">
+<span class="font-label-caps text-label-caps text-risk-high uppercase flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-risk-high animate-pulse"></span>
+                            Critical Faults
+                        </span>
+<span class="material-symbols-outlined text-risk-high text-[20px]">warning</span>
+</div>
+<div class="font-display-lg text-display-lg text-risk-high font-data-mono pl-sm">03</div>
+</div>
+<!-- Medium Risk Metric -->
+<div class="bg-surface-dim border border-lum-border rounded-lg p-md flex flex-col justify-between relative overflow-hidden hover-expand">
+<div class="absolute top-0 left-0 w-1 h-full bg-risk-medium"></div>
+<div class="flex justify-between items-center mb-sm pl-sm">
+<span class="font-label-caps text-label-caps text-risk-medium uppercase">Medium Anomalies</span>
+<span class="material-symbols-outlined text-risk-medium text-[20px]">error</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface font-data-mono pl-sm">18</div>
+</div>
+<!-- System Status -->
+<div class="bg-surface-dim border border-lum-border rounded-lg p-md flex flex-col justify-between relative hover-expand">
+<div class="flex justify-between items-center mb-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Telemetry Engine</span>
+<span class="material-symbols-outlined text-risk-low text-[20px]">dns</span>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full w-[98%] chart-flow"></div>
+</div>
+<span class="font-data-mono text-data-mono text-risk-low" id="telemetry-stat">98.2% UP</span>
+</div>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="bg-surface-container-low border border-lum-border rounded-lg p-md flex flex-wrap items-center gap-md">
+<div class="flex-1 min-w-[150px]">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-xs">Alert ID</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-2 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full pl-8 pr-3 py-1.5 rounded bg-surface border-lum-border text-body-sm font-data-mono focus:border-primary focus:ring-1 focus:ring-primary" placeholder="e.g. ALR-992..." type="text"/>
+</div>
+</div>
+<div class="w-32">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-xs">Severity</label>
+<select class="w-full px-3 py-1.5 rounded bg-surface border-lum-border text-body-sm focus:border-primary focus:ring-1 focus:ring-primary appearance-none">
+<option value="">All</option>
+<option value="high">High</option>
+<option value="medium">Medium</option>
+<option value="low">Low</option>
+</select>
+</div>
+<div class="w-40">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-xs">Device</label>
+<select class="w-full px-3 py-1.5 rounded bg-surface border-lum-border text-body-sm focus:border-primary focus:ring-1 focus:ring-primary appearance-none">
+<option value="">All Devices</option>
+<option value="turb1">Turbine A1</option>
+<option value="conv2">Conveyor B2</option>
+</select>
+</div>
+<div class="w-32">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-xs">Status</label>
+<select class="w-full px-3 py-1.5 rounded bg-surface border-lum-border text-body-sm focus:border-primary focus:ring-1 focus:ring-primary appearance-none">
+<option value="active">Active</option>
+<option value="processing">Processing</option>
+<option value="closed">Closed</option>
+</select>
+</div>
+<div class="w-48">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-xs">Date Range</label>
+<input class="w-full px-3 py-1.5 rounded bg-surface border-lum-border text-body-sm focus:border-primary focus:ring-1 focus:ring-primary" type="date"/>
+</div>
+<div class="mt-5 flex gap-sm">
+<button class="px-md py-1.5 bg-primary-container text-on-primary-container rounded font-title-sm text-title-sm hover:opacity-90 transition-opacity hover-expand">Apply</button>
+<button class="px-md py-1.5 border border-lum-border text-on-surface rounded font-title-sm text-title-sm hover:bg-surface-variant transition-colors hover-expand">Reset</button>
+</div>
+</div>
+<!-- Structured Alert List (Bento-style Grid list instead of plain table) -->
+<div class="flex-1 flex flex-col gap-sm">
+<!-- List Header -->
+<div class="grid grid-cols-12 gap-md px-md py-sm bg-surface-container border border-lum-border rounded-t font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
+<div class="col-span-2">ID / Time</div>
+<div class="col-span-2">Target Device</div>
+<div class="col-span-1">Severity</div>
+<div class="col-span-3">Trigger Condition</div>
+<div class="col-span-1">Match %</div>
+<div class="col-span-1">Status</div>
+<div class="col-span-2 text-right">Actions</div>
+</div>
+<!-- Alert Item: High Risk -->
+<div class="grid grid-cols-12 gap-md px-md py-md bg-surface-dim border border-lum-border hover:bg-surface-container-highest transition-colors items-center relative overflow-hidden group entry-fade-right delay-1 row-hover glow-critical">
+<div class="absolute top-0 left-0 w-1 h-full bg-risk-high shadow-[0_0_10px_rgba(227,77,89,0.8)]"></div>
+<div class="col-span-2 flex flex-col pl-sm">
+<span class="font-data-mono text-data-mono text-on-surface">ALR-9042</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant opacity-70">10:42:05 UTC</span>
+</div>
+<div class="col-span-2 flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">Main Turbine A1</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Bearing Assembly</span>
+</div>
+<div class="col-span-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-risk-high/10 text-risk-high border border-risk-high/20">
+<span class="w-1.5 h-1.5 rounded-full bg-risk-high animate-pulse"></span>
+                            HIGH
+                        </span>
+</div>
+<div class="col-span-3 flex items-center gap-sm">
+<span class="material-symbols-outlined text-risk-high text-[18px]">device_thermostat</span>
+<span class="font-data-mono text-data-mono text-on-surface bg-surface px-2 py-1 rounded border border-lum-border">Temp &gt; 85.5°C</span>
+</div>
+<div class="col-span-1 font-data-mono text-data-mono text-on-surface" id="match-1">
+                        99.2%
+                    </div>
+<div class="col-span-1">
+<span class="text-on-surface-variant font-body-sm">Active</span>
+</div>
+<div class="col-span-2 flex justify-end gap-sm">
+<button class="p-1.5 rounded bg-surface border border-lum-border hover:border-primary text-primary transition-colors tooltip relative hover-expand">
+<span class="material-symbols-outlined text-[18px]">view_in_ar</span>
+</button>
+<button class="px-3 py-1.5 rounded bg-risk-high/20 border border-risk-high text-risk-high font-title-sm text-title-sm hover:bg-risk-high hover:text-white transition-colors hover-expand">
+                            Details
+                        </button>
+</div>
+</div>
+<!-- Alert Item: Medium Risk -->
+<div class="grid grid-cols-12 gap-md px-md py-md bg-surface-dim border border-lum-border hover:bg-surface-container-highest transition-colors items-center relative overflow-hidden group entry-fade-right delay-2 row-hover">
+<div class="absolute top-0 left-0 w-1 h-full bg-risk-medium"></div>
+<div class="col-span-2 flex flex-col pl-sm">
+<span class="font-data-mono text-data-mono text-on-surface">ALR-9041</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant opacity-70">10:38:12 UTC</span>
+</div>
+<div class="col-span-2 flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">Conveyor B2</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Motor Drive</span>
+</div>
+<div class="col-span-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-risk-medium/10 text-risk-medium border border-risk-medium/20">
+                            MED
+                        </span>
+</div>
+<div class="col-span-3 flex items-center gap-sm">
+<span class="material-symbols-outlined text-risk-medium text-[18px]">vibration</span>
+<span class="font-data-mono text-data-mono text-on-surface bg-surface px-2 py-1 rounded border border-lum-border">Vib_Z &gt; 4.2mm/s</span>
+</div>
+<div class="col-span-1 font-data-mono text-data-mono text-on-surface" id="match-2">
+                        84.5%
+                    </div>
+<div class="col-span-1">
+<span class="text-on-surface-variant font-body-sm">Processing</span>
+</div>
+<div class="col-span-2 flex justify-end gap-sm">
+<button class="p-1.5 rounded bg-surface border border-lum-border hover:border-primary text-primary transition-colors tooltip relative hover-expand">
+<span class="material-symbols-outlined text-[18px]">view_in_ar</span>
+</button>
+<button class="px-3 py-1.5 rounded bg-surface border border-lum-border text-on-surface font-title-sm text-title-sm hover:bg-surface-variant transition-colors hover-expand">
+                            Details
+                        </button>
+</div>
+</div>
+<!-- Alert Item: Low/Closed -->
+<div class="grid grid-cols-12 gap-md px-md py-md bg-surface-dim/50 border border-lum-border hover:bg-surface-container-highest transition-colors items-center relative overflow-hidden group opacity-70 hover:opacity-100 entry-fade-right delay-3 row-hover">
+<div class="absolute top-0 left-0 w-1 h-full bg-outline"></div>
+<div class="col-span-2 flex flex-col pl-sm">
+<span class="font-data-mono text-data-mono text-on-surface">ALR-9038</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant opacity-70">09:15:00 UTC</span>
+</div>
+<div class="col-span-2 flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">Pump Station 4</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Inlet Valve</span>
+</div>
+<div class="col-span-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-surface border border-outline-variant text-on-surface-variant">
+                            LOW
+                        </span>
+</div>
+<div class="col-span-3 flex items-center gap-sm">
+<span class="material-symbols-outlined text-outline text-[18px]">speed</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant bg-surface px-2 py-1 rounded border border-lum-border">Flow &lt; 100L/m</span>
+</div>
+<div class="col-span-1 font-data-mono text-data-mono text-on-surface-variant">
+                        62.0%
+                    </div>
+<div class="col-span-1">
+<span class="text-risk-low font-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                            Closed
+                        </span>
+</div>
+<div class="col-span-2 flex justify-end gap-sm">
+<button class="px-3 py-1.5 rounded bg-surface border border-lum-border text-on-surface font-title-sm text-title-sm hover:bg-surface-variant transition-colors hover-expand">
+                            Log
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+    // Data Jitter Simulation
+    setInterval(() => {
+        // Jitter Match %
+        const match1 = document.getElementById('match-1');
+        if (match1) {
+            const base = 99.2;
+            const jitter = (Math.random() * 0.4 - 0.2).toFixed(1);
+            match1.innerText = `${(base + parseFloat(jitter)).toFixed(1)}%`;
+        }
+
+        const match2 = document.getElementById('match-2');
+        if (match2) {
+            const base = 84.5;
+            const jitter = (Math.random() * 0.8 - 0.4).toFixed(1);
+            match2.innerText = `${(base + parseFloat(jitter)).toFixed(1)}%`;
+        }
+
+        // Jitter Telemetry Stat
+        const telStat = document.getElementById('telemetry-stat');
+        if (telStat) {
+            const base = 98.2;
+            const jitter = (Math.random() * 0.2 - 0.1).toFixed(1);
+            telStat.innerText = `${(base + parseFloat(jitter)).toFixed(1)}% UP`;
+        }
+    }, 2000);
+</script>
+</body></html>

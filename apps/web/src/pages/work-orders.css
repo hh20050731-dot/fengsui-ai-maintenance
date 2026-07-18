@@ -1,0 +1,43 @@
+.work-orders-page .filter-bar { margin-top: 14px; }
+.work-order-id { color: var(--industrial-primary); font-size: 11px; font-weight: 600; }
+.work-order-sync { display: inline-flex; align-items: center; gap: 5px; color: var(--industrial-text-muted); font-size: 10px; white-space: nowrap; }
+.work-order-sync i { width: 6px; height: 6px; border-radius: 999px; background: var(--industrial-offline); }
+.work-order-sync i.is-synced, .work-order-detail__header .work-order-sync i { background: var(--industrial-success); box-shadow: 0 0 6px rgba(68,216,173,.4); }
+.work-order-transition { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; border: 1px solid var(--industrial-border); border-radius: 4px; background: var(--industrial-surface-low); padding: 12px; color: var(--industrial-text-muted); }
+.work-order-part-selector { display: grid; gap: 8px; border: 1px solid var(--industrial-border); border-radius: 4px; background: var(--industrial-surface-low); padding: 12px; }
+.work-order-part-selector > label { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.work-order-part-selector > label > span { display: flex; align-items: center; gap: 8px; color: var(--industrial-text-secondary); font-size: 12px; }
+.work-order-part-selector small { color: var(--industrial-text-muted); font-size: 10px; }
+.work-order-detail__header { display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid var(--industrial-border); padding-bottom: 14px; }
+.work-order-detail__header h3 { color: var(--industrial-text); font-size: 20px; font-weight: 650; }
+.work-order-detail__header button { margin-top: 7px; color: var(--industrial-primary); font-size: 12px; }
+.work-order-detail__header > div:last-child { text-align: right; }
+.work-order-detail__header > div:last-child span { display: block; color: var(--industrial-text-muted); font-size: 10px; }
+.work-order-detail__header > div:last-child strong { display: block; margin-top: 4px; color: var(--industrial-text); font-size: 13px; }
+.work-order-detail__grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(280px, .75fr); gap: 14px; }
+.work-order-detail__main, .work-order-detail__side { display: flex; min-width: 0; flex-direction: column; gap: 14px; }
+.work-order-copy, .work-order-suggestion { padding: 16px; color: var(--industrial-text-secondary); font-size: 12px; line-height: 1.8; }
+.work-order-suggestion { display: grid; gap: 8px; }
+.work-order-suggestion li { position: relative; padding-left: 14px; }
+.work-order-suggestion li::before { content: ''; position: absolute; left: 0; top: .68em; width: 5px; height: 5px; border-radius: 999px; background: var(--industrial-primary); }
+.work-order-result-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.work-order-result-grid p { padding: 14px; color: var(--industrial-text-secondary); font-size: 11px; line-height: 1.7; }
+.work-order-health-delta { display: flex; align-items: center; justify-content: center; gap: 17px; padding: 22px 12px; color: var(--industrial-text-muted); }
+.work-order-health-delta span { text-align: center; }
+.work-order-health-delta strong { display: block; color: #ff858e; font-size: 38px; line-height: 1; }
+.work-order-health-delta strong.is-after { color: var(--industrial-success); }
+.work-order-health-delta small { display: block; margin-top: 7px; color: var(--industrial-text-muted); font-size: 9px; }
+.work-order-facts, .work-order-parts { padding: 14px; }
+.work-order-facts > div, .work-order-parts > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid rgba(85,213,255,.08); padding: 9px 0; }
+.work-order-facts span, .work-order-parts h4 { color: var(--industrial-text-muted); font-size: 10px; }
+.work-order-facts strong, .work-order-parts span { max-width: 64%; color: var(--industrial-text-secondary); font-size: 11px; font-weight: 550; text-align: right; }
+.work-order-parts h4 { margin: 5px 0 2px; color: var(--industrial-primary); }
+.work-order-parts h4:not(:first-child) { margin-top: 16px; }
+.work-order-parts strong { color: var(--industrial-text); font-size: 11px; }
+.work-order-parts p { padding: 8px 0; color: var(--industrial-text-muted); font-size: 11px; }
+.work-order-detail__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 16px; border-top: 1px solid var(--industrial-border); padding-top: 14px; }
+
+@media (max-width: 960px) {
+  .work-order-detail__grid { grid-template-columns: 1fr; }
+  .work-order-result-grid { grid-template-columns: 1fr; }
+}

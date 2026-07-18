@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fengsui Zhishou - Digital Twin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#b4c5ff",
+                        "secondary-container": "#92aeff",
+                        "primary-container": "#0052d9",
+                        "on-secondary-container": "#1f3f89",
+                        "surface": "#f8f9ff",
+                        "surface-container-highest": "#d4e4fc",
+                        "surface-tint": "#0353da",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#dae1ff",
+                        "on-background": "#0d1c2e",
+                        "outline-variant": "#c3c6d7",
+                        "on-primary-container": "#cbd6ff",
+                        "inverse-primary": "#b4c5ff",
+                        "on-surface-variant": "#434654",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-surface": "#0d1c2e",
+                        "secondary": "#3e5ba6",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#390c00",
+                        "secondary-fixed-dim": "#b3c5ff",
+                        "on-secondary-fixed": "#001849",
+                        "surface-dim": "#ccdbf3",
+                        "outline": "#737686",
+                        "surface-container": "#e5eeff",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "primary": "#003da6",
+                        "inverse-surface": "#223144",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#832700",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed": "#00174b",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-fixed": "#ffdbd0",
+                        "background": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-secondary-fixed-variant": "#23438c",
+                        "surface-bright": "#f8f9ff",
+                        "tertiary": "#822600",
+                        "tertiary-container": "#aa3500",
+                        "tertiary-fixed-dim": "#ffb59c",
+                        "surface-variant": "#d4e4fc",
+                        "on-tertiary-container": "#ffccbc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "margin": "24px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "base": "4px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "data-mono": ["JetBrains Mono"],
+                        "title-sm": ["Hanken Grotesk"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "label-caps": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "data-mono": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "title-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f8f9ff; color: #0d1c2e; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .filled-icon { font-variation-settings: 'FILL' 1; }
+        .workspace-bg { background-color: #0b1120; background-image: radial-gradient(#1f2937 1px, transparent 1px); background-size: 24px 24px; }
+        .chart-path { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: dash 2s ease-in-out forwards; }
+        @keyframes dash { to { stroke-dashoffset: 0; } }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c3c6d7; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #737686; }
+    </style>
+</head>
+<body class="flex flex-col font-body-md bg-surface antialiased">
+<!-- TopNavBar -->
+<nav class="fixed top-0 right-0 h-16 w-[calc(100%-16rem)] flex justify-between items-center px-lg z-40 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="font-label-caps text-label-caps uppercase text-primary font-bold border-b-2 border-primary pb-1 mr-4 cursor-pointer">Site Alpha</span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors cursor-pointer pb-1">Turbine 04</span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors cursor-pointer pb-1">Live Telemetry</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="bg-primary text-on-primary font-label-caps px-4 py-2 rounded shadow-sm hover:bg-surface-tint transition-colors">Sync Feishu</button>
+<div class="flex gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="sync">sync</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="help">help</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant ml-2">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A small circular avatar placeholder image showing a generic user silhouette in muted gray tones against a light blue background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4e6omaBZJPrGO5zsVgzVfDSTaS3UjP1SLy1SlhMa4QI7Vt7grJ8iYZyr3R3jblFydZx3EHNcIlcsKto1LaBBWDpTIkIWGCKQ_ZdfvzOqbePwwOAo1GWKPp2AezlMvw-MNDOGCpcYGC2EfP9amyozDgA7idkWjczV1RWR4K8cps2HVuJKZrvVFaWxGynsjdLoOibusAiqY4nbEw9LvSe1ARAHNqOM3_UII_eBR8mzv6Vg6GtX1VY_Z5Q"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface bg-surface-container-low shadow-sm flex flex-col py-md overflow-y-auto z-50">
+<div class="px-md mb-xl flex items-center gap-sm">
+<div class="w-10 h-10 rounded bg-primary-container flex items-center justify-center text-on-primary font-bold text-lg">FZ</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary leading-tight">Fengsui Zhishou</h1>
+<p class="font-body-sm text-on-surface-variant text-[10px] uppercase tracking-wider">O&amp;M Platform</p>
+</div>
+</div>
+<nav class="flex-1 px-sm space-y-1">
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-primary-container/10 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined filled-icon" data-icon="precision_manufacturing">precision_manufacturing</span>
+<span class="font-body-md">Digital Twin</span>
+</a>
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-body-md font-medium">Assets</span>
+</a>
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-body-md font-medium">Work Orders</span>
+</a>
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-body-md font-medium">Diagnostics</span>
+</a>
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md font-medium">Settings</span>
+</a>
+</nav>
+<div class="px-md mt-auto pt-md border-t border-outline-variant">
+<div class="bg-surface-container-high p-3 rounded text-center">
+<span class="font-data-mono text-data-mono text-primary">System Health: 98%</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 mt-16 p-4 h-[calc(100vh-4rem)] flex gap-4 bg-surface-container-lowest">
+<!-- Left Panel: Selectors -->
+<div class="w-64 flex flex-col gap-4 flex-shrink-0">
+<!-- Equipment Selector -->
+<div class="bg-surface border border-outline-variant rounded-lg p-4 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+<div class="flex justify-between items-center mb-3">
+<span class="font-title-sm text-title-sm font-semibold">设备</span>
+<span class="font-body-sm text-on-surface-variant">1 台</span>
+</div>
+<div class="bg-surface-container-low border border-primary/20 rounded p-3 mb-3 cursor-pointer hover:bg-surface-container-high transition-colors border-l-4 border-l-primary">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="air">air</span>
+<span class="font-title-sm text-sm font-bold">1号引风机</span>
+</div>
+<div class="flex justify-between items-center text-xs">
+<span class="font-data-mono text-on-surface-variant">IDF-01</span>
+<span class="flex items-center gap-1 text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> 在线</span>
+</div>
+</div>
+<div class="text-xs text-on-surface-variant space-y-1 font-data-mono">
+<p>离心式引风机</p>
+<p>焚烧间 A 区</p>
+<p>台账编号: IDF-001</p>
+</div>
+</div>
+<!-- Scenario Selector -->
+<div class="bg-surface border border-outline-variant rounded-lg p-4 shadow-[0_2px_8px_rgba(0,0,0,0.05)] flex-1 overflow-y-auto">
+<div class="flex justify-between items-center mb-3 pb-2 border-b border-outline-variant">
+<span class="font-title-sm text-title-sm font-semibold">故障场景</span>
+<span class="font-body-sm text-on-surface-variant text-xs cursor-pointer hover:text-primary">演示切换</span>
+</div>
+<ul class="space-y-1">
+<li class="flex justify-between items-center p-2 bg-surface-container-high rounded text-sm font-medium cursor-pointer">
+<span>正常运行</span>
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+</li>
+<li class="flex justify-between items-center p-2 hover:bg-surface-container-low rounded text-sm text-on-surface-variant cursor-pointer transition-colors">
+<span>叶轮不平衡</span>
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+</li>
+<li class="flex justify-between items-center p-2 hover:bg-surface-container-low rounded text-sm text-on-surface-variant cursor-pointer transition-colors">
+<span>轴承温升</span>
+<span class="w-2 h-2 rounded-full bg-red-500"></span>
+</li>
+<li class="flex justify-between items-center p-2 hover:bg-surface-container-low rounded text-sm text-on-surface-variant cursor-pointer transition-colors">
+<span>联轴器不对中</span>
+<span class="w-2 h-2 rounded-full bg-red-500"></span>
+</li>
+</ul>
+<p class="text-[10px] text-outline mt-4 leading-relaxed">
+                    切换场景将同步更新指标、趋势、辅助研判与模型表现，不会写入设备台账。
+                </p>
+</div>
+</div>
+<!-- Center 3D Workspace -->
+<div class="flex-1 flex flex-col border border-outline-variant rounded-lg overflow-hidden bg-surface shadow-[0_2px_8px_rgba(0,0,0,0.05)] relative">
+<div class="h-10 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center px-4">
+<div class="flex items-center gap-2">
+<span class="font-title-sm text-sm font-bold">三维模型</span>
+<span class="font-data-mono text-[10px] text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded">/models/induced-draft-fan.glb</span>
+</div>
+<div class="flex items-center gap-3 text-xs text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> 正常运行</span>
+<span class="px-1.5 py-0.5 border border-outline-variant rounded text-[10px]">原始材质</span>
+</div>
+</div>
+<!-- 3D Area (Simulated) -->
+<div class="flex-1 workspace-bg relative flex items-center justify-center overflow-hidden">
+<!-- Placeholder for actual 3D rendering. Using an image placeholder to simulate the model view -->
+<img alt="3D Model Placeholder" class="max-w-[80%] max-h-[80%] object-contain opacity-80" data-alt="A highly detailed 3D wireframe render of an industrial induced draft fan centered in a dark, grid-patterned workspace. The model is rendered in a bright, luminous white/light gray wireframe style, standing out sharply against the deep navy and charcoal background, implying a technical digital twin environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0QEpV9WQaSb0tIMOCeDSFEiE8MKeAL4Z7Kgiy84TSZ7DFgx_DtYcozZcJzbnXwdILmDVWky46gqS666o9Rj527AmKeHRho3UfSlaSSvNOoEkv6ZIjwQJCGGT2evlaaepXTZXQl6hTWTeQQsR0JeFdU4Kj1yrbZLgTC2x6Vg5TduVCmYK34KQ5QSsrceHVrLXYQthcNhY7wnPZ6rHxmvkwHqq4a-ibKfzgLMYOsZyrJeiBBKR1HsxHHw"/>
+<!-- Overlay Controls -->
+<div class="absolute top-4 right-4 bg-surface/10 backdrop-blur-md border border-white/10 rounded flex gap-1 p-1 text-white text-xs font-label-caps">
+<button class="px-2 py-1 hover:bg-white/20 rounded flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-[14px]" data-icon="zoom_in_map">zoom_in_map</span> 复位</button>
+<button class="px-2 py-1 hover:bg-white/20 rounded flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-[14px]" data-icon="crop_square">crop_square</span> 正视</button>
+<button class="px-2 py-1 hover:bg-white/20 rounded flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-[14px]" data-icon="swap_horiz">swap_horiz</span> 侧视</button>
+<button class="px-2 py-1 hover:bg-white/20 rounded flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-[14px]" data-icon="flip_to_front">flip_to_front</span> 俯视</button>
+<div class="w-px h-4 bg-white/20 self-center mx-1"></div>
+<button class="px-2 py-1 hover:bg-white/20 rounded flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-[14px]" data-icon="fullscreen">fullscreen</span> 全屏</button>
+</div>
+<div class="absolute bottom-4 left-4 bg-surface/10 backdrop-blur-md border border-white/10 rounded px-2 py-1 text-white/70 text-[10px] font-data-mono">
+                    左键旋转 · 滚轮缩放 · 右键平移 · 点击部件查看节点
+                </div>
+</div>
+<div class="h-8 border-t border-outline-variant bg-surface-container-lowest flex justify-between items-center px-4 text-[10px] text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]" data-icon="info">info</span> 模型包含 27 个独立 Mesh; 节点命名以 SHELL 为主，点击可查看真实节点，语义部件无法匹配时自动使用整机效果。</span>
+<span class="font-data-mono flex items-center gap-1"><span class="material-symbols-outlined text-[12px]" data-icon="deployed_code">deployed_code</span> 28 nodes / 27 meshes</span>
+</div>
+</div>
+<!-- Right Panel: Telemetry & Diagnostics -->
+<div class="w-80 flex flex-col gap-4 flex-shrink-0">
+<!-- Status Overview -->
+<div class="bg-surface border border-outline-variant rounded-lg p-4 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+<div class="flex justify-between items-center border-b border-outline-variant pb-2 mb-3">
+<span class="font-title-sm text-sm font-bold">运行状态</span>
+<span class="flex items-center gap-1 text-xs text-green-600 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> 在线</span>
+</div>
+<div class="grid grid-cols-3 gap-2 mb-4 text-center divide-x divide-outline-variant">
+<div>
+<div class="text-[10px] text-on-surface-variant mb-1">健康度</div>
+<div class="font-data-mono text-2xl font-bold">96</div>
+</div>
+<div>
+<div class="text-[10px] text-on-surface-variant mb-1">风险等级</div>
+<div class="font-data-mono text-lg font-bold text-green-600 mt-1">低</div>
+</div>
+<div>
+<div class="text-[10px] text-on-surface-variant mb-1">故障概率</div>
+<div class="font-data-mono text-lg font-bold">4<span class="text-[10px] font-normal text-on-surface-variant">%</span></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm border-t border-outline-variant pt-3">
+<div>
+<div class="flex items-center gap-1 text-[10px] text-on-surface-variant mb-1"><span class="material-symbols-outlined text-[12px]" data-icon="device_thermostat">device_thermostat</span> 轴承温度</div>
+<div class="font-data-mono font-medium">54 <span class="text-[10px] font-normal text-on-surface-variant">°C</span></div>
+</div>
+<div>
+<div class="flex items-center gap-1 text-[10px] text-on-surface-variant mb-1"><span class="material-symbols-outlined text-[12px]" data-icon="show_chart">show_chart</span> 振动速度</div>
+<div class="font-data-mono font-medium">2.1 <span class="text-[10px] font-normal text-on-surface-variant">mm/s</span></div>
+</div>
+<div>
+<div class="flex items-center gap-1 text-[10px] text-on-surface-variant mb-1"><span class="material-symbols-outlined text-[12px]" data-icon="autorenew">autorenew</span> 转速</div>
+<div class="font-data-mono font-medium">1480 <span class="text-[10px] font-normal text-on-surface-variant">r/min</span></div>
+</div>
+<div>
+<div class="flex items-center gap-1 text-[10px] text-on-surface-variant mb-1"><span class="material-symbols-outlined text-[12px]" data-icon="electric_bolt">electric_bolt</span> 电流</div>
+<div class="font-data-mono font-medium">38 <span class="text-[10px] font-normal text-on-surface-variant">A</span></div>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-outline-variant text-[11px] flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant" data-icon="history_toggle_off">history_toggle_off</span>
+<span class="text-on-surface-variant">当前状态:</span>
+<span class="font-medium">高负荷稳定运行</span>
+</div>
+</div>
+<!-- Diagnostics & Suggestions -->
+<div class="bg-surface border border-outline-variant rounded-lg p-4 shadow-[0_2px_8px_rgba(0,0,0,0.05)] flex-1 overflow-y-auto flex flex-col">
+<div class="flex justify-between items-center border-b border-outline-variant pb-2 mb-3">
+<span class="font-title-sm text-sm font-bold">辅助研判</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant px-1.5 py-0.5 bg-surface-container-low rounded border border-outline-variant">规则演示</span>
+</div>
+<div class="bg-blue-50/50 border border-blue-100 rounded p-3 mb-4 flex gap-2">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5" data-icon="info">info</span>
+<p class="text-xs text-on-surface-variant leading-relaxed">当前主要指标位于演示工况基准范围内，未发现持续异常趋势。</p>
+</div>
+<div class="mb-4 flex-1">
+<h4 class="text-[11px] font-bold text-on-surface mb-2">检修建议</h4>
+<ul class="text-xs text-on-surface-variant space-y-2">
+<li class="flex gap-2 items-start">
+<span class="material-symbols-outlined text-[14px] text-outline mt-0.5" data-icon="check_circle">check_circle</span>
+<span>按既定点检周期检查轴承、联轴器和润滑状态</span>
+</li>
+<li class="flex gap-2 items-start">
+<span class="material-symbols-outlined text-[14px] text-outline mt-0.5" data-icon="visibility">visibility</span>
+<span>持续观察振动与温度趋势</span>
+</li>
+</ul>
+<div class="mt-3 text-[11px]">
+<span class="text-on-surface-variant">建议时限:</span> <span class="font-bold">按计划点检</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant border-dashed rounded p-3 mb-4 text-center cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="text-xs text-on-surface-variant flex items-center justify-center gap-1 mb-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="account_tree">account_tree</span> 已选模型节点
+                    </div>
+<div class="text-[10px] text-outline">未选择 (点击模型部件查看)</div>
+</div>
+<button class="w-full bg-inverse-surface text-on-inverse-surface py-2 rounded text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[16px]" data-icon="open_in_new">open_in_new</span>
+                    查看关联工单
+                </button>
+<p class="text-[9px] text-outline mt-3 text-center leading-tight">
+                    本结果根据模拟数据和规则库生成，仅供比赛演示。是否停机及检修安排应由现场负责人结合安全规程决定。
+                </p>
+</div>
+</div>
+</main>
+</body></html>

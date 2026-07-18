@@ -1,4 +1,4 @@
-import { createMockData, type Alert, type Equipment, type KnowledgeEntry, type OperationLog, type SparePart, type SparePartTransaction, type TelemetryPoint, type WorkOrder } from '@fengsui/shared';
+import { createMockData, matchesWorkOrderIdentifier, normalizeWorkOrderIdentity, type Alert, type Equipment, type KnowledgeEntry, type OperationLog, type SparePart, type SparePartTransaction, type TelemetryPoint, type WorkOrder } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
 import type { DataRepository } from './data-repository.js';
 
@@ -15,9 +15,15 @@ export class MockRepository implements DataRepository {
   async getAlert(id: string) { return this.data.alerts.find((item) => item.alertId === id); }
   async updateAlert(id: string, patch: Partial<Alert>) { return this.update('alerts', 'alertId', id, patch); }
   async listWorkOrders() { return this.data.workOrders; }
-  async getWorkOrder(id: string) { return this.data.workOrders.find((item) => item.workOrderId === id); }
-  async createWorkOrder(input: WorkOrder) { this.data.workOrders.unshift(input); return input; }
-  async updateWorkOrder(id: string, patch: Partial<WorkOrder>) { return this.update('workOrders', 'workOrderId', id, patch); }
+  async getWorkOrder(identifier: string) { return this.data.workOrders.find((item) => matchesWorkOrderIdentifier(item, identifier)); }
+  async createWorkOrder(input: WorkOrder) { const normalized = normalizeWorkOrderIdentity(input) as WorkOrder; this.data.workOrders.unshift(normalized); return normalized; }
+  async updateWorkOrder(identifier: string, patch: Partial<WorkOrder>) {
+    const index = this.data.workOrders.findIndex((item) => matchesWorkOrderIdentifier(item, identifier));
+    if (index < 0) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', `未找到维修工单：${identifier}`);
+    const updated = normalizeWorkOrderIdentity({ ...this.data.workOrders[index]!, ...patch }) as WorkOrder;
+    this.data.workOrders[index] = updated;
+    return updated;
+  }
   async listSpareParts() { return this.data.spareParts; }
   async getSparePart(id: string) { return this.data.spareParts.find((item) => item.partId === id); }
   async updateSparePart(id: string, patch: Partial<SparePart>) { return this.update('spareParts', 'partId', id, patch); }

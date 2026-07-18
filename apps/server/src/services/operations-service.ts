@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
-  assertWorkOrderTransition, getStockStatus, type AiDiagnosis, type CreateWorkOrderInput, type DashboardData, type Equipment, type KnowledgeEntry, type SparePartUsage,
+  assertWorkOrderTransition, getStockStatus, getWorkOrderNo, getWorkOrderTransitionIdentifier, type AiDiagnosis, type CreateWorkOrderInput, type DashboardData, type Equipment, type KnowledgeEntry, type SparePartUsage,
   type TelemetryPoint, type WorkOrder, type WorkOrderStatus,
 } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
@@ -76,21 +76,25 @@ export class OperationsService {
     const faultDescription = twin
       ? `${twin.faultPart} · ${twin.faultType}；故障概率 ${twin.failureProbability}%；温度 ${twin.temperature}℃、振动 ${twin.vibration} mm/s、转速 ${twin.speed} r/min、电流 ${twin.current} A；辅助研判：${twin.diagnosis}`
       : `${alert.abnormalIndicators.join('、')}异常：${alert.suspectedCause}`;
+    const workOrderNo = input.replayWorkOrderId ?? `WO-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String((await this.repository.listWorkOrders()).length + 1).padStart(3, '0')}`;
+    const createdAt = twin?.createdAt ?? new Date().toISOString();
+    const faultPart = twin?.faultPart ?? (alert.abnormalIndicators.join('、') || '待现场确认');
+    const faultType = twin?.faultType ?? alert.suspectedCause;
     const order: WorkOrder = {
-      workOrderId: input.replayWorkOrderId ?? `WO-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String((await this.repository.listWorkOrders()).length + 1).padStart(3, '0')}`,
+      id: workOrderNo, workOrderNo, workOrderId: workOrderNo,
       sourceAlertId: alert.alertId, deviceId: alert.deviceId, deviceName: alert.deviceName, riskLevel,
-      faultDescription,
+      faultPart, faultType, faultDescription,
       maintenanceSuggestion: twin?.advice ?? alert.maintenanceSuggestion, assignee: input.assignee, assigneeUserId: input.assigneeUserId,
-      createdBy, createdTime: twin?.createdAt ?? new Date().toISOString(), deadline: input.deadline ?? new Date(Date.now() + 24 * 3_600_000).toISOString(),
+      createdBy, createdAt, createdTime: createdAt, deadline: input.deadline ?? new Date(Date.now() + 24 * 3_600_000).toISOString(),
       requiredSpareParts: required.map((part) => ({ partId: part.partId, partName: part.partName, quantity: 1, unit: part.unit })),
       consumedSpareParts: [], processingRecord: [{ id: randomUUID(), time: new Date().toISOString(), operator: createdBy, action: '创建工单', detail: twin ? `由预警 ${alert.alertId} 和3D数字孪生“${twin.faultType}”场景生成` : `由预警 ${alert.alertId} 生成` }],
       healthScoreBefore: twin?.healthScore ?? alert.healthScore, status: '待接单',
     };
-    await this.repository.createWorkOrder(order);
-    await this.repository.updateAlert(alertId, { alertStatus: '已生成工单', relatedWorkOrderId: order.workOrderId });
-    await this.log('work-order', order.workOrderId, '创建工单', createdBy, `来源预警 ${alertId}`);
-    this.idempotency.set(input.idempotencyKey, order);
-    return order;
+    const created = await this.repository.createWorkOrder(order);
+    await this.repository.updateAlert(alertId, { alertStatus: '已生成工单', relatedWorkOrderId: getWorkOrderNo(created) });
+    await this.log('work-order', getWorkOrderNo(created), '创建工单', createdBy, `来源预警 ${alertId}`);
+    this.idempotency.set(input.idempotencyKey, created);
+    return created;
   }
 
   async transitionWorkOrder(id: string, input: {
@@ -108,7 +112,9 @@ export class OperationsService {
     const consumed = input.consumedSpareParts ? await this.resolveUsage(input.consumedSpareParts) : order.consumedSpareParts;
     if (input.targetStatus === '已完成') await this.ensureStock(consumed);
     const record = { id: randomUUID(), time: new Date().toISOString(), operator: input.operator, action: `状态推进：${order.status} → ${input.targetStatus}`, detail: input.note || '按标准流程推进' };
-    const updated = await this.repository.updateWorkOrder(id, {
+    const updateIdentifier = getWorkOrderTransitionIdentifier(order);
+    if (!updateIdentifier) throw new AppError(404, 'WORK_ORDER_IDENTIFIER_MISSING', '维修工单缺少可用标识');
+    const updated = await this.repository.updateWorkOrder(updateIdentifier, {
       status: input.targetStatus, inspectionResult: input.inspectionResult ?? order.inspectionResult,
       repairResult: input.repairResult ?? order.repairResult, consumedSpareParts: consumed,
       healthScoreAfter: input.healthScoreAfter ?? order.healthScoreAfter, verificationResult: input.verificationResult ?? order.verificationResult,
@@ -117,7 +123,7 @@ export class OperationsService {
     });
     if (input.targetStatus === '已完成') await this.completeWorkOrder(updated, input.operator, input.idempotencyKey);
     else if (order.sourceAlertId) await this.repository.updateAlert(order.sourceAlertId, { alertStatus: input.targetStatus === '待接单' ? '已生成工单' : '处理中' });
-    await this.log('work-order', id, '推进工单状态', input.operator, `${order.status} → ${input.targetStatus}；${input.note}`);
+    await this.log('work-order', getWorkOrderNo(updated), '推进工单状态', input.operator, `${order.status} → ${input.targetStatus}；${input.note}`);
     this.idempotency.set(input.idempotencyKey, updated);
     return updated;
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assertWorkOrderTransition, canTransitionWorkOrder, getNextWorkOrderActions } from './index.js';
+import { assertWorkOrderTransition, canTransitionWorkOrder, getNextWorkOrderActions, getWorkOrderTransitionIdentifier } from './index.js';
 
 describe('维修工单状态机', () => {
   it('允许标准正向推进和待验证退回', () => {
@@ -13,5 +13,9 @@ describe('维修工单状态机', () => {
     expect(getNextWorkOrderActions('待接单')).toContain('已取消');
     expect(getNextWorkOrderActions('已完成')).toEqual([]);
     expect(() => assertWorkOrderTransition('已完成', '检修中')).toThrow('不允许');
+  });
+  it('状态更新标识优先使用飞书 recordId', () => {
+    expect(getWorkOrderTransitionIdentifier({ id: 'internal-001', workOrderNo: 'WO-001', workOrderId: 'WO-001', recordId: 'rec-001' })).toBe('rec-001');
+    expect(getWorkOrderTransitionIdentifier({ id: 'internal-001', workOrderNo: 'WO-001', workOrderId: 'WO-001' })).toBe('internal-001');
   });
 });

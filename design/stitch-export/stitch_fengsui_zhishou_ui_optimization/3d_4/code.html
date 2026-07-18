@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>3D Digital Twin - Normal Operation | Fengsui Command Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#ffcc89",
+                      "inverse-on-surface": "#263140",
+                      "error-container": "#93000a",
+                      "on-background": "#d8e3f7",
+                      "secondary-fixed-dim": "#33dfae",
+                      "on-tertiary-container": "#674200",
+                      "surface-container-highest": "#2b3545",
+                      "on-surface": "#d8e3f7",
+                      "primary-fixed": "#b9eaff",
+                      "on-tertiary-fixed": "#291800",
+                      "error": "#ffb4ab",
+                      "on-primary-fixed-variant": "#004d61",
+                      "surface-bright": "#2f3a49",
+                      "on-primary": "#003544",
+                      "primary-container": "#28c8f5",
+                      "inverse-surface": "#d8e3f7",
+                      "tertiary-fixed": "#ffddb4",
+                      "on-secondary-fixed-variant": "#00513c",
+                      "surface": "#091422",
+                      "surface-variant": "#2b3545",
+                      "surface-container-high": "#202b3a",
+                      "on-tertiary-fixed-variant": "#633f00",
+                      "secondary-fixed": "#5bfcc9",
+                      "background": "#091422",
+                      "on-primary-container": "#005065",
+                      "surface-tint": "#55d5ff",
+                      "on-tertiary": "#452b00",
+                      "primary": "#8fe0ff",
+                      "surface-container": "#15202f",
+                      "primary-fixed-dim": "#55d5ff",
+                      "secondary-container": "#03ce9e",
+                      "secondary": "#44ebb8",
+                      "on-primary-fixed": "#001f29",
+                      "surface-container-low": "#111c2b",
+                      "surface-container-lowest": "#040f1d",
+                      "tertiary-container": "#f8a926",
+                      "outline": "#869399",
+                      "surface-dim": "#091422",
+                      "on-secondary-fixed": "#002116",
+                      "inverse-primary": "#006780",
+                      "on-surface-variant": "#bcc8cf",
+                      "on-secondary-container": "#00523d",
+                      "tertiary-fixed-dim": "#ffb955",
+                      "on-secondary": "#003829",
+                      "on-error": "#690005",
+                      "on-error-container": "#ffdad6",
+                      "outline-variant": "#3d494e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "margin-page": "24px",
+                      "panel-padding": "20px"
+              },
+              "fontFamily": {
+                      "display-lg": ["notoSans"],
+                      "data-display": ["jetbrainsMono"],
+                      "body-lg": ["notoSans"],
+                      "body-sm": ["notoSans"],
+                      "headline-md": ["notoSans"],
+                      "data-label": ["jetbrainsMono"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "data-display": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "data-label": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body { background-color: #06111F; } /* Deep space backdrop */
+        
+        .glass-panel {
+            background: rgba(12, 32, 52, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(72, 183, 226, 0.18);
+            border-radius: 0.5rem;
+        }
+        
+        .glass-panel:hover {
+            border-color: rgba(68, 235, 184, 0.5); /* Secondary/Cyan glow */
+            box-shadow: 0 0 15px rgba(68, 235, 184, 0.1);
+        }
+
+        .status-dot.healthy {
+            background-color: #44ebb8;
+            box-shadow: 0 0 8px #44ebb8;
+        }
+
+        .data-input {
+            background: #091422;
+            border-bottom: 1px solid #3d494e;
+        }
+        .data-input:focus-within {
+            border-bottom-color: #8fe0ff;
+            background: linear-gradient(0deg, rgba(143,224,255,0.05) 0%, rgba(9,20,34,0) 100%);
+        }
+
+        /* Scanner ring animation */
+        @keyframes scan {
+            0% { transform: scale(0.8) rotate(0deg); opacity: 0.8; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.2; }
+            100% { transform: scale(0.8) rotate(360deg); opacity: 0.8; }
+        }
+        .scanner-ring {
+            animation: scan 8s linear infinite;
+        }
+    </style>
+</head>
+<body class="text-on-surface min-h-screen flex flex-col font-body-sm relative overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-gutter h-16 bg-surface-container/90 backdrop-blur-xl border-b border-outline-variant/30 text-primary">
+<div class="flex items-center gap-6">
+<span class="font-display-lg text-display-lg font-bold text-primary tracking-tighter">Fengsui Command Center</span>
+<div class="hidden md:flex gap-4">
+<a class="text-on-surface-variant font-medium hover:text-secondary-fixed-dim transition-colors opacity-80 hover:opacity-100" href="#">Plant Alpha-7</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1" href="#">Status: Online</a>
+<a class="text-on-surface-variant font-medium hover:text-secondary-fixed-dim transition-colors opacity-80 hover:opacity-100" href="#">Sync: Active</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded font-medium border border-primary/30 transition-colors">Alert Center</button>
+<button class="text-on-surface-variant hover:text-secondary-fixed-dim transition-colors">Feishu Link</button>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-surface-container-highest rounded-full transition-colors group">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">notifications</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-full transition-colors group">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">settings</span>
+</button>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/50 ml-2">
+<img alt="Operator Profile" class="w-full h-full object-cover" data-alt="A futuristic, high-tech abstract geometric avatar for an industrial command center operator. Deep dark blue and cyan hues, sleek vector style, glowing edges, minimalist tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6VUbJSBoS-xfHq-ssnK53mERTBF-x3YnY3U9AUdxQEanUAdtDjgaVfG0qwEVssNPPXvGqKFUo_3VbaBJv8ej5os6OPIv4wBStWYMR8t0_K1pM2IHQtJIqhLlNgIBzUd144KnBwPpkYFl9g2Rds2SBHODj4WNXGwPt0i8CcBLjL24i7_Oh9jvUbx86Qrcft9gCtVTveLGtvX7suRj7LJFmk46FvgOxLkprKZXF561xQskphqRK1WFPCw"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full flex flex-col py-6 z-40 bg-surface-container-lowest/95 backdrop-blur-2xl border-r border-outline-variant/20 shadow-lg shadow-primary/5 docked h-screen w-20 hover:w-64 transition-all duration-300 group mt-16">
+<div class="px-4 mb-8 flex items-center gap-3 overflow-hidden whitespace-nowrap">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center border border-outline-variant/30 shrink-0">
+<span class="material-symbols-outlined text-primary">memory</span>
+</div>
+<div class="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+<span class="font-headline-md text-headline-md text-on-surface">F-SCC</span>
+<span class="font-data-label text-data-label text-outline">V2.4.0-Stable</span>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-2 px-2 overflow-hidden">
+<a class="flex items-center gap-4 p-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all group/item whitespace-nowrap" href="#">
+<span class="material-symbols-outlined shrink-0 group-hover/item:text-primary">dashboard</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 p-3 rounded-lg bg-secondary-container/20 text-secondary-fixed shadow-[0_0_15px_rgba(68,235,184,0.3)] border-r-4 border-secondary translate-x-1 duration-200 group/item whitespace-nowrap" href="#">
+<span class="material-symbols-outlined shrink-0" style="font-variation-settings: 'FILL' 1;">hub</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-bold">Topology</span>
+</a>
+<a class="flex items-center gap-4 p-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all group/item whitespace-nowrap" href="#">
+<span class="material-symbols-outlined shrink-0 group-hover/item:text-primary">build_circle</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Maintenance</span>
+</a>
+<a class="flex items-center gap-4 p-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all group/item whitespace-nowrap" href="#">
+<span class="material-symbols-outlined shrink-0 group-hover/item:text-primary">analytics</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Analytics</span>
+</a>
+<a class="flex items-center gap-4 p-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all group/item whitespace-nowrap" href="#">
+<span class="material-symbols-outlined shrink-0 group-hover/item:text-primary">history</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Logs</span>
+</a>
+</nav>
+<div class="mt-auto px-2 flex flex-col gap-2 overflow-hidden">
+<a class="flex items-center gap-4 p-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all group/item whitespace-nowrap" href="#">
+<span class="material-symbols-outlined shrink-0">help</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Support</span>
+</a>
+<a class="flex items-center gap-4 p-3 rounded-lg text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-all group/item whitespace-nowrap" href="#">
+<span class="material-symbols-outlined shrink-0">terminal</span>
+<span class="font-data-label text-data-label opacity-0 group-hover:opacity-100 transition-opacity duration-300">Terminal</span>
+</a>
+<button class="mt-4 mx-2 py-2 px-4 bg-error-container/20 text-error border border-error/50 rounded hover:bg-error-container/40 transition-colors whitespace-nowrap opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+<span class="font-data-label text-data-label font-bold">Emergency Stop</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-20 mt-16 p-margin-page grid grid-cols-24 gap-gutter transition-all duration-300">
+<!-- Background Grid Floor -->
+<div class="fixed inset-0 z-[-1] opacity-20 pointer-events-none" style="background-image: radial-gradient(circle at center, transparent 0%, #06111F 80%), linear-gradient(rgba(72, 183, 226, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(72, 183, 226, 0.1) 1px, transparent 1px); background-size: 100% 100%, 40px 40px, 40px 40px;"></div>
+<!-- Left Column: Controls & Scenarios -->
+<section class="col-span-24 lg:col-span-6 flex flex-col gap-gutter">
+<div class="glass-panel p-panel-padding relative overflow-hidden">
+<div class="absolute top-2 right-2 font-data-display text-[10px] text-outline opacity-60">ID: SEL-001</div>
+<h2 class="font-headline-md text-[18px] text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">precision_manufacturing</span>
+                    Device Selection
+                </h2>
+<div class="space-y-3">
+<button class="w-full text-left p-3 rounded bg-surface-container-highest border border-primary/30 text-primary-fixed flex items-center justify-between group">
+<span class="font-data-display text-[14px]">IDF-01 Blower</span>
+<div class="w-2 h-2 rounded-full status-dot healthy"></div>
+</button>
+<button class="w-full text-left p-3 rounded bg-surface-container/50 border border-outline-variant/30 text-on-surface-variant hover:border-outline/50 transition-colors flex items-center justify-between">
+<span class="font-data-display text-[14px]">IDF-02 Blower</span>
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+</button>
+<button class="w-full text-left p-3 rounded bg-surface-container/50 border border-outline-variant/30 text-on-surface-variant hover:border-outline/50 transition-colors flex items-center justify-between">
+<span class="font-data-display text-[14px]">PA-01 Pump</span>
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+</button>
+</div>
+</div>
+<div class="glass-panel p-panel-padding relative flex-1">
+<div class="absolute top-2 right-2 font-data-display text-[10px] text-outline opacity-60">ID: SIM-002</div>
+<h2 class="font-headline-md text-[18px] text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">science</span>
+                    Fault Scenarios
+                </h2>
+<div class="grid grid-cols-1 gap-2">
+<label class="flex items-center gap-3 p-3 rounded bg-secondary-container/10 border border-secondary/30 cursor-pointer">
+<input checked="" class="form-radio text-secondary focus:ring-secondary bg-surface border-outline-variant h-4 w-4" name="scenario" type="radio"/>
+<span class="font-data-label text-secondary">Normal Operation</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded hover:bg-surface-container-highest border border-transparent hover:border-outline-variant/50 transition-colors cursor-pointer data-input">
+<input class="form-radio text-primary focus:ring-primary bg-surface border-outline-variant h-4 w-4" name="scenario" type="radio"/>
+<span class="font-data-label text-on-surface-variant">Rotor Imbalance</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded hover:bg-surface-container-highest border border-transparent hover:border-outline-variant/50 transition-colors cursor-pointer data-input">
+<input class="form-radio text-primary focus:ring-primary bg-surface border-outline-variant h-4 w-4" name="scenario" type="radio"/>
+<span class="font-data-label text-on-surface-variant">Bearing Temp Rise</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded hover:bg-surface-container-highest border border-transparent hover:border-outline-variant/50 transition-colors cursor-pointer data-input">
+<input class="form-radio text-primary focus:ring-primary bg-surface border-outline-variant h-4 w-4" name="scenario" type="radio"/>
+<span class="font-data-label text-on-surface-variant">Shaft Misalignment</span>
+</label>
+</div>
+</div>
+</section>
+<!-- Center Column: 3D Twin & AI -->
+<section class="col-span-24 lg:col-span-12 flex flex-col gap-gutter">
+<!-- 3D Viewport Area -->
+<div class="glass-panel relative flex-1 min-h-[500px] flex items-center justify-center overflow-hidden border border-primary/20" style="box-shadow: inset 0 0 40px rgba(12,32,52,0.8);">
+<!-- Coordinate Grid Base -->
+<div class="absolute bottom-10 w-3/4 h-64 border border-outline-variant/20 rounded-full" style="transform: rotateX(75deg); background: radial-gradient(circle, rgba(68,235,184,0.05) 0%, transparent 70%);">
+<div class="w-full h-full border border-secondary/30 rounded-full scanner-ring"></div>
+<div class="absolute inset-0 border border-primary/10 rounded-full scale-[1.2]"></div>
+<div class="absolute inset-0 border border-primary/10 rounded-full scale-[1.4]"></div>
+</div>
+<!-- Abstract Representation of 3D Blower Model -->
+<div class="relative z-10 w-64 h-64 flex flex-col items-center justify-center">
+<div class="w-32 h-48 border-2 border-primary/40 bg-surface-container/50 backdrop-blur-md rounded-t-full relative flex items-center justify-center shadow-[0_0_30px_rgba(143,224,255,0.1)]">
+<div class="w-16 h-16 border-4 border-secondary border-dashed rounded-full animate-[spin_4s_linear_infinite] opacity-70"></div>
+<div class="absolute w-40 h-2 bg-primary/30 bottom-10 -ml-20 rounded shadow-[0_0_10px_rgba(143,224,255,0.4)]"></div>
+</div>
+</div>
+<!-- Floating Data Labels -->
+<div class="absolute top-1/4 left-1/4 font-data-display text-[12px] text-primary bg-surface-container/80 px-2 py-1 border border-primary/30 rounded backdrop-blur-sm">
+<span class="opacity-50 mr-1">T-01</span> 54°C
+                    <div class="absolute w-16 h-[1px] bg-primary/30 -right-16 top-1/2"></div>
+</div>
+<div class="absolute bottom-1/3 right-1/4 font-data-display text-[12px] text-secondary bg-surface-container/80 px-2 py-1 border border-secondary/30 rounded backdrop-blur-sm">
+<span class="opacity-50 mr-1">V-02</span> 2.1mm/s
+                    <div class="absolute w-20 h-[1px] bg-secondary/30 -left-20 top-1/2"></div>
+</div>
+<div class="absolute top-4 left-4 flex gap-2">
+<button class="bg-surface-container border border-outline-variant/30 text-on-surface-variant p-1.5 rounded hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">view_in_ar</span></button>
+<button class="bg-surface-container border border-outline-variant/30 text-on-surface-variant p-1.5 rounded hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">layers</span></button>
+</div>
+<div class="absolute bottom-4 right-4 font-data-display text-[10px] text-outline text-right leading-tight">
+                    COORD: X 45.2 Y -12.0 Z 108.5<br/>
+                    RENDER: HIGH-RES REALTIME
+                </div>
+</div>
+<!-- AI Assistant Banner -->
+<div class="glass-panel p-4 border border-secondary/20 bg-secondary-container/5 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-secondary/40 shrink-0 shadow-[0_0_10px_rgba(68,235,184,0.2)]">
+<span class="material-symbols-outlined text-secondary">smart_toy</span>
+</div>
+<div class="flex-1">
+<p class="font-body-sm text-on-surface">"System running stable within baseline parameters. No anomalies detected in current operational mode."</p>
+</div>
+<div class="shrink-0 flex gap-2">
+<span class="w-1 h-4 bg-secondary/40 animate-pulse delay-75"></span>
+<span class="w-1 h-4 bg-secondary/80 animate-pulse delay-150"></span>
+<span class="w-1 h-4 bg-secondary/40 animate-pulse delay-300"></span>
+</div>
+</div>
+</section>
+<!-- Right Column: Health & Metrics -->
+<section class="col-span-24 lg:col-span-6 flex flex-col gap-gutter">
+<!-- Health Overview -->
+<div class="glass-panel p-panel-padding relative">
+<div class="absolute top-2 right-2 font-data-display text-[10px] text-outline opacity-60">ID: HLTH-99</div>
+<h2 class="font-headline-md text-[18px] text-on-surface mb-6">Asset Health</h2>
+<div class="flex items-end gap-4 mb-6">
+<div class="text-display-lg font-display-lg text-secondary leading-none">96<span class="text-[24px]">%</span></div>
+<div class="flex flex-col pb-1">
+<span class="font-data-label text-outline uppercase">Status</span>
+<span class="font-data-display text-secondary">Optimal</span>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between font-data-label text-[10px] uppercase mb-1">
+<span class="text-outline">Risk Level</span>
+<span class="text-secondary">Low</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded overflow-hidden">
+<div class="h-full bg-secondary w-[15%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-data-label text-[10px] uppercase mb-1">
+<span class="text-outline">Failure Prob (72h)</span>
+<span class="text-primary">4%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded overflow-hidden">
+<div class="h-full bg-primary w-[4%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Telemetry -->
+<div class="glass-panel p-panel-padding relative flex-1">
+<div class="absolute top-2 right-2 font-data-display text-[10px] text-outline opacity-60">ID: TLM-04</div>
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-headline-md text-[18px] text-on-surface">Telemetry</h2>
+<span class="flex items-center gap-1 font-data-label text-[10px] text-secondary border border-secondary/30 px-2 py-0.5 rounded bg-secondary/5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> LIVE
+                    </span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<!-- Metric Card 1 -->
+<div class="bg-surface-container/40 p-3 rounded border border-outline-variant/20 hover:border-primary/40 transition-colors">
+<div class="font-data-label text-outline text-[10px] uppercase mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">device_thermostat</span> Bearing Temp
+                        </div>
+<div class="font-data-display text-[20px] text-on-surface">54<span class="text-[12px] text-outline ml-1">°C</span></div>
+<!-- Sparkline placeholder -->
+<div class="h-6 mt-2 border-b border-primary/20 relative" style="background: linear-gradient(90deg, transparent 0%, rgba(143,224,255,0.1) 100%);">
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 100 24">
+<polyline fill="none" points="0,15 20,12 40,16 60,10 80,14 100,12" stroke="#8fe0ff" stroke-opacity="0.7" stroke-width="1.5"></polyline>
+</svg>
+</div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-surface-container/40 p-3 rounded border border-outline-variant/20 hover:border-secondary/40 transition-colors">
+<div class="font-data-label text-outline text-[10px] uppercase mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">vibration</span> Vibration
+                        </div>
+<div class="font-data-display text-[20px] text-on-surface">2.1<span class="text-[12px] text-outline ml-1">mm/s</span></div>
+<div class="h-6 mt-2 border-b border-secondary/20 relative" style="background: linear-gradient(90deg, transparent 0%, rgba(68,235,184,0.1) 100%);">
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 100 24">
+<polyline fill="none" points="0,10 20,15 40,8 60,12 80,9 100,11" stroke="#44ebb8" stroke-opacity="0.7" stroke-width="1.5"></polyline>
+</svg>
+</div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-surface-container/40 p-3 rounded border border-outline-variant/20 hover:border-primary/40 transition-colors">
+<div class="font-data-label text-outline text-[10px] uppercase mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">rotate_right</span> RPM
+                        </div>
+<div class="font-data-display text-[20px] text-on-surface">1480</div>
+</div>
+<!-- Metric Card 4 -->
+<div class="bg-surface-container/40 p-3 rounded border border-outline-variant/20 hover:border-primary/40 transition-colors">
+<div class="font-data-label text-outline text-[10px] uppercase mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">electric_bolt</span> Current
+                        </div>
+<div class="font-data-display text-[20px] text-on-surface">38<span class="text-[12px] text-outline ml-1">A</span></div>
+</div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="glass-panel p-4 flex flex-col gap-2">
+<button class="w-full bg-primary text-on-primary font-bold py-2 px-4 rounded hover:bg-primary-fixed-dim transition-colors flex items-center justify-center gap-2 relative overflow-hidden group">
+<div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+<span class="material-symbols-outlined text-[18px]">build</span>
+                    Generate Work Order
+                </button>
+<div class="grid grid-cols-2 gap-2 mt-2">
+<button class="bg-transparent border border-primary text-primary hover:bg-primary/10 py-1.5 px-2 rounded font-medium text-sm transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span> Trends
+                    </button>
+<button class="bg-transparent border border-primary text-primary hover:bg-primary/10 py-1.5 px-2 rounded font-medium text-sm transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">history</span> History
+                    </button>
+</div>
+</div>
+</section>
+</main>
+</body></html>
