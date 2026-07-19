@@ -15,6 +15,41 @@ const persistedDemoFlow: DemoJournalEntry[] = [
 ];
 
 describe('Mock API', () => {
+  it('健康检查返回版本、运行模式与可核对的Git SHA字段', async () => {
+    const { app } = createApp({ forceMock: true });
+    const response = await request(app).get('/api/health').expect(200);
+    expect(response.body.data).toMatchObject({ status: 'ok', version: '1.0.2', mode: 'mock', gitSha: expect.any(String) });
+  });
+
+  it('提供可追溯RAG、结构化研判、受控Agent和多模态安全降级接口', async () => {
+    const { app } = createApp({ forceMock: true });
+    const rag = await request(app).post('/api/rag/search').send({ query: '引风机轴承温升', limit: 5 }).expect(200);
+    expect(rag.body.data.citations.length).toBeGreaterThan(0);
+    expect(rag.body.data.citations[0]).toMatchObject({ title: expect.any(String), sourceRef: expect.any(String), excerpt: expect.any(String) });
+
+    const structured = await request(app).post('/api/ai/structured-diagnose').send({ deviceId: 'IDF-001', question: '为什么存在轴承温升风险？' }).expect(200);
+    expect(structured.body.data.deviceId).toBe('IDF-001');
+    expect(structured.body.data.citations.length).toBeGreaterThan(0);
+    expect(structured.body.data.limitations.join('')).toContain('比赛演示');
+
+    const agent = await request(app).post('/api/agent/run').send({ deviceId: 'IDF-001', task: '执行风险研判与检修准备', maxSteps: 10, timeoutMs: 12_000, confirmCreateWorkOrder: false, operator: '黄浩' }).expect(200);
+    expect(agent.body.data.status).toBe('awaiting_confirmation');
+    expect(agent.body.data.steps.map((item: { toolName: string }) => item.toolName)).toContain('searchKnowledgeBase');
+    expect(agent.body.data.workOrderId).toBeUndefined();
+
+    const image = Buffer.from('competition-demo-image').toString('base64');
+    const multimodal = await request(app).post('/api/multimodal/inspect').send({ deviceId: 'IDF-001', fileName: '现场照片.png', mediaType: '现场照片', mimeType: 'image/png', size: 22, dataUrl: `data:image/png;base64,${image}` }).expect(200);
+    expect(multimodal.body.data.provider).toBe('LocalDemonstrationInspectionProvider');
+    expect(multimodal.body.data.limitations.join('')).toContain('不能替代现场检测');
+  });
+
+  it('RAG无匹配或Repository异常时不伪造引用', async () => {
+    const { app } = createApp({ forceMock: true });
+    const result = await request(app).post('/api/rag/search').send({ query: '量子星际曲率发动机', limit: 5 }).expect(200);
+    expect(result.body.data.citations).toHaveLength(0);
+    expect(result.body.data.message).toContain('未检索到');
+  });
+
   it('辅助研判按九类问题返回不同答案并回显真实问题', async () => {
     const { app } = createApp({ forceMock: true });
     const questions = [
@@ -36,7 +71,7 @@ describe('Mock API', () => {
     }
     expect(new Set(answers.map((item) => item.intent))).toHaveLength(9);
     expect(new Set(answers.map((item) => item.riskJudgment))).toHaveLength(9);
-    expect(answers[0].deviceId).toBe('LTP-001');
+    expect(answers[0].deviceId).toBe('LCP-001');
     expect(answers[1].riskJudgment).toContain('高风险设备');
     expect(answers[2].deviceId).toBe('IDF-001');
     expect(answers[3].riskJudgment).toContain('待处理工单');

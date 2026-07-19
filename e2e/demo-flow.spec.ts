@@ -10,7 +10,7 @@ test('1号引风机完整维修闭环', async ({ page }) => {
   await expect(page.getByTestId('device-health-score')).toHaveText('68');
   await page.getByRole('button', { name: '立即研判' }).click();
   await expect(page.getByText('辅助研判 · 1号引风机')).toBeVisible();
-  await expect(page.getByText(/4.2 mm\/s 上升至 6.8 mm\/s/)).toBeVisible();
+  await expect(page.getByText(/4\.1 mm\/s 上升至 6\.8 mm\/s/)).toBeVisible();
   await page.getByRole('button', { name: '关闭' }).click();
   await page.getByRole('button', { name: '生成维修工单' }).click();
   await expect(page).toHaveURL(/work-orders\/WO-/);
@@ -59,7 +59,7 @@ test('1号引风机完整维修闭环', async ({ page }) => {
 
 test('引风机3D数字孪生场景与入口联动', async ({ page }) => {
   await page.goto('/digital-twin?equipment=IDF-01&fault=bearing-overheat');
-  await expect(page.getByRole('heading', { name: '引风机数字孪生' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '3D数字孪生工作台' })).toBeVisible();
   await expect(page.getByTestId('digital-twin-viewer')).toBeVisible();
   await expect(page.getByTestId('twin-temperature')).toContainText('82');
   await expect(page.getByRole('button', { name: '轴承温升' })).toHaveAttribute('aria-pressed', 'true');

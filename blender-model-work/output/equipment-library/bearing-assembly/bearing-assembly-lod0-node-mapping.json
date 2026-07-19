@@ -1,0 +1,27 @@
+{
+  "modelId": "bearing-assembly",
+  "label": "轴承组件",
+  "lod": "lod0",
+  "meshCount": 12,
+  "triangleCount": 2132,
+  "nodes": [
+    "bearing_assembly_root",
+    "drive_base",
+    "base_mount_-1.4500000000000002_-0.85",
+    "base_mount_-1.4500000000000002_0.85",
+    "base_mount_1.4500000000000002_-0.85",
+    "base_mount_1.4500000000000002_0.85",
+    "bearing_drive_group",
+    "bearing_drive_housing",
+    "bearing_drive_outer_ring",
+    "bearing_drive_shaft",
+    "bearing_drive_temperature_sensor",
+    "bearing_drive_vibration_sensor",
+    "bearing_drive_fault_locator",
+    "bearing_roller_00",
+    "bearing_roller_01",
+    "bearing_roller_02",
+    "bearing_roller_03",
+    "rotation_axis"
+  ]
+}

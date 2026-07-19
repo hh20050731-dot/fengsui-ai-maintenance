@@ -62,6 +62,33 @@ export const diagnosisRequestSchema = z.object({
   question: z.string().trim().min(2, '请输入至少2个字符的问题').max(200, '问题不能超过200个字符'),
 });
 
+export const ragSearchRequestSchema = z.object({
+  query: z.string().trim().min(2).max(300),
+  deviceType: z.string().trim().min(1).max(80).optional(),
+  faultType: z.string().trim().min(1).max(80).optional(),
+  riskLevel: z.enum(['正常', '关注', '预警', '严重']).optional(),
+  limit: z.number().int().min(1).max(10).default(5),
+});
+
+export const multimodalInspectionRequestSchema = z.object({
+  deviceId: z.string().trim().min(1).max(64),
+  fileName: z.string().trim().min(1).max(160),
+  mediaType: z.enum(['现场照片', '仪表照片', '泄漏照片', '振动频谱截图', '温度趋势截图']),
+  mimeType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  size: z.number().int().positive().max(8 * 1024 * 1024),
+  dataUrl: z.string().startsWith('data:image/').max(12 * 1024 * 1024),
+});
+
+export const agentRunRequestSchema = z.object({
+  deviceId: z.string().trim().min(1).max(64),
+  alertId: z.string().trim().min(1).max(80).optional(),
+  task: z.string().trim().min(2).max(240).default('执行设备风险研判与检修准备'),
+  maxSteps: z.number().int().min(3).max(12).default(10),
+  timeoutMs: z.number().int().min(1000).max(30_000).default(12_000),
+  confirmCreateWorkOrder: z.boolean().default(false),
+  operator: z.string().trim().min(1).max(40).default('黄浩'),
+});
+
 export const demoJournalEntrySchema = z.object({
   version: z.literal(1),
   method: z.enum(['POST', 'PATCH']),

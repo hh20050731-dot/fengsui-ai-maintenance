@@ -1,0 +1,24 @@
+{
+  "modelId": "flexible-coupling",
+  "label": "弹性联轴器",
+  "lod": "lod1",
+  "meshCount": 11,
+  "triangleCount": 724,
+  "nodes": [
+    "flexible_coupling_root",
+    "drive_base",
+    "base_mount_-1.6999999999999997_-0.7000000000000001",
+    "base_mount_-1.6999999999999997_0.7000000000000001",
+    "base_mount_1.6999999999999997_-0.7000000000000001",
+    "base_mount_1.6999999999999997_0.7000000000000001",
+    "input_shaft",
+    "coupling_group",
+    "coupling_input",
+    "coupling_element",
+    "coupling_output",
+    "coupling_guard",
+    "coupling_misalignment_locator",
+    "output_shaft",
+    "rotation_axis"
+  ]
+}

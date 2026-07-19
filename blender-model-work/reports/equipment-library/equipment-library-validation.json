@@ -1,0 +1,263 @@
+{
+  "generatedBy": "Blender Python bpy",
+  "blenderVersion": "5.2.0 LTS",
+  "dataBoundary": "Competition semantic digital-twin models; not manufacturer-accurate CAD.",
+  "models": [
+    {
+      "modelId": "industrial-motor",
+      "label": "工业电机",
+      "blend": "blender-model-work/output/equipment-library/industrial-motor/industrial-motor.blend",
+      "preview": "blender-model-work/previews/equipment-library/industrial-motor.png",
+      "lods": [
+        {
+          "lod": "lod0",
+          "glb": "apps/web/public/models/industrial-motor-lod0.glb",
+          "size": 322584,
+          "meshCount": 26,
+          "triangleCount": 1112,
+          "nodeCount": 31
+        },
+        {
+          "lod": "lod1",
+          "glb": "apps/web/public/models/industrial-motor-lod1.glb",
+          "size": 213700,
+          "meshCount": 20,
+          "triangleCount": 704,
+          "nodeCount": 25
+        },
+        {
+          "lod": "lod2",
+          "glb": "apps/web/public/models/industrial-motor-lod2.glb",
+          "size": 141860,
+          "meshCount": 12,
+          "triangleCount": 464,
+          "nodeCount": 17
+        }
+      ]
+    },
+    {
+      "modelId": "bearing-assembly",
+      "label": "轴承组件",
+      "blend": "blender-model-work/output/equipment-library/bearing-assembly/bearing-assembly.blend",
+      "preview": "blender-model-work/previews/equipment-library/bearing-assembly.png",
+      "lods": [
+        {
+          "lod": "lod0",
+          "glb": "apps/web/public/models/bearing-assembly-lod0.glb",
+          "size": 247044,
+          "meshCount": 12,
+          "triangleCount": 2132,
+          "nodeCount": 18
+        },
+        {
+          "lod": "lod1",
+          "glb": "apps/web/public/models/bearing-assembly-lod1.glb",
+          "size": 168760,
+          "meshCount": 12,
+          "triangleCount": 804,
+          "nodeCount": 18
+        },
+        {
+          "lod": "lod2",
+          "glb": "apps/web/public/models/bearing-assembly-lod2.glb",
+          "size": 89748,
+          "meshCount": 8,
+          "triangleCount": 452,
+          "nodeCount": 14
+        }
+      ]
+    },
+    {
+      "modelId": "flexible-coupling",
+      "label": "弹性联轴器",
+      "blend": "blender-model-work/output/equipment-library/flexible-coupling/flexible-coupling.blend",
+      "preview": "blender-model-work/previews/equipment-library/flexible-coupling.png",
+      "lods": [
+        {
+          "lod": "lod0",
+          "glb": "apps/web/public/models/flexible-coupling-lod0.glb",
+          "size": 246924,
+          "meshCount": 11,
+          "triangleCount": 1204,
+          "nodeCount": 15
+        },
+        {
+          "lod": "lod1",
+          "glb": "apps/web/public/models/flexible-coupling-lod1.glb",
+          "size": 160692,
+          "meshCount": 11,
+          "triangleCount": 724,
+          "nodeCount": 15
+        },
+        {
+          "lod": "lod2",
+          "glb": "apps/web/public/models/flexible-coupling-lod2.glb",
+          "size": 117576,
+          "meshCount": 11,
+          "triangleCount": 484,
+          "nodeCount": 15
+        }
+      ]
+    },
+    {
+      "modelId": "feed-water-pump",
+      "label": "给水泵",
+      "blend": "blender-model-work/output/equipment-library/feed-water-pump/feed-water-pump.blend",
+      "preview": "blender-model-work/previews/equipment-library/feed-water-pump.png",
+      "lods": [
+        {
+          "lod": "lod0",
+          "glb": "apps/web/public/models/feed-water-pump-lod0.glb",
+          "size": 800772,
+          "meshCount": 40,
+          "triangleCount": 4548,
+          "nodeCount": 56
+        },
+        {
+          "lod": "lod1",
+          "glb": "apps/web/public/models/feed-water-pump-lod1.glb",
+          "size": 447504,
+          "meshCount": 34,
+          "triangleCount": 2028,
+          "nodeCount": 50
+        },
+        {
+          "lod": "lod2",
+          "glb": "apps/web/public/models/feed-water-pump-lod2.glb",
+          "size": 263152,
+          "meshCount": 26,
+          "triangleCount": 1116,
+          "nodeCount": 42
+        }
+      ]
+    },
+    {
+      "modelId": "circulation-water-pump",
+      "label": "循环水泵",
+      "blend": "blender-model-work/output/equipment-library/circulation-water-pump/circulation-water-pump.blend",
+      "preview": "blender-model-work/previews/equipment-library/circulation-water-pump.png",
+      "lods": [
+        {
+          "lod": "lod0",
+          "glb": "apps/web/public/models/circulation-water-pump-lod0.glb",
+          "size": 670812,
+          "meshCount": 35,
+          "triangleCount": 3880,
+          "nodeCount": 47
+        },
+        {
+          "lod": "lod1",
+          "glb": "apps/web/public/models/circulation-water-pump-lod1.glb",
+          "size": 374952,
+          "meshCount": 29,
+          "triangleCount": 1696,
+          "nodeCount": 41
+        },
+        {
+          "lod": "lod2",
+          "glb": "apps/web/public/models/circulation-water-pump-lod2.glb",
+          "size": 220152,
+          "meshCount": 21,
+          "triangleCount": 928,
+          "nodeCount": 33
+        }
+      ]
+    },
+    {
+      "modelId": "grate-gearbox",
+      "label": "炉排减速机",
+      "blend": "blender-model-work/output/equipment-library/grate-gearbox/grate-gearbox.blend",
+      "preview": "blender-model-work/previews/equipment-library/grate-gearbox.png",
+      "lods": [
+        {
+          "lod": "lod0",
+          "glb": "apps/web/public/models/grate-gearbox-lod0.glb",
+          "size": 807796,
+          "meshCount": 76,
+          "triangleCount": 2320,
+          "nodeCount": 80
+        },
+        {
+          "lod": "lod1",
+          "glb": "apps/web/public/models/grate-gearbox-lod1.glb",
+          "size": 464356,
+          "meshCount": 47,
+          "triangleCount": 1300,
+          "nodeCount": 51
+        },
+        {
+          "lod": "lod2",
+          "glb": "apps/web/public/models/grate-gearbox-lod2.glb",
+          "size": 180244,
+          "meshCount": 17,
+          "triangleCount": 652,
+          "nodeCount": 21
+        }
+      ]
+    },
+    {
+      "modelId": "air-compressor",
+      "label": "空气压缩机",
+      "blend": "blender-model-work/output/equipment-library/air-compressor/air-compressor.blend",
+      "preview": "blender-model-work/previews/equipment-library/air-compressor.png",
+      "lods": [
+        {
+          "lod": "lod0",
+          "glb": "apps/web/public/models/air-compressor-lod0.glb",
+          "size": 800184,
+          "meshCount": 46,
+          "triangleCount": 4284,
+          "nodeCount": 57
+        },
+        {
+          "lod": "lod1",
+          "glb": "apps/web/public/models/air-compressor-lod1.glb",
+          "size": 463924,
+          "meshCount": 38,
+          "triangleCount": 1932,
+          "nodeCount": 49
+        },
+        {
+          "lod": "lod2",
+          "glb": "apps/web/public/models/air-compressor-lod2.glb",
+          "size": 285428,
+          "meshCount": 28,
+          "triangleCount": 1044,
+          "nodeCount": 39
+        }
+      ]
+    },
+    {
+      "modelId": "leachate-pump",
+      "label": "渗滤液泵",
+      "blend": "blender-model-work/output/equipment-library/leachate-pump/leachate-pump.blend",
+      "preview": "blender-model-work/previews/equipment-library/leachate-pump.png",
+      "lods": [
+        {
+          "lod": "lod0",
+          "glb": "apps/web/public/models/leachate-pump-lod0.glb",
+          "size": 447216,
+          "meshCount": 22,
+          "triangleCount": 2940,
+          "nodeCount": 30
+        },
+        {
+          "lod": "lod1",
+          "glb": "apps/web/public/models/leachate-pump-lod1.glb",
+          "size": 239460,
+          "meshCount": 18,
+          "triangleCount": 1212,
+          "nodeCount": 26
+        },
+        {
+          "lod": "lod2",
+          "glb": "apps/web/public/models/leachate-pump-lod2.glb",
+          "size": 161356,
+          "meshCount": 16,
+          "triangleCount": 708,
+          "nodeCount": 24
+        }
+      ]
+    }
+  ]
+}

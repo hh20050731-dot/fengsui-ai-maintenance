@@ -1,0 +1,43 @@
+{
+  "source": "blender-model-work/output/induced-draft-fan-enhanced-v1.blend",
+  "dataBoundary": "Non-destructive LOD copies for visualization; source model unchanged.",
+  "lods": [
+    {
+      "lod": "lod0",
+      "target": 120000,
+      "trianglesBefore": 432666,
+      "trianglesAfter": 119993,
+      "decimationRatio": 0.269393,
+      "sizeBytes": 7200536,
+      "path": "apps/web/public/models/induced-draft-fan-lod0.glb",
+      "requiredNodes": 16,
+      "missingNodes": [],
+      "valid": true
+    },
+    {
+      "lod": "lod1",
+      "target": 30000,
+      "trianglesBefore": 432666,
+      "trianglesAfter": 29990,
+      "decimationRatio": 0.05909,
+      "sizeBytes": 1773376,
+      "path": "apps/web/public/models/induced-draft-fan-lod1.glb",
+      "requiredNodes": 16,
+      "missingNodes": [],
+      "valid": true
+    },
+    {
+      "lod": "lod2",
+      "target": 8000,
+      "trianglesBefore": 432666,
+      "trianglesAfter": 7985,
+      "decimationRatio": 0.007683,
+      "sizeBytes": 498724,
+      "path": "apps/web/public/models/induced-draft-fan-lod2.glb",
+      "requiredNodes": 16,
+      "missingNodes": [],
+      "valid": true
+    }
+  ],
+  "valid": true
+}

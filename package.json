@@ -12,6 +12,7 @@
     "dev": "concurrently -n server,web -c blue,cyan \"npm run dev -w @fengsui/server\" \"npm run dev -w @fengsui/web\"",
     "dev:server": "npm run dev -w @fengsui/server",
     "dev:web": "npm run dev -w @fengsui/web",
+    "dev:e2e": "concurrently -k -n e2e-server,e2e-web -c yellow,cyan \"tsx scripts/run-e2e-server.ts\" \"npm run dev -w @fengsui/web -- --host 127.0.0.1\"",
     "feishu:ws": "npm run build:shared && tsx apps/server/src/feishu-ws.ts",
     "build:shared": "npm run build --workspace=@fengsui/shared",
     "build:server": "npm run build --workspace=@fengsui/server",

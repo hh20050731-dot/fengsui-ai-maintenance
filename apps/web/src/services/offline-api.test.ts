@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AiDiagnosis, Alert, Equipment, KnowledgeEntry, SparePart, WorkOrder } from '@fengsui/shared';
+import type { AiDiagnosis, Alert, Equipment, KnowledgeEntry, RagSearchResult, SparePart, WorkOrder } from '@fengsui/shared';
 
 function installLocalStorage() {
   const values = new Map<string, string>();
@@ -74,5 +74,17 @@ describe('浏览器离线演示数据适配器', () => {
     expect(highest.intent).toBe('highest_risk_equipment');
     expect(inventory.intent).toBe('spare_part_availability');
     expect(highest.riskJudgment).not.toBe(inventory.riskJudgment);
+  });
+
+  it('连续中文问题能够召回可追溯RAG证据', async () => {
+    const offline = await import('./offline-api');
+    offline.resetOfflineDemoState();
+    const result = await offline.handleOfflineApi<RagSearchResult>('/rag/search', post({
+      query: '为什么判断1号引风机存在轴承温升风险？',
+      limit: 5,
+    }));
+    expect(result.citations.length).toBeGreaterThan(0);
+    expect(result.citations[0]?.sourceRef).toMatch(/^(knowledge|fault-case):/);
+    expect(result.citations[0]?.excerpt).not.toBe('');
   });
 });

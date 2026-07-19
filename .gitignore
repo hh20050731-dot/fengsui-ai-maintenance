@@ -6,14 +6,21 @@ coverage/
 playwright-report/
 test-results/
 screenshots/
+!deliverables/screenshots/
+!deliverables/screenshots/**
 .cache/
 .tmp/
 tmp/
 *.tsbuildinfo
 *.log
+*.inspect.ndjson
 .DS_Store
 .vercel/
 local-secrets/
+*.blend1
+deliverables/rendered-report/
+deliverables/report-final.docx
+deliverables/report-final.pdf
 
 design/stitch-export/
 

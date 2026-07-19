@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: { proxy: { '/api': { target: 'http://localhost:3001', changeOrigin: true } } },
   build: {
-    sourcemap: true,
+    sourcemap: false,
     rollupOptions: { output: { manualChunks: { react: ['react', 'react-dom', 'react-router-dom'], charts: ['recharts'], query: ['@tanstack/react-query'] } } },
   },
 });
