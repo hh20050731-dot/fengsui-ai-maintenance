@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
-  assertWorkOrderTransition, getStockStatus, getWorkOrderNo, getWorkOrderTransitionIdentifier, type AiDiagnosis, type CreateWorkOrderInput, type DashboardData, type Equipment, type KnowledgeEntry, type SparePartUsage,
+  assertWorkOrderTransition, getDiagnosisIntentRoute, getStockStatus, getWorkOrderNo, getWorkOrderTransitionIdentifier, resolveDiagnosisDevice, type AiDiagnosis, type CreateWorkOrderInput, type DashboardData, type Equipment, type KnowledgeEntry, type RuleDiagnosisContext, type SparePartUsage,
   type TelemetryPoint, type WorkOrder, type WorkOrderStatus,
 } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
@@ -50,9 +50,42 @@ export class OperationsService {
     };
   }
 
-  async diagnose(deviceId: string, question?: string): Promise<AiDiagnosis> {
-    const device = await this.mustDevice(deviceId);
-    return this.ai.diagnose({ device, telemetry: await this.repository.getTelemetry(deviceId), knowledge: await this.repository.listKnowledge(), question });
+  async diagnose(selectedDeviceId: string | undefined, question: string): Promise<AiDiagnosis> {
+    const route = getDiagnosisIntentRoute(question, selectedDeviceId);
+    const intent = route.intent;
+    const base: RuleDiagnosisContext = { question, intent, selectedDeviceId };
+    if (intent === 'unsupported_or_ambiguous') {
+      return this.ai.diagnose(base);
+    }
+    if (intent === 'highest_risk_equipment' || intent === 'high_risk_equipment_list') {
+      return this.ai.diagnose({ ...base, equipment: await this.repository.listEquipment() });
+    }
+    if (intent === 'pending_work_orders') {
+      return this.ai.diagnose({ ...base, workOrders: await this.repository.listWorkOrders() });
+    }
+    if (intent === 'spare_part_availability') {
+      return this.ai.diagnose({ ...base, spareParts: await this.repository.listSpareParts() });
+    }
+    if (intent === 'repeated_alerts') {
+      return this.ai.diagnose({ ...base, alerts: await this.repository.listAlerts() });
+    }
+    if (intent === 'maintenance_priority') {
+      const [equipment, alerts, workOrders] = await Promise.all([
+        this.repository.listEquipment(),
+        this.repository.listAlerts(),
+        this.repository.listWorkOrders(),
+      ]);
+      return this.ai.diagnose({ ...base, equipment, alerts, workOrders });
+    }
+    const equipment = await this.repository.listEquipment();
+    const device = resolveDiagnosisDevice(question, equipment, selectedDeviceId);
+    if (!device) throw new AppError(404, 'DIAGNOSIS_DEVICE_NOT_FOUND', '问题中未识别到设备，请选择设备或在问题中写明设备名称');
+    const [telemetry, knowledge, alerts] = await Promise.all([
+      this.repository.getTelemetry(device.deviceId),
+      this.repository.listKnowledge(),
+      this.repository.listAlerts(),
+    ]);
+    return this.ai.diagnose({ ...base, equipment, device, telemetry, knowledge, alerts });
   }
 
   async createWorkOrderFromAlert(alertId: string, input: CreateWorkOrderInput & { replayWorkOrderId?: string }, createdBy = '黄浩') {
@@ -61,14 +94,16 @@ export class OperationsService {
     const alert = await this.repository.getAlert(alertId);
     if (!alert) throw new AppError(404, 'ALERT_NOT_FOUND', '未找到预警');
     if (alert.relatedWorkOrderId) { const existing = await this.repository.getWorkOrder(alert.relatedWorkOrderId); if (existing) return existing; }
+    const workOrderNo = input.replayWorkOrderId ?? (/^ALT-/.test(alert.alertId)
+      ? alert.alertId.replace(/^ALT-/, 'WO-')
+      : `WO-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${alert.alertId.replace(/[^a-zA-Z0-9]/g, '').slice(-8) || 'ALERT'}`);
+    const persistedExisting = await this.repository.getWorkOrder(workOrderNo);
+    if (persistedExisting) {
+      this.idempotency.set(input.idempotencyKey, persistedExisting);
+      return persistedExisting;
+    }
     const twin = input.digitalTwinContext;
     if (twin && twin.equipmentId !== alert.deviceId) throw new AppError(409, 'EQUIPMENT_MISMATCH', '数字孪生场景设备与关联预警设备不一致');
-    try {
-      const notification = await this.notifications.sendAlert(alert);
-      await this.log('alert', alert.alertId, notification.delivered ? '发送预警通知' : '预警通知发送失败', '系统', notification.delivered ? `消息 ${notification.messageId || 'Mock 卡片预览'} 已生成` : `${notification.error ?? '未知错误'}；业务流程继续，可稍后重试`);
-    } catch (error) {
-      await this.log('alert', alert.alertId, '预警通知发送失败', '系统', `${error instanceof Error ? error.message : '未知错误'}；业务流程继续，可稍后重试`);
-    }
     const parts = await this.repository.listSpareParts();
     const twinPartNames = twin?.faultType === '联轴器不对中' ? ['联轴器'] : twin?.faultType === '轴承温升' ? ['风机轴承', '通用润滑油'] : [];
     const required = parts.filter((part) => twin ? twinPartNames.includes(part.partName) : alert.deviceId === 'IDF-001' ? ['风机轴承', '通用润滑油'].includes(part.partName) : alert.abnormalIndicators.some((indicator) => part.partName.includes(indicator.replace('轴承', '')))).slice(0, 2);
@@ -76,7 +111,6 @@ export class OperationsService {
     const faultDescription = twin
       ? `${twin.faultPart} · ${twin.faultType}；故障概率 ${twin.failureProbability}%；温度 ${twin.temperature}℃、振动 ${twin.vibration} mm/s、转速 ${twin.speed} r/min、电流 ${twin.current} A；辅助研判：${twin.diagnosis}`
       : `${alert.abnormalIndicators.join('、')}异常：${alert.suspectedCause}`;
-    const workOrderNo = input.replayWorkOrderId ?? `WO-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${String((await this.repository.listWorkOrders()).length + 1).padStart(3, '0')}`;
     const createdAt = twin?.createdAt ?? new Date().toISOString();
     const faultPart = twin?.faultPart ?? (alert.abnormalIndicators.join('、') || '待现场确认');
     const faultType = twin?.faultType ?? alert.suspectedCause;
@@ -93,6 +127,28 @@ export class OperationsService {
     const created = await this.repository.createWorkOrder(order);
     await this.repository.updateAlert(alertId, { alertStatus: '已生成工单', relatedWorkOrderId: getWorkOrderNo(created) });
     await this.log('work-order', getWorkOrderNo(created), '创建工单', createdBy, `来源预警 ${alertId}`);
+    if (created.riskLevel === '高风险' && created.status === '待接单') {
+      try {
+        const notification = await this.notifications.sendWorkOrderAlert(created, {
+          temperature: twin?.temperature,
+          vibration: twin?.vibration,
+          healthScore: twin?.healthScore ?? alert.healthScore,
+          failureProbability: twin?.failureProbability,
+          suggestedDeadline: twin?.advice?.[0] ?? alert.suggestedDeadline,
+        });
+        await this.log(
+          'work-order',
+          getWorkOrderNo(created),
+          notification.delivered ? '发送高风险工单卡片' : '高风险工单卡片发送失败',
+          '系统',
+          notification.delivered
+            ? `消息 ${notification.messageId || 'Mock 卡片预览'} 已生成`
+            : `${notification.error ?? '未知错误'}；工单已创建，可稍后重试通知`,
+        );
+      } catch (error) {
+        await this.log('work-order', getWorkOrderNo(created), '高风险工单卡片发送失败', '系统', `${error instanceof Error ? error.message : '未知错误'}；工单已创建，可稍后重试通知`);
+      }
+    }
     this.idempotency.set(input.idempotencyKey, created);
     return created;
   }

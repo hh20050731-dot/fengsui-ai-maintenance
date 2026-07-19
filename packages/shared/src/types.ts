@@ -190,6 +190,8 @@ export interface OperationLog {
 
 export interface AiDiagnosis {
   deviceId: string;
+  question: string;
+  intent: DiagnosisIntent;
   riskJudgment: string;
   operatingCondition: string;
   abnormalIndicators: string[];
@@ -203,6 +205,18 @@ export interface AiDiagnosis {
   generatedAt: string;
   provider: string;
 }
+
+export type DiagnosisIntent =
+  | 'highest_risk_equipment'
+  | 'high_risk_equipment_list'
+  | 'equipment_status'
+  | 'abnormal_metrics'
+  | 'pending_work_orders'
+  | 'spare_part_availability'
+  | 'maintenance_priority'
+  | 'diagnosis_reason'
+  | 'repeated_alerts'
+  | 'unsupported_or_ambiguous';
 
 export interface DashboardData {
   statistics: {

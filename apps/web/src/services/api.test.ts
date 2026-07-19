@@ -43,4 +43,15 @@ describe('API 飞书工单写入保护', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(client.isOfflineDemoTransport()).toBe(false);
   });
+
+  it('辅助研判API失败时显示明确错误而不是静默返回固定模板', async () => {
+    const fetchMock = vi.fn().mockRejectedValueOnce(new TypeError('network timeout'));
+    vi.stubGlobal('fetch', fetchMock);
+    const client = await import('./api');
+    await expect(client.postJson('/ai/diagnose', {
+      deviceId: 'IDF-001',
+      question: '当前风险最高的设备是什么？',
+    })).rejects.toMatchObject({ code: 'AI_DIAGNOSIS_UNAVAILABLE' });
+    expect(client.isOfflineDemoTransport()).toBe(false);
+  });
 });

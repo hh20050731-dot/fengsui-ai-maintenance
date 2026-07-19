@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
@@ -18,12 +18,14 @@ import { FeishuBotNotificationProvider, MockNotificationProvider } from './provi
 import { FeishuBitableRepository } from './repositories/feishu-bitable-repository.js';
 import { MockRepository } from './repositories/mock-repository.js';
 import { APP_MODE_HEADER, DEMO_JOURNAL_HEADER, DemoStatePersistence } from './services/demo-state-persistence.js';
+import { FeishuCallbackService, safeSecretEqual } from './services/feishu-callback-service.js';
+import { OperationsJobsService } from './services/operations-jobs-service.js';
 import { OperationsService } from './services/operations-service.js';
 import type { User, WorkOrder } from '@fengsui/shared';
 
 const success = <T>(data: T, meta?: Record<string, unknown>) => ({ success: true as const, data, ...(meta ? { meta } : {}) });
 
-export function createApp(options?: { forceMock?: boolean }) {
+export function createApp(options?: { forceMock?: boolean; cronSecret?: string; verificationToken?: string; encryptKey?: string }) {
   const mode = options?.forceMock ? 'mock' : effectiveMode;
   const capabilities = buildFeishuCapabilities(env, mode);
   const partialFeishu = mode === 'feishu' && Object.values(capabilities).some((capability) => capability.mode === 'mock');
@@ -33,7 +35,12 @@ export function createApp(options?: { forceMock?: boolean }) {
   const service = new OperationsService(repository, new RuleBasedDiagnosisProvider(), notificationProvider, { createKnowledgeCandidates: capabilities.knowledge.mode === 'mock' });
   const demoPersistence = mode === 'mock' ? new DemoStatePersistence(repository as MockRepository, service) : undefined;
   const sessions = new Map<string, User>();
-  const processedEvents = new Set<string>();
+  const callbackService = new FeishuCallbackService(repository, service, notificationProvider, {
+    verificationToken: options?.verificationToken ?? env.FEISHU_VERIFICATION_TOKEN,
+    encryptKey: options?.encryptKey ?? env.FEISHU_ENCRYPT_KEY,
+  });
+  const jobsService = new OperationsJobsService(repository, notificationProvider);
+  const cronSecret = options?.cronSecret ?? env.CRON_SECRET;
   const app = express();
 
   app.disable('x-powered-by');
@@ -87,6 +94,8 @@ export function createApp(options?: { forceMock?: boolean }) {
     sso: mode === 'feishu' ? '等待端内登录' : '演示身份',
     bitable: mode === 'feishu' ? Object.values(capabilities).every((capability) => capability.mode === 'feishu') ? '已配置' : '已部分配置' : '模拟数据仓库',
     robot: mode === 'feishu' && env.FEISHU_NOTIFICATION_CHAT_ID ? '已配置' : mode === 'feishu' ? '缺少默认会话' : '卡片预览',
+    callbacks: { verificationConfigured: Boolean(options?.verificationToken ?? env.FEISHU_VERIFICATION_TOKEN), encryptionConfigured: Boolean(options?.encryptKey ?? env.FEISHU_ENCRYPT_KEY) },
+    scheduledJobs: { configured: Boolean(cronSecret) },
     aiProvider: 'RuleBasedDiagnosisProvider', version: '1.0.2', lastSyncAt: new Date().toISOString(), missingConfig: missingFeishuConfig,
   })));
 
@@ -160,26 +169,20 @@ export function createApp(options?: { forceMock?: boolean }) {
   app.post('/api/notifications/test', async (req, res) => { const result = await notificationProvider.sendTest(req.body?.recipient); if (!result.delivered) await repository.addOperationLog({ logId: `LOG-${randomUUID()}`, entityType: 'notification', entityId: 'test', action: '机器人消息发送失败', operator: '系统', detail: result.error ?? '未知错误，可重试', timestamp: new Date().toISOString() }); res.json(success(result)); });
   app.post('/api/notifications/alert', async (req, res) => { const alert = await repository.getAlert(String(req.body?.alertId)); if (!alert) throw new AppError(404, 'ALERT_NOT_FOUND', '未找到预警'); const result = await notificationProvider.sendAlert(alert, req.body?.recipient); await repository.addOperationLog({ logId: `LOG-${randomUUID()}`, entityType: 'alert', entityId: alert.alertId, action: result.delivered ? '发送机器人预警消息' : '机器人预警消息发送失败', operator: '系统', detail: result.delivered ? `消息 ID：${result.messageId}` : `${result.error ?? '未知错误'}；允许重试`, timestamp: new Date().toISOString() }); res.json(success(result)); });
 
-  app.post('/api/feishu/events', async (req, res) => {
-    if (req.body?.challenge) {
-      if (env.FEISHU_VERIFICATION_TOKEN && req.body.token !== env.FEISHU_VERIFICATION_TOKEN) throw new AppError(401, 'INVALID_EVENT_SOURCE', '事件校验令牌不匹配');
-      res.json({ challenge: req.body.challenge }); return;
-    }
-    const header = req.body?.header ?? {};
-    if (env.FEISHU_VERIFICATION_TOKEN && (header.token ?? req.body?.token) !== env.FEISHU_VERIFICATION_TOKEN) throw new AppError(401, 'INVALID_EVENT_SOURCE', '事件来源校验失败');
-    const actionValue = req.body?.event?.action?.value ?? req.body?.action?.value;
-    const eventId = String(header.event_id ?? req.body?.event_id ?? createHash('sha256').update(JSON.stringify({ actionValue, openId: req.body?.open_id ?? req.body?.event?.operator?.operator_id?.open_id })).digest('hex'));
-    if (processedEvents.has(eventId)) { res.json(success({ duplicate: true })); return; }
-    processedEvents.add(eventId);
-    if (actionValue?.action === 'acknowledge' && actionValue.alertId) {
-      await repository.updateAlert(String(actionValue.alertId), { alertStatus: '已确认', acknowledgedBy: '飞书卡片操作人', acknowledgedAt: new Date().toISOString() });
-      res.json({ toast: { type: 'success', content: '预警已确认' } }); return;
-    }
-    if (actionValue?.action === 'create_work_order' && actionValue.alertId) {
-      const order = await service.createWorkOrderFromAlert(String(actionValue.alertId), { assignee: '张工', assigneeUserId: 'zhang-gong', idempotencyKey: `feishu-event-${eventId}` }, '飞书卡片操作人');
-      res.json({ toast: { type: 'success', content: `已创建工单 ${order.workOrderId}` } }); return;
-    }
-    res.json(success({ received: true, eventId }));
+  app.post('/api/feishu/events', async (req, res) => res.json(await callbackService.handle(req.body)));
+
+  const requireCron = (authorization: string | undefined, headerSecret: string | undefined) => {
+    if (!cronSecret) throw new AppError(503, 'CRON_NOT_CONFIGURED', '定时任务保护密钥尚未配置');
+    const bearer = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+    if (!safeSecretEqual(headerSecret ?? bearer, cronSecret)) throw new AppError(401, 'INVALID_CRON_SECRET', '定时任务鉴权失败');
+  };
+  app.post('/api/jobs/work-order-reminders', async (req, res) => {
+    requireCron(req.header('authorization'), req.header('x-cron-secret'));
+    res.json(success(await jobsService.runWorkOrderReminders()));
+  });
+  app.post('/api/jobs/daily-operations-brief', async (req, res) => {
+    requireCron(req.header('authorization'), req.header('x-cron-secret'));
+    res.json(success(await jobsService.runDailyOperationsBrief()));
   });
 
   if (env.NODE_ENV === 'production' && process.env.VERCEL !== '1') {
@@ -190,5 +193,5 @@ export function createApp(options?: { forceMock?: boolean }) {
     }
   }
   app.use(notFound); app.use(errorHandler);
-  return { app, service, repository };
+  return { app, service, repository, notificationProvider, callbackService, jobsService };
 }

@@ -13,7 +13,7 @@
 - “1号引风机”完整数据闭环：68 分预警 → 诊断 → 消息卡片 → 工单 → 检修 → 备件扣减 → 验证 → 92 分健康 → 预警关闭 → 操作记录。
 - 工单状态机、必要字段校验、库存预检查、幂等完成、审计记录与知识库候选案例说明。
 - Mock / Feishu Repository、认证、通知和研判 Provider 适配器；飞书配置不完整时安全降级。
-- 飞书 `requestAccess` 免登（旧客户端回退 `requestAuthCode`）、tenant token 缓存、多维表格 CRUD、机器人交互卡片和事件挑战校验。
+- 飞书 `requestAccess` 免登（旧客户端回退 `requestAuthCode`）、tenant token 缓存、多维表格 CRUD、高风险工单卡片、加密回调、机器人意图查询、自动督办和日报。
 - Vitest 单元/接口测试、Supertest 闭环测试与 Playwright 端到端脚本。
 
 ## 技术栈
@@ -90,7 +90,7 @@ npm run test:e2e
 
 - `FEISHU_APP_ID`、`FEISHU_APP_SECRET`
 - `FEISHU_BITABLE_APP_TOKEN`
-- Equipment、Telemetry、HealthSnapshots、Alerts、WorkOrders、SpareParts、SparePartTransactions、KnowledgeBase、OperationLogs 的表 ID
+- 当前真实工单同步至少配置 `FEISHU_WORK_ORDER_TABLE_ID`；其他表仅在启用对应真实模块时配置
 - 前端公开的 `VITE_FEISHU_APP_ID`
 - 发送机器人消息时的 `FEISHU_NOTIFICATION_CHAT_ID`
 
@@ -106,10 +106,11 @@ npm run test:e2e
 | `FEISHU_APP_ID` | 应用唯一标识 | 是 | 否 | 开发者后台“凭证与基础信息” |
 | `FEISHU_APP_SECRET` | 服务端换取令牌 | 是 | 否 | 同上；仅放服务端 |
 | `FEISHU_VERIFICATION_TOKEN` | 事件来源校验 | 开启事件回调时 | 否 | 事件订阅配置 |
-| `FEISHU_ENCRYPT_KEY` | 加密事件预留 | 使用加密事件时 | 否 | 事件订阅配置 |
+| `FEISHU_ENCRYPT_KEY` | 解密飞书加密回调信封 | 使用加密事件时 | 否 | 事件订阅配置；仅服务端 |
 | `FEISHU_BITABLE_APP_TOKEN` | 多维表格 App Token | 是 | 否 | 多维表格 URL |
 | `FEISHU_*_TABLE_ID` | 各业务表的 table_id；按启用模块分别配置 | 对应模块启用时 | 否 | 多维表格 URL / 初始化脚本输出 |
 | `FEISHU_NOTIFICATION_CHAT_ID` | 机器人默认会话 | 发送群消息时 | 否 | 目标会话 ID |
+| `CRON_SECRET` | 保护自动督办与日报接口 | 启用定时任务时 | 否 | 自行生成至少32位随机值；仅服务端 |
 | `AI_PROVIDER` | `rule` / 预留真实 Provider | 否 | 否 | 自行设置 |
 | `OPENAI_API_KEY`、`OPENAI_MODEL` | 预留真实大模型 | 选择相应 Provider 时 | 否 | 模型服务商 |
 | `VITE_API_BASE_URL` | 浏览器 API 地址 | 视部署方式 | 可选 | 部署 API 地址；同域留空/`/api` |
@@ -119,6 +120,20 @@ npm run test:e2e
 | `DRY_RUN` | 初始化脚本只检查/写入 | 首次建议 `true` | 否 | 自行设置 |
 
 严禁创建 `VITE_FEISHU_APP_SECRET`。所有 Secret、访问令牌和 API Key 只允许进入服务端环境变量。
+
+## 飞书原生协同接口
+
+- `POST /api/feishu/events`：challenge、Verification Token、Encrypt Key 加密回调、卡片接单/暂缓、机器人文本消息。
+- `POST /api/jobs/work-order-reminders`：高风险30分钟未接单、4小时内到期、待验证与完成提醒。
+- `POST /api/jobs/daily-operations-brief`：生成并发送每日运维简报。
+
+两个定时任务接口必须使用 `Authorization: Bearer <CRON_SECRET>` 或 `x-cron-secret`。本地生成卡片、回调、七类查询、督办和日报模拟证据：
+
+```bash
+npm run simulate:feishu
+```
+
+输出位于 `artifacts/feishu/`，全部明确标注 `LOCAL SIMULATION — NOT REAL FEISHU CALLBACK`，不能作为真实飞书联调成功证据。明日人工配置步骤见 [飞书原生协同手动清单](docs/飞书原生协同_明日手动配置清单.md)。
 
 ## 部署
 
@@ -149,3 +164,4 @@ NODE_ENV=production npm run start -w @fengsui/server
 - [机器人](docs/07-机器人配置指南.md) · [权限](docs/08-权限清单.md) · [Vercel](docs/09-Vercel部署指南.md)
 - [比赛演示脚本](docs/10-比赛演示脚本.md) · [排错](docs/11-常见问题与排错.md) · [真实数据接入](docs/12-真实数据接入说明.md)
 - [离线演示与外部资源清单](docs/13-离线演示保障与外部资源清单.md) · [EdgeOne Pages 备用部署](docs/14-EdgeOne-Pages备用部署指南.md)
+- [飞书原生协同明日配置清单](docs/飞书原生协同_明日手动配置清单.md) · [隔夜执行报告](docs/overnight-final-report.md)

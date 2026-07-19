@@ -1,0 +1,169 @@
+import { createCipheriv, createHash, randomBytes } from 'node:crypto';
+import { describe, expect, it, vi } from 'vitest';
+import { RuleBasedDiagnosisProvider } from '../providers/ai-diagnosis-provider.js';
+import { MockNotificationProvider } from '../providers/notification-provider.js';
+import { MockRepository } from '../repositories/mock-repository.js';
+import { FeishuCallbackService, decryptFeishuPayload, redactSensitiveText, safeSecretEqual } from './feishu-callback-service.js';
+import { OperationsService } from './operations-service.js';
+
+function encryptPayload(payload: object, keyText: string) {
+  const iv = randomBytes(16);
+  const key = createHash('sha256').update(keyText).digest();
+  const cipher = createCipheriv('aes-256-cbc', key, iv);
+  return Buffer.concat([iv, cipher.update(JSON.stringify(payload)), cipher.final()]).toString('base64');
+}
+
+function createFixture() {
+  const repository = new MockRepository();
+  const notifications = new MockNotificationProvider();
+  const operations = new OperationsService(repository, new RuleBasedDiagnosisProvider(), notifications);
+  const callbacks = new FeishuCallbackService(repository, operations, notifications, { verificationToken: 'verification-token-for-test' });
+  return { repository, notifications, operations, callbacks };
+}
+
+describe('飞书回调安全处理', () => {
+  it('支持官方AES-256-CBC格式的加密回调与challenge', async () => {
+    const key = 'encrypt-key-for-local-test';
+    const plain = { challenge: 'encrypted-challenge', token: 'verification-token-for-test' };
+    const encrypted = encryptPayload(plain, key);
+    expect(decryptFeishuPayload(encrypted, key)).toEqual(plain);
+
+    const fixture = createFixture();
+    const encryptedCallbacks = new FeishuCallbackService(
+      fixture.repository,
+      fixture.operations,
+      fixture.notifications,
+      { verificationToken: 'verification-token-for-test', encryptKey: key },
+    );
+    await expect(encryptedCallbacks.handle({ encrypt: encrypted })).resolves.toEqual({ challenge: 'encrypted-challenge' });
+  });
+
+  it('拒绝错误Verification Token且日志脱敏', async () => {
+    const { callbacks } = createFixture();
+    await expect(callbacks.handle({ challenge: 'x', token: 'wrong' })).rejects.toMatchObject({ code: 'INVALID_EVENT_SOURCE' });
+    await expect(callbacks.handle({ challenge: 'x' })).rejects.toMatchObject({ code: 'INVALID_EVENT_SOURCE' });
+    expect(safeSecretEqual('anything', undefined)).toBe(false);
+    expect(redactSensitiveText('app_secret=abc Bearer token-value')).toBe('app_secret=[REDACTED] Bearer [REDACTED]');
+  });
+
+  it('拒绝错误Encrypt Key且不回显加密内容', async () => {
+    const fixture = createFixture();
+    const callbacks = new FeishuCallbackService(
+      fixture.repository,
+      fixture.operations,
+      fixture.notifications,
+      { verificationToken: 'verification-token-for-test', encryptKey: 'correct-encrypt-key' },
+    );
+    const encrypted = encryptPayload({ challenge: 'x', token: 'verification-token-for-test' }, 'wrong-encrypt-key');
+    await expect(callbacks.handle({ encrypt: encrypted })).rejects.toMatchObject({ code: 'INVALID_ENCRYPTED_EVENT' });
+  });
+
+  it('高风险卡片按工单标识接单、重复事件幂等且不同事件不重复推进', async () => {
+    const { callbacks, operations, repository, notifications } = createFixture();
+    const notificationSpy = vi.spyOn(notifications, 'sendWorkOrderAlert');
+    const order = await operations.createWorkOrderFromAlert('ALT-20260717-001', {
+      assignee: '张工',
+      assigneeUserId: 'zhang-gong',
+      idempotencyKey: 'callback-create-high-risk',
+      digitalTwinContext: {
+        equipmentName: '1号引风机', equipmentId: 'IDF-001', faultPart: '驱动端轴承', faultType: '轴承温升', riskLevel: '高',
+        failureProbability: 89, healthScore: 42, temperature: 82, vibration: 5.2, speed: 1472, current: 41,
+        diagnosis: '存在轴承温升风险', advice: ['24小时内检查'], createdAt: new Date(Date.now() - 40 * 60_000).toISOString(),
+      },
+    });
+    expect(notificationSpy).toHaveBeenCalledOnce();
+    const payload = {
+      schema: '2.0',
+      header: { token: 'verification-token-for-test', event_id: 'evt-accept-001', event_type: 'card.action.trigger' },
+      event: {
+        operator: { open_id: 'ou_local_operator_001' },
+        action: { tag: 'button', value: { action: 'accept_work_order', workOrderId: order.workOrderNo, workOrderNo: order.workOrderNo } },
+        context: { open_message_id: 'om_local_card_001', open_chat_id: 'oc_local_chat_001' },
+      },
+    };
+    const accepted = await callbacks.handle(payload) as { toast: { content: string }; card: { type: string; data: { schema: string } } };
+    expect(accepted.toast.content).toContain('接单成功');
+    expect(accepted.card).toMatchObject({ type: 'raw', data: { schema: '2.0' } });
+    expect((await repository.getWorkOrder(order.id))?.status).toBe('已接单');
+
+    const duplicate = await callbacks.handle(payload) as { data: { duplicate: boolean } };
+    expect(duplicate.data.duplicate).toBe(true);
+    const repeated = await callbacks.handle({ ...payload, header: { ...payload.header, event_id: 'evt-accept-002' } }) as { toast: { content: string } };
+    expect(repeated.toast.content).toContain('未重复推进');
+    expect((await repository.getWorkOrder(order.id))?.processingRecord.filter((item) => item.action.includes('待接单 → 已接单'))).toHaveLength(1);
+  });
+
+  it('两位操作人并发接单时只推进一次并使用可信操作人字段', async () => {
+    const { callbacks, operations, repository } = createFixture();
+    const order = await operations.createWorkOrderFromAlert('ALT-20260717-001', {
+      assignee: '张工', assigneeUserId: 'zhang-gong', idempotencyKey: 'concurrent-accept-create',
+    });
+    const payload = (eventId: string, operator: string) => ({
+      schema: '2.0',
+      header: { token: 'verification-token-for-test', event_id: eventId, event_type: 'card.action.trigger' },
+      event: {
+        operator: { open_id: operator },
+        action: { tag: 'button', value: { action: 'accept_work_order', workOrderNo: order.workOrderNo } },
+        context: { open_message_id: 'om_local_concurrent', open_chat_id: 'oc_local_chat' },
+      },
+    });
+    const responses = await Promise.all([
+      callbacks.handle(payload('evt-concurrent-a', 'ou_local_operator_a')),
+      callbacks.handle(payload('evt-concurrent-b', 'ou_local_operator_b')),
+    ]) as Array<{ toast: { content: string } }>;
+    expect(responses.filter((item) => item.toast.content.includes('接单成功'))).toHaveLength(1);
+    expect(responses.filter((item) => item.toast.content.includes('未重复推进'))).toHaveLength(1);
+    const updated = await repository.getWorkOrder(order.workOrderNo);
+    const transitions = updated?.processingRecord.filter((item) => item.action.includes('待接单 → 已接单')) ?? [];
+    expect(transitions).toHaveLength(1);
+    expect(transitions[0]?.operator).toMatch(/^飞书用户#[a-f0-9]{8}$/);
+  });
+
+  it('机器人七类问题复用IntentRouter并返回不同意图', async () => {
+    const { callbacks, notifications } = createFixture();
+    const reply = vi.spyOn(notifications, 'sendText');
+    const questions = [
+      '当前风险最高的设备是什么？',
+      '当前有哪些高风险设备？',
+      '1号引风机当前状态如何？',
+      '当前有哪些待处理工单？',
+      '当前备件库存是否满足维修需求？',
+      '哪台设备应该优先检修？',
+      '为什么判断1号引风机存在轴承温升风险？',
+    ];
+    const intents: string[] = [];
+    for (const [index, question] of questions.entries()) {
+      const response = await callbacks.handle({
+        header: { token: 'verification-token-for-test', event_id: `evt-message-${index}`, event_type: 'im.message.receive_v1' },
+        event: {
+          sender: { sender_type: 'user', sender_id: { open_id: `ou_local_sender_${index}` } },
+          message: { message_id: `om_local_message_${index}`, message_type: 'text', chat_id: 'oc_local_simulation', chat_type: 'group', content: JSON.stringify({ text: `@_user_1 ${question}` }), mentions: [{ key: '@_user_1', name: '烽燧机器人' }] },
+        },
+      }) as { data: { intent: string } };
+      intents.push(response.data.intent);
+    }
+    expect(new Set(intents)).toHaveLength(7);
+    expect(reply).toHaveBeenCalledTimes(7);
+    expect(new Set(reply.mock.calls.map((call) => call[0]))).toHaveLength(7);
+  });
+
+  it('相同message_id不会重复回复且机器人自己的消息不会形成循环', async () => {
+    const { callbacks, notifications } = createFixture();
+    const reply = vi.spyOn(notifications, 'sendText');
+    const message = {
+      sender: { sender_type: 'user' },
+      message: { message_id: 'om_local_deduplicate', message_type: 'text', chat_id: 'oc_local_simulation', content: JSON.stringify({ text: '当前风险最高的设备是什么？' }) },
+    };
+    await callbacks.handle({ header: { token: 'verification-token-for-test', event_id: 'evt-message-a', event_type: 'im.message.receive_v1' }, event: message });
+    const duplicate = await callbacks.handle({ header: { token: 'verification-token-for-test', event_id: 'evt-message-b', event_type: 'im.message.receive_v1' }, event: message }) as { data: { duplicate: boolean } };
+    expect(duplicate.data.duplicate).toBe(true);
+    expect(reply).toHaveBeenCalledOnce();
+
+    const bot = await callbacks.handle({
+      header: { token: 'verification-token-for-test', event_id: 'evt-bot-message', event_type: 'im.message.receive_v1' },
+      event: { sender: { sender_type: 'app' }, message: { message_id: 'om_local_bot', message_type: 'text', chat_id: 'oc_local_simulation', content: JSON.stringify({ text: '当前风险最高的设备是什么？' }) } },
+    }) as { data: { ignored: boolean } };
+    expect(bot.data.ignored).toBe(true);
+    expect(reply).toHaveBeenCalledOnce();
+  });
+});

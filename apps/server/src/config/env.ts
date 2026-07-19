@@ -1,7 +1,12 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
-const schema = z.object({
+const optionalProtectedValue = z.preprocess(
+  (value) => value === '' ? undefined : value,
+  z.string().min(16).optional(),
+);
+
+export const serverEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   APP_MODE: z.enum(['mock', 'feishu']).default('mock'),
   APP_BASE_URL: z.string().url().default('http://localhost:5173'),
@@ -15,9 +20,10 @@ const schema = z.object({
   FEISHU_KNOWLEDGE_TABLE_ID: z.string().optional(), FEISHU_OPERATION_LOG_TABLE_ID: z.string().optional(),
   FEISHU_NOTIFICATION_CHAT_ID: z.string().optional(), AI_PROVIDER: z.string().default('rule'),
   OPENAI_API_KEY: z.string().optional(), OPENAI_MODEL: z.string().optional(),
+  CRON_SECRET: optionalProtectedValue,
 });
 
-export const env = schema.parse(process.env);
+export const env = serverEnvSchema.parse(process.env);
 
 export const feishuClientKeys = ['FEISHU_APP_ID', 'FEISHU_APP_SECRET', 'FEISHU_BITABLE_APP_TOKEN'] as const;
 export const feishuCapabilityTableKeys = {

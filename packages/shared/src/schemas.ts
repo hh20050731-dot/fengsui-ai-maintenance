@@ -57,7 +57,10 @@ export const stockChangeSchema = z.object({
   remark: z.string().default('手工库存调整'),
   idempotencyKey: z.string().min(6),
 });
-export const diagnosisRequestSchema = z.object({ deviceId: z.string().min(1), question: z.string().optional() });
+export const diagnosisRequestSchema = z.object({
+  deviceId: z.string().min(1).optional(),
+  question: z.string().trim().min(2, '请输入至少2个字符的问题').max(200, '问题不能超过200个字符'),
+});
 
 export const demoJournalEntrySchema = z.object({
   version: z.literal(1),

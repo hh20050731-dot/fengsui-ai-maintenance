@@ -26,7 +26,7 @@ export function EquipmentDetailPage() {
   const deviceQuery = useQuery({ queryKey: ['equipment', deviceId], queryFn: () => api<Equipment>(`/equipment/${deviceId}`) });
   const telemetryQuery = useQuery({ queryKey: ['telemetry', deviceId, range], queryFn: () => api<TelemetryPoint[]>(`/equipment/${deviceId}/telemetry?range=${range}`) });
   const historyQuery = useQuery({ queryKey: ['history', deviceId], queryFn: () => api<HistoryData>(`/equipment/${deviceId}/history`) });
-  const diagnose = useMutation({ mutationFn: () => postJson<AiDiagnosis>('/ai/diagnose', { deviceId }), onSuccess: setDiagnosis });
+  const diagnose = useMutation({ mutationFn: () => postJson<AiDiagnosis>('/ai/diagnose', { deviceId, question: '请研判当前设备状态和主要风险' }), onSuccess: setDiagnosis });
   const acknowledge = useMutation({ mutationFn: (alertId: string) => postJson(`/alerts/${alertId}/acknowledge`, { operator: '黄浩' }), onSuccess: async () => { setToast('预警已确认'); await queryClient.invalidateQueries({ queryKey: ['history', deviceId] }); } });
   const createOrder = useMutation({ mutationFn: (alertId: string) => postJson<WorkOrder>(`/alerts/${alertId}/create-work-order`, { assignee: '张工', assigneeUserId: 'zhang-gong', idempotencyKey: idempotencyKey('create-order') }), onSuccess: (order) => { queryClient.invalidateQueries({ queryKey: ['history', deviceId] }); navigate(`/work-orders/${order.workOrderId}`); } });
   if (deviceQuery.isLoading || telemetryQuery.isLoading || historyQuery.isLoading) return <Loading />;

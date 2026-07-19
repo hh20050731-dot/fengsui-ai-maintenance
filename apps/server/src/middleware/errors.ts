@@ -10,6 +10,10 @@ export function notFound(req: Request, _res: Response, next: NextFunction) {
 }
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+  if (error instanceof SyntaxError && 'type' in error && error.type === 'entity.parse.failed') {
+    res.status(400).json({ success: false, error: { code: 'INVALID_JSON', message: '请求体不是合法 JSON' } });
+    return;
+  }
   if (error instanceof ZodError) {
     res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: '请求参数校验失败', details: error.flatten() } });
     return;

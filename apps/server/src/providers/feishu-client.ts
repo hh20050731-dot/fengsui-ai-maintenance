@@ -33,13 +33,21 @@ export class FeishuClient {
   }
 
   async request<T>(path: string, init: RequestInit = {}, userAccessToken?: string): Promise<T> {
-    const token = userAccessToken ?? await this.getTenantAccessToken();
-    const response = await fetch(`https://open.feishu.cn/open-apis${path}`, {
-      ...init, headers: { 'content-type': 'application/json; charset=utf-8', authorization: `Bearer ${token}`, ...init.headers },
-    });
-    const result = await response.json() as FeishuEnvelope<T>;
-    if (!response.ok || result.code !== 0) throw new AppError(502, 'FEISHU_API_ERROR', `飞书接口调用失败（${result.code ?? response.status}）：${result.msg ?? result.message ?? response.status}`);
-    return result.data as T;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const token = userAccessToken ?? await this.getTenantAccessToken();
+      const response = await fetch(`https://open.feishu.cn/open-apis${path}`, {
+        ...init, headers: { 'content-type': 'application/json; charset=utf-8', authorization: `Bearer ${token}`, ...init.headers },
+      });
+      const result = await response.json() as FeishuEnvelope<T>;
+      const tenantTokenInvalid = !userAccessToken && (response.status === 401 || result.code === 99991663);
+      if (tenantTokenInvalid && attempt === 0) {
+        this.tenantToken = undefined;
+        continue;
+      }
+      if (!response.ok || result.code !== 0) throw new AppError(502, 'FEISHU_API_ERROR', `飞书接口调用失败（${result.code ?? response.status}）：${result.msg ?? result.message ?? response.status}`);
+      return result.data as T;
+    }
+    throw new AppError(502, 'FEISHU_TOKEN_RETRY_EXHAUSTED', '飞书应用凭证刷新后仍无法完成接口调用');
   }
 
   async listRecords(appToken: string, tableId: string) {

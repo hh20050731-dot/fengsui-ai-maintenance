@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Alert, Equipment, KnowledgeEntry, SparePart, WorkOrder } from '@fengsui/shared';
+import type { AiDiagnosis, Alert, Equipment, KnowledgeEntry, SparePart, WorkOrder } from '@fengsui/shared';
 
 function installLocalStorage() {
   const values = new Map<string, string>();
@@ -64,5 +64,15 @@ describe('浏览器离线演示数据适配器', () => {
     expect(alert.relatedWorkOrderId).toBeUndefined();
     expect(orders).toHaveLength(3);
     expect(parts.find((item) => item.partId === 'SP-001')?.currentStock).toBe(6);
+  });
+
+  it('离线辅助研判也使用问题意图而不是固定模板', async () => {
+    const offline = await import('./offline-api');
+    offline.resetOfflineDemoState();
+    const highest = await offline.handleOfflineApi<AiDiagnosis>('/ai/diagnose', post({ deviceId: 'IDF-001', question: '当前风险最高的设备是什么？' }));
+    const inventory = await offline.handleOfflineApi<AiDiagnosis>('/ai/diagnose', post({ deviceId: 'IDF-001', question: '当前备件库存是否满足维修需求？' }));
+    expect(highest.intent).toBe('highest_risk_equipment');
+    expect(inventory.intent).toBe('spare_part_availability');
+    expect(highest.riskJudgment).not.toBe(inventory.riskJudgment);
   });
 });

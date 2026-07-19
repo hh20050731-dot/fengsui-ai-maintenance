@@ -1,10 +1,12 @@
 import {
   assertWorkOrderTransition,
+  buildRuleBasedDiagnosis,
   createMockData,
+  getDiagnosisIntentRoute,
   getStockStatus,
   matchesWorkOrderIdentifier,
   normalizeWorkOrderIdentity,
-  type AiDiagnosis,
+  resolveDiagnosisDevice,
   type Alert,
   type DashboardData,
   type Equipment,
@@ -164,25 +166,28 @@ function dashboard(state: OfflineDemoState, range: string): DashboardData {
   };
 }
 
-function diagnose(state: OfflineDemoState, deviceId: string): AiDiagnosis {
-  const device = getDevice(state, deviceId); const points = state.telemetry[deviceId] ?? []; const last = points.at(-1);
-  const abnormalIndicators = [...(device.vibration >= 5.2 ? ['轴承振动'] : []), ...(device.temperature >= 78 ? ['轴承温度'] : []), ...(device.current >= 108 ? ['电流'] : []), ...(device.pressure > 0 && device.pressure < 0.35 ? ['压力'] : [])];
-  const relevant = state.knowledge.filter((entry) => entry.deviceType === '通用' || device.deviceType.includes(entry.deviceType) || entry.deviceType.includes('旋转') || entry.abnormalIndicators.some((indicator) => abnormalIndicators.includes(indicator)));
-  const unique = (values: string[], limit: number) => [...new Set(values)].slice(0, limit);
-  const sixHourPoint = points.find((point) => new Date(point.timestamp).getTime() >= Date.now() - 6 * 3_600_000);
-  const startVibration = device.deviceId === 'IDF-001' ? 4.2 : (sixHourPoint?.vibration ?? device.vibration);
-  const startTemperature = device.deviceId === 'IDF-001' ? 72 : (sixHourPoint?.temperature ?? device.temperature);
-  return {
-    deviceId, riskJudgment: `${device.deviceName}当前为${device.riskLevel}，存在异常趋势继续发展的风险。`, operatingCondition: device.operatingCondition,
-    abnormalIndicators: abnormalIndicators.length ? abnormalIndicators : ['暂未发现明显越限指标'],
-    trendEvidence: [`过去6小时振动值由 ${startVibration.toFixed(1)} mm/s 上升至 ${(last?.vibration ?? device.vibration).toFixed(1)} mm/s`, `过去6小时轴承温度由 ${startTemperature.toFixed(0)}℃ 上升至 ${(last?.temperature ?? device.temperature).toFixed(0)}℃`, `当前处于${device.operatingCondition}工况，健康度为 ${device.healthScore}`],
-    suspectedCauses: device.deviceId === 'IDF-001' ? ['轴承磨损', '润滑状态异常', '联轴器不对中', '地脚松动'] : unique(relevant.flatMap((entry) => entry.possibleCauses), 4),
-    inspectionItems: unique(relevant.flatMap((entry) => entry.inspectionSteps), 6),
-    suggestedDeadline: device.riskLevel === '高风险' ? '建议立即由现场负责人评估处置' : device.riskLevel === '二级预警' ? '24小时内' : '72小时内',
-    relatedSpareParts: unique(relevant.flatMap((entry) => entry.relatedSpareParts), 4), confidence: device.deviceId === 'IDF-001' ? 0.86 : 0.74,
-    riskNotice: '本结果根据模拟数据和规则模型生成，仅用于比赛方案展示。实际生产应用需结合企业真实数据、设备说明书、安全规程和专业人员判断。是否停机应由现场负责人结合安全规程决定。',
-    generatedAt: nowIso(), provider: 'RuleBasedDiagnosisProvider（浏览器离线演示）',
-  };
+function diagnose(state: OfflineDemoState, selectedDeviceId: string | undefined, question: string) {
+  const route = getDiagnosisIntentRoute(question, selectedDeviceId);
+  const intent = route.intent;
+  const device = route.requiresDevice
+    ? resolveDiagnosisDevice(question, state.equipment, selectedDeviceId)
+    : undefined;
+  if (route.requiresDevice && !device) {
+    return fail('DIAGNOSIS_DEVICE_NOT_FOUND', '问题中未识别到设备，请选择设备或在问题中写明设备名称');
+  }
+  return buildRuleBasedDiagnosis({
+    question,
+    intent,
+    selectedDeviceId,
+    equipment: state.equipment,
+    device,
+    telemetry: device ? state.telemetry[device.deviceId] ?? [] : [],
+    alerts: state.alerts,
+    workOrders: state.workOrders,
+    spareParts: state.spareParts,
+    knowledge: state.knowledge,
+    providerName: 'RuleBasedDiagnosisProvider（浏览器离线演示）',
+  });
 }
 
 function resolveUsage(state: OfflineDemoState, items: Array<{ partId: string; quantity: number }>): SparePartUsage[] {
@@ -332,7 +337,7 @@ export async function handleOfflineApi<T>(path: string, init?: RequestInit): Pro
   else if (method === 'POST' && url.pathname === '/spare-parts/outbound') result = stockChange(state, '出库', body);
   else if (segments[0] === 'spare-parts' && segments[1] && segments[2] === 'transactions' && method === 'GET') result = clone(state.spareTransactions.filter((item) => item.partId === segments[1]));
   else if (method === 'GET' && url.pathname === '/knowledge') { const search = url.searchParams.get('search'); result = clone(search ? state.knowledge.filter((item) => JSON.stringify(item).includes(search)) : state.knowledge); }
-  else if (method === 'POST' && url.pathname === '/ai/diagnose') result = diagnose(state, String(body.deviceId ?? ''));
+  else if (method === 'POST' && url.pathname === '/ai/diagnose') result = diagnose(state, typeof body.deviceId === 'string' ? body.deviceId : undefined, String(body.question ?? ''));
   else if (method === 'POST' && url.pathname === '/notifications/test') result = notificationPreview();
   else if (method === 'POST' && url.pathname === '/notifications/alert') result = notificationPreview(getAlert(state, String(body.alertId ?? '')));
   else if (method === 'POST' && url.pathname === '/demo/reset') { resetOfflineDemoState(); result = { reset: true }; }

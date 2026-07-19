@@ -22,6 +22,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "verify:production": "tsx scripts/verify-production-build.ts",
+    "simulate:feishu": "tsx scripts/simulate-feishu-collaboration.ts",
     "bootstrap:bitable": "tsx scripts/bootstrap-bitable.ts",
     "seed:bitable": "tsx scripts/seed-bitable.ts"
   },

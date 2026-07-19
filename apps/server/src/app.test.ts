@@ -15,6 +15,39 @@ const persistedDemoFlow: DemoJournalEntry[] = [
 ];
 
 describe('Mock API', () => {
+  it('辅助研判按九类问题返回不同答案并回显真实问题', async () => {
+    const { app } = createApp({ forceMock: true });
+    const questions = [
+      '当前风险最高的设备是什么？',
+      '当前有哪些高风险设备？',
+      '1号引风机当前状态如何？',
+      '当前有哪些待处理工单？',
+      '当前备件库存是否满足维修需求？',
+      '哪台设备应该优先检修？',
+      '为什么判断1号引风机存在轴承温升风险？',
+      '最近哪些指标异常？',
+      '今天天气怎么样？',
+    ];
+    const answers = [];
+    for (const question of questions) {
+      const response = await request(app).post('/api/ai/diagnose').send({ deviceId: 'IDF-002', question }).expect(200);
+      expect(response.body.data.question).toBe(question);
+      answers.push(response.body.data);
+    }
+    expect(new Set(answers.map((item) => item.intent))).toHaveLength(9);
+    expect(new Set(answers.map((item) => item.riskJudgment))).toHaveLength(9);
+    expect(answers[0].deviceId).toBe('LTP-001');
+    expect(answers[1].riskJudgment).toContain('高风险设备');
+    expect(answers[2].deviceId).toBe('IDF-001');
+    expect(answers[3].riskJudgment).toContain('待处理工单');
+    expect(answers[4].riskJudgment).toContain('备件');
+    expect(answers[5].riskJudgment).toContain('优先');
+    expect(answers[6].intent).toBe('diagnosis_reason');
+    expect(answers[7].intent).toBe('abnormal_metrics');
+    expect(answers[8].intent).toBe('unsupported_or_ambiguous');
+    expect(answers[8].riskJudgment).toContain('未执行固定设备诊断');
+  });
+
   it('查询设备与模拟通知', async () => {
     const { app } = createApp({ forceMock: true });
     const equipment = await request(app).get('/api/equipment').expect(200);
@@ -59,6 +92,17 @@ describe('Mock API', () => {
     const { app } = createApp({ forceMock: true });
     const result = await request(app).post('/api/spare-parts/outbound').send({ partId: 'SP-001', quantity: -2 }).expect(400);
     expect(result.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('非法JSON返回400且不会泄露内部堆栈', async () => {
+    const { app } = createApp({ forceMock: true });
+    const result = await request(app)
+      .post('/api/ai/diagnose')
+      .set('content-type', 'application/json')
+      .send('{broken-json')
+      .expect(400);
+    expect(result.body.error).toEqual({ code: 'INVALID_JSON', message: '请求体不是合法 JSON' });
+    expect(JSON.stringify(result.body)).not.toContain('stack');
   });
 
   it('不存在的工单状态更新返回明确404', async () => {
@@ -106,12 +150,43 @@ describe('Mock API', () => {
   });
 
   it('飞书事件支持挑战校验、卡片动作和重复事件幂等', async () => {
-    const { app } = createApp({ forceMock: true });
-    await request(app).post('/api/feishu/events').send({ challenge: 'challenge-value' }).expect(200, { challenge: 'challenge-value' });
-    const payload = { header: { event_id: 'evt-card-001' }, event: { action: { value: { action: 'acknowledge', alertId: 'ALT-20260717-001' } } } };
+    const verificationToken = 'verification-token-for-app-test';
+    const { app } = createApp({ forceMock: true, verificationToken });
+    await request(app).post('/api/feishu/events').send({ challenge: 'challenge-value', token: verificationToken }).expect(200, { challenge: 'challenge-value' });
+    await request(app).post('/api/feishu/events').send({ challenge: 'missing-token' }).expect(401);
+    const payload = { schema: '2.0', header: { token: verificationToken, event_id: 'evt-card-001', event_type: 'card.action.trigger' }, event: { operator: { open_id: 'ou_local_test_user' }, action: { tag: 'button', value: { action: 'acknowledge', alertId: 'ALT-20260717-001' } } } };
     const first = await request(app).post('/api/feishu/events').send(payload).expect(200);
     expect(first.body.toast.content).toBe('预警已确认');
     const duplicate = await request(app).post('/api/feishu/events').send(payload).expect(200);
     expect(duplicate.body.data.duplicate).toBe(true);
+  });
+
+  it('未配置Verification Token时回调端点关闭而非默认放行', async () => {
+    const { app } = createApp({ forceMock: true, verificationToken: '' });
+    const result = await request(app).post('/api/feishu/events').send({ challenge: 'x' }).expect(503);
+    expect(result.body.error.code).toBe('EVENT_VERIFICATION_NOT_CONFIGURED');
+  });
+
+  it('自动督办与日报接口必须通过CRON_SECRET鉴权', async () => {
+    const { app } = createApp({ forceMock: true, cronSecret: 'local-test-cron-secret-123456' });
+    await request(app).post('/api/jobs/work-order-reminders').expect(401);
+    await request(app).post('/api/jobs/work-order-reminders').set('x-cron-secret', 'wrong-local-secret').expect(401);
+    const reminders = await request(app)
+      .post('/api/jobs/work-order-reminders')
+      .set('authorization', 'Bearer local-test-cron-secret-123456')
+      .expect(200);
+    expect(reminders.body.success).toBe(true);
+    const brief = await request(app)
+      .post('/api/jobs/daily-operations-brief')
+      .set('x-cron-secret', 'local-test-cron-secret-123456')
+      .expect(200);
+    expect(brief.body.data.brief.equipment.total).toBe(12);
+    expect(brief.body.data.delivery.delivered).toBe(true);
+  });
+
+  it('未配置CRON_SECRET时任务接口返回503且不执行任务', async () => {
+    const { app } = createApp({ forceMock: true, cronSecret: '' });
+    const result = await request(app).post('/api/jobs/daily-operations-brief').expect(503);
+    expect(result.body.error.code).toBe('CRON_NOT_CONFIGURED');
   });
 });

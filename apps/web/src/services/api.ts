@@ -25,6 +25,7 @@ function isTransportFailure(error: unknown) {
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const method = (init?.method ?? 'GET').toUpperCase();
   const isWrite = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+  const isDiagnosisRequest = method === 'POST' && path === '/ai/diagnose';
   const isFeishuWorkOrderWrite = isWrite
     && /^\/work-orders(?:\/|$)/.test(path)
     && (effectiveServerMode === 'feishu' || runtimeConfig.requestedMode === 'feishu');
@@ -59,6 +60,9 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   } catch (error) {
     if (isFeishuWorkOrderWrite && isTransportFailure(error)) {
       throw new ApiClientError('FEISHU_WRITE_STATUS_UNKNOWN', '飞书写入请求未在限定时间内返回，请刷新工单列表确认状态，系统不会将该写操作重放到Mock');
+    }
+    if (isDiagnosisRequest && isTransportFailure(error)) {
+      throw new ApiClientError('AI_DIAGNOSIS_UNAVAILABLE', '辅助研判服务暂不可用，系统未返回固定模板；请检查服务连接后重试');
     }
     if (!runtimeConfig.allowOfflineFallback || !isTransportFailure(error)) throw error;
     transportMode = 'offline';
