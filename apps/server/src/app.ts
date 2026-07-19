@@ -7,13 +7,14 @@ import path from 'node:path';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import {
-  acknowledgeAlertSchema, createWorkOrderSchema, diagnosisRequestSchema, equipmentInputSchema,
+  acknowledgeAlertSchema, agentRunRequestSchema, createWorkOrderSchema, diagnosisRequestSchema, equipmentInputSchema, multimodalInspectionRequestSchema, ragSearchRequestSchema,
   stockChangeSchema, transitionWorkOrderSchema, workOrderRecordSchema,
 } from '@fengsui/shared';
 import { buildFeishuCapabilities, effectiveMode, env, feishuClientConfigured, missingFeishuConfig } from './config/env.js';
 import { AppError, errorHandler, notFound } from './middleware/errors.js';
 import { DemoAuthProvider, FeishuAuthProvider } from './providers/auth-provider.js';
 import { RuleBasedDiagnosisProvider } from './providers/ai-diagnosis-provider.js';
+import { DoubaoProvider, ResilientAiProvider, RuleBasedFallbackProvider } from './providers/structured-ai-provider.js';
 import { FeishuBotNotificationProvider, MockNotificationProvider } from './providers/notification-provider.js';
 import { FeishuClient } from './providers/feishu-client.js';
 import { FeishuBitableRepository } from './repositories/feishu-bitable-repository.js';
@@ -23,6 +24,9 @@ import { FeishuCallbackService, safeSecretEqual } from './services/feishu-callba
 import { buildRuntimeCapabilities, FeishuIntegrationState } from './services/feishu-integration-state.js';
 import { OperationsJobsService } from './services/operations-jobs-service.js';
 import { OperationsService } from './services/operations-service.js';
+import { LocalRagService } from './services/rag-service.js';
+import { MaintenanceAgent } from './services/maintenance-agent.js';
+import { MultimodalInspectionService } from './services/multimodal-inspection-service.js';
 import type { User, WorkOrder } from '@fengsui/shared';
 
 const success = <T>(data: T, meta?: Record<string, unknown>) => ({ success: true as const, data, ...(meta ? { meta } : {}) });
@@ -51,13 +55,20 @@ export function createApp(options?: {
     encryptKey: options?.encryptKey ?? env.FEISHU_ENCRYPT_KEY,
   });
   const jobsService = new OperationsJobsService(repository, notificationProvider);
+  const ragService = new LocalRagService(repository);
+  const maintenanceAgent = new MaintenanceAgent(repository, service, ragService);
+  const structuredAiProvider = new ResilientAiProvider(
+    new DoubaoProvider({ apiKey: env.DOUBAO_API_KEY, model: env.DOUBAO_MODEL, baseUrl: env.DOUBAO_BASE_URL }),
+    new RuleBasedFallbackProvider(),
+  );
+  const multimodalService = new MultimodalInspectionService(repository, ragService);
   const cronSecret = options?.cronSecret ?? env.CRON_SECRET;
   const app = express();
 
   app.disable('x-powered-by');
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(cors({ origin: true, credentials: true, exposedHeaders: [APP_MODE_HEADER] }));
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '12mb' }));
   app.use(cookieParser());
   if (env.NODE_ENV !== 'test') app.use(morgan('tiny'));
 
@@ -194,6 +205,23 @@ export function createApp(options?: {
   app.get('/api/spare-parts/:id/transactions', async (req, res) => res.json(success((await repository.listSpareTransactions()).filter((item) => item.partId === req.params.id))));
 
   app.get('/api/knowledge', async (req, res) => { let rows = await repository.listKnowledge(); if (req.query.search) rows = rows.filter((row) => JSON.stringify(row).includes(String(req.query.search))); res.json(success(rows)); });
+  app.post('/api/rag/search', async (req, res) => res.json(success(await ragService.search(ragSearchRequestSchema.parse(req.body)))));
+  app.get('/api/agent/runs', (_req, res) => res.json(success(maintenanceAgent.listRuns())));
+  app.get('/api/agent/runs/:id', (req, res) => { const run = maintenanceAgent.getRun(req.params.id); if (!run) throw new AppError(404, 'AGENT_RUN_NOT_FOUND', '未找到Agent执行记录'); res.json(success(run)); });
+  app.post('/api/agent/run', async (req, res) => res.json(success(await maintenanceAgent.run(agentRunRequestSchema.parse(req.body)))));
+  app.get('/api/ai/provider/status', (_req, res) => res.json(success(structuredAiProvider.status())));
+  app.post('/api/ai/structured-diagnose', async (req, res) => {
+    const body = diagnosisRequestSchema.parse(req.body);
+    if (!body.deviceId) throw new AppError(400, 'DEVICE_REQUIRED', '结构化研判需要指定设备');
+    const device = await repository.getEquipment(body.deviceId);
+    if (!device) throw new AppError(404, 'DEVICE_NOT_FOUND', '未找到设备');
+    const [telemetry, rag] = await Promise.all([
+      repository.getTelemetry(device.deviceId),
+      ragService.search({ query: `${device.deviceName} ${body.question}`, deviceType: device.deviceType, limit: 5 }),
+    ]);
+    res.json(success(await structuredAiProvider.diagnose({ device, telemetry, citations: rag.citations, question: body.question })));
+  });
+  app.post('/api/multimodal/inspect', async (req, res) => res.json(success(await multimodalService.analyze(multimodalInspectionRequestSchema.parse(req.body)))));
   app.post('/api/ai/diagnose', async (req, res) => { const body = diagnosisRequestSchema.parse(req.body); res.json(success(await service.diagnose(body.deviceId, body.question))); });
 
   app.post('/api/notifications/test', async (req, res) => { const result = await notificationProvider.sendTest(req.body?.recipient); if (!result.delivered) await repository.addOperationLog({ logId: `LOG-${randomUUID()}`, entityType: 'notification', entityId: 'test', action: '机器人消息发送失败', operator: '系统', detail: result.error ?? '未知错误，可重试', timestamp: new Date().toISOString() }); res.json(success(result)); });

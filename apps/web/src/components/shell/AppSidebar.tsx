@@ -1,6 +1,6 @@
 import {
   AlertTriangle, BookOpen, Boxes, Box, ChevronLeft, ChevronRight, ClipboardList, Gauge,
-  PackageSearch, Settings, Wrench,
+  PackageSearch, Settings, Sparkles, Wrench,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { NavLink } from 'react-router-dom';
@@ -14,6 +14,7 @@ const navigation = [
   { to: '/work-orders', label: '维修工单', icon: ClipboardList },
   { to: '/spare-parts', label: '备件库存', icon: PackageSearch },
   { to: '/knowledge', label: '运维知识库', icon: Wrench },
+  { to: '/capabilities', label: '六大能力映射', icon: Sparkles },
   { to: '/settings', label: '系统设置', icon: Settings },
 ];
 

@@ -4,17 +4,17 @@ import type { Equipment, RiskLevel } from '@fengsui/shared';
 import { StatusNode } from '../industrial';
 
 const mainNodes = [
-  { id: 'LTP-001', stage: '垃圾仓', x: 5, y: 43 },
-  { id: 'FDR-001', stage: '给料机', x: 20, y: 43 },
+  { id: 'LCP-001', stage: '渗滤液处理', x: 5, y: 43 },
+  { id: 'FWP-001', stage: '给水泵', x: 20, y: 43 },
   { id: 'GRB-001', stage: '焚烧炉', x: 35, y: 43 },
-  { id: 'TUR-001', stage: '余热发电', x: 50, y: 43 },
-  { id: 'GEN-001', stage: '电力输出', x: 64, y: 43 },
+  { id: 'SAF-001', stage: '二次风系统', x: 50, y: 43 },
+  { id: 'CLP-001', stage: '炉排冷却', x: 64, y: 43 },
   { id: 'IDF-001', stage: '引风机', x: 79, y: 43 },
 ] as const;
 
 const branchNodes = [
-  { id: 'FDR-002', x: 20, y: 78 },
-  { id: 'GRB-002', x: 35, y: 78 },
+  { id: 'FWP-002', x: 20, y: 78 },
+  { id: 'PAF-001', x: 35, y: 78 },
   { id: 'CWP-001', x: 50, y: 78 },
   { id: 'CWP-002', x: 61, y: 78 },
   { id: 'ACP-001', x: 72, y: 78 },
@@ -39,7 +39,7 @@ export function EquipmentTopology({ equipment }: { equipment: Equipment[] }) {
         <strong>{item.deviceName}</strong>
         <span className="industrial-data">{item.deviceId} · {item.healthScore}</span>
       </button>
-      {id === 'IDF-001' && <button className="topology-node__twin" onClick={() => navigate('/digital-twin?equipment=IDF-01')}><Box size={12} />进入3D</button>}
+      {id === 'IDF-001' && <button className="topology-node__twin" onClick={() => navigate('/digital-twin?equipment=IDF-001')}><Box size={12} />进入3D</button>}
     </div>;
   };
 

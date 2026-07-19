@@ -1,0 +1,30 @@
+{
+  "modelId": "grate-gearbox",
+  "label": "炉排减速机",
+  "lod": "lod2",
+  "meshCount": 17,
+  "triangleCount": 652,
+  "nodes": [
+    "grate_gearbox_root",
+    "drive_base",
+    "base_mount_-3.05_-1.35",
+    "base_mount_-3.05_1.35",
+    "base_mount_3.05_-1.35",
+    "base_mount_3.05_1.35",
+    "gearbox_housing",
+    "gearbox_top_cover",
+    "gearbox_inspection_cover",
+    "gearbox_breather",
+    "gearbox_oil_sight",
+    "gearbox_cooling_rib_00",
+    "gearbox_cooling_rib_01",
+    "gear_1",
+    "gear_2",
+    "gear_3",
+    "gearbox_input_shaft",
+    "gearbox_output_shaft",
+    "gearbox_oil_temperature_sensor",
+    "gearbox_vibration_sensor",
+    "gearbox_lubrication_locator"
+  ]
+}

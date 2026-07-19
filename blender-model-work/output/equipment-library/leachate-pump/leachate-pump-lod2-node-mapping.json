@@ -1,0 +1,33 @@
+{
+  "modelId": "leachate-pump",
+  "label": "渗滤液泵",
+  "lod": "lod2",
+  "meshCount": 16,
+  "triangleCount": 708,
+  "nodes": [
+    "leachate_pump_root",
+    "drive_base",
+    "base_mount_-1.85_-1.4500000000000002",
+    "base_mount_-1.85_1.4500000000000002",
+    "base_mount_1.85_-1.4500000000000002",
+    "base_mount_1.85_1.4500000000000002",
+    "leachate_pump_group",
+    "leachate_motor",
+    "leachate_shaft",
+    "leachate_impeller_housing",
+    "leachate_volute",
+    "leachate_inlet",
+    "leachate_outlet",
+    "leachate_inlet_pressure_sensor",
+    "leachate_outlet_pressure_sensor",
+    "leachate_impeller_locator",
+    "leachate_seal_locator",
+    "leachate_intake_cage",
+    "leachate_intake_bar_00",
+    "leachate_intake_bar_01",
+    "leachate_intake_bar_02",
+    "leachate_intake_bar_03",
+    "leachate_current_sensor",
+    "leachate_blockage_locator"
+  ]
+}

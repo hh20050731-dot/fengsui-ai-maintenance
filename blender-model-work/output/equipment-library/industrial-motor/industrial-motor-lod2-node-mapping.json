@@ -1,0 +1,26 @@
+{
+  "modelId": "industrial-motor",
+  "label": "工业电机",
+  "lod": "lod2",
+  "meshCount": 12,
+  "triangleCount": 464,
+  "nodes": [
+    "industrial_motor_root",
+    "drive_base",
+    "base_mount_-2.0_-0.9500000000000001",
+    "base_mount_-2.0_0.9500000000000001",
+    "base_mount_2.0_-0.9500000000000001",
+    "base_mount_2.0_0.9500000000000001",
+    "motor_group",
+    "motor",
+    "motor_front_endcap",
+    "motor_rear_endcap",
+    "motor_shaft",
+    "motor_terminal_box",
+    "motor_foot_left",
+    "motor_foot_right",
+    "motor_temperature_sensor",
+    "motor_vibration_sensor",
+    "rotation_axis"
+  ]
+}

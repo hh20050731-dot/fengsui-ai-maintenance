@@ -2,15 +2,21 @@ import {
   assertWorkOrderTransition,
   buildRuleBasedDiagnosis,
   createMockData,
+  faultCases,
   getDiagnosisIntentRoute,
   getStockStatus,
   matchesWorkOrderIdentifier,
   normalizeWorkOrderIdentity,
   resolveDiagnosisDevice,
   type Alert,
+  type AgentRun,
   type DashboardData,
+  type DiagnosisResult,
   type Equipment,
   type KnowledgeEntry,
+  type MultimodalInspection,
+  type RagCitation,
+  type RagSearchResult,
   type SparePart,
   type SparePartTransaction,
   type SparePartUsage,
@@ -49,6 +55,7 @@ export class OfflineApiError extends Error {
 }
 
 let memoryState: OfflineDemoState | undefined;
+const offlineAgentRuns = new Map<string, AgentRun>();
 const clone = <T>(value: T): T => structuredClone(value);
 const uid = (prefix: string) => `${prefix}-${generateUuid()}`;
 const nowIso = () => new Date().toISOString();
@@ -188,6 +195,151 @@ function diagnose(state: OfflineDemoState, selectedDeviceId: string | undefined,
     knowledge: state.knowledge,
     providerName: 'RuleBasedDiagnosisProvider（浏览器离线演示）',
   });
+}
+
+function competitionRisk(device: Equipment): DiagnosisResult['riskLevel'] {
+  if (device.riskLevel === '高风险') return '严重';
+  if (device.riskLevel === '二级预警') return '预警';
+  if (device.riskLevel === '关注') return '关注';
+  return '正常';
+}
+
+function localRagSearch(state: OfflineDemoState, query: string, limit = 5): RagSearchResult {
+  const normalized = query.trim().toLowerCase();
+  const terms = [...new Set(normalized.split(/[\s，。；、：？！,.!?;:]+/).filter(Boolean))];
+  const rows = [
+    ...state.knowledge.map((entry) => ({
+      documentId: entry.knowledgeId,
+      title: entry.title,
+      section: `${entry.deviceType} / ${entry.faultPhenomenon}`,
+      sourceRef: `knowledge:${entry.knowledgeId}`,
+      text: [entry.title, entry.deviceType, entry.faultPhenomenon, ...entry.abnormalIndicators, ...entry.possibleCauses, ...entry.inspectionSteps, ...entry.handlingMethod].join(' '),
+    })),
+    ...faultCases.map((item) => ({
+      documentId: item.caseId,
+      title: item.title,
+      section: '比赛演示故障案例',
+      sourceRef: `fault-case:${item.caseId}`,
+      text: [item.title, item.deviceType, ...item.possibleCauses, ...item.recommendedActions, ...item.requiredParts].join(' '),
+    })),
+  ];
+  const citations: RagCitation[] = rows.map((row) => {
+    const compact = row.text.toLowerCase();
+    const hits = terms.reduce((score, term) => score + (compact.includes(term) ? 1 : 0), 0);
+    const direct = normalized.length >= 2 && compact.includes(normalized) ? 2 : 0;
+    return {
+      citationId: `RC-${row.documentId}`,
+      documentId: row.documentId,
+      chunkId: `${row.documentId}-local`,
+      title: row.title,
+      section: row.section,
+      sourceRef: row.sourceRef,
+      excerpt: row.text.slice(0, 180),
+      relevance: Math.min(1, (hits + direct) / Math.max(2, terms.length + 1)),
+    };
+  }).filter((item) => item.relevance > 0).sort((a, b) => b.relevance - a.relevance).slice(0, limit);
+  return {
+    query,
+    citations,
+    matchedDocumentCount: citations.length,
+    degraded: true,
+    message: citations.length ? `离线演示知识库召回 ${citations.length} 条可追溯证据。` : '未检索到足够相关的本地知识证据，未生成虚假引用。',
+  };
+}
+
+function trendText(start: number, end: number, unit: string) {
+  const delta = Number(Math.abs(end - start).toFixed(1));
+  const direction = end > start ? '上升' : end < start ? '下降' : '持平';
+  return `${start} → ${end}${unit}，${direction}${delta}${unit}`;
+}
+
+function localStructuredDiagnosis(state: OfflineDemoState, deviceId: string, question: string): DiagnosisResult {
+  const device = getDevice(state, deviceId);
+  const points = state.telemetry[deviceId] ?? [];
+  const recent = points.slice(-13);
+  const first = recent[0] ?? points[0];
+  const last = recent.at(-1) ?? points.at(-1);
+  const rag = localRagSearch(state, `${device.deviceName} ${question}`, 5);
+  const risk = competitionRisk(device);
+  const evidence = [
+    `当前工况：${device.operatingCondition}；健康度 ${device.healthScore}/100。`,
+    first && last ? `振动趋势：${trendText(first.vibration, last.vibration, ' mm/s')}。` : '振动趋势数据点不足。',
+    first && last ? `温度趋势：${trendText(first.temperature, last.temperature, '℃')}。` : '温度趋势数据点不足。',
+  ];
+  return {
+    diagnosisId: uid('DG'),
+    deviceId,
+    summary: `${device.deviceName}当前风险等级为${device.riskLevel}，存在的风险需结合遥测趋势与现场检查进一步确认。`,
+    evidence,
+    multiParameterAnalysis: [`振动 ${device.vibration} mm/s、温度 ${device.temperature}℃、电流 ${device.current} A。`, `健康度 ${device.healthScore}/100，当前工况 ${device.operatingCondition}。`],
+    possibleCauses: device.deviceId.startsWith('IDF') ? ['轴承或润滑状态异常', '转子不平衡或联轴器对中偏差', '负荷与冷却条件变化'] : ['工况变化', '机械或电气部件状态变化', '传感器或过程条件异常'],
+    confidenceSupport: `基于当前遥测与 ${rag.citations.length} 条可追溯本地知识证据进行规则匹配。`,
+    riskLevel: risk,
+    inspectionSteps: ['复核传感器与当前工况', '按设备点检规程检查异常部位', '记录复测指标并由现场负责人确认处置方案'],
+    recommendedActions: ['持续观察趋势', ...(risk === '预警' || risk === '严重' ? ['24小时内安排现场复核'] : [])],
+    recommendedDeadline: risk === '严重' ? '立即安排' : risk === '预警' ? '24小时内' : risk === '关注' ? '72小时内' : '按计划点检',
+    requiredParts: device.deviceId.startsWith('IDF') && risk !== '正常' ? ['风机轴承', '通用润滑油'] : [],
+    createWorkOrder: risk === '预警' || risk === '严重',
+    citations: rag.citations,
+    limitations: ['当前为比赛演示规则模型，不代表真实设备诊断结果。', '是否停机应由现场负责人结合设备说明书和安全规程决定。'],
+    provider: 'RuleBasedFallbackProvider（浏览器离线演示）',
+    generatedAt: nowIso(),
+  };
+}
+
+function localAgentRun(state: OfflineDemoState, body: Record<string, unknown>): AgentRun {
+  const deviceId = String(body.deviceId ?? '');
+  const device = getDevice(state, deviceId);
+  const maxSteps = Math.max(3, Math.min(12, Number(body.maxSteps ?? 10)));
+  const alert = state.alerts.find((item) => item.deviceId === deviceId && !['已关闭', '误报'].includes(item.alertStatus));
+  const rag = localRagSearch(state, `${device.deviceName} ${String(body.task ?? '风险研判')}`, 4);
+  const tools = [
+    ['getEquipmentStatus', `健康度 ${device.healthScore}，风险 ${device.riskLevel}，工况 ${device.operatingCondition}`],
+    ['getTelemetryTrend', `已读取 ${state.telemetry[deviceId]?.length ?? 0} 个遥测点`],
+    ['getActiveAlerts', alert ? `关联活动预警 ${alert.alertId}` : '未发现活动预警'],
+    ['getMaintenanceHistory', `关联 ${state.workOrders.filter((item) => item.deviceId === deviceId).length} 条历史工单`],
+    ['searchKnowledgeBase', rag.message],
+    ['checkSparePartInventory', `已检查 ${state.spareParts.length} 种备件的当前库存`],
+    ['generateDiagnosis', '已生成结构化规则研判，未暴露内部推理过程'],
+    ['createWorkOrder', body.confirmCreateWorkOrder ? '离线演示不会代替真实飞书审批；请从现有工单流程人工确认' : '等待人工确认，未创建工单'],
+    ['notifyFeishu', '离线演示未发送真实飞书通知'],
+    ['createKnowledgeCandidate', '待维修完成并验证后生成知识候选'],
+  ].slice(0, maxSteps);
+  const run: AgentRun = {
+    agentRunId: uid('AR'),
+    task: String(body.task ?? '执行设备风险研判与检修准备'),
+    deviceId,
+    alertId: alert?.alertId,
+    diagnosisId: uid('DG'),
+    status: tools.length < 10 ? 'partial' : alert && !body.confirmCreateWorkOrder ? 'awaiting_confirmation' : 'completed',
+    steps: tools.map(([toolName, outputSummary], index) => ({
+      stepId: uid(`AS${index + 1}`), toolName: String(toolName), status: 'completed', inputSummary: `处理 ${device.deviceName} 的本地演示数据`, outputSummary: String(outputSummary), startedAt: nowIso(), completedAt: nowIso(), citationIds: toolName === 'searchKnowledgeBase' ? rag.citations.map((item) => item.citationId) : [],
+    })),
+    citations: rag.citations,
+    riskConclusion: `${device.deviceName}健康度 ${device.healthScore}，风险等级 ${device.riskLevel}；建议结合现场检查进一步确认。`,
+    startedAt: nowIso(), completedAt: nowIso(), maxSteps, requiresHumanConfirmation: !body.confirmCreateWorkOrder,
+  };
+  offlineAgentRuns.set(run.agentRunId, run);
+  return run;
+}
+
+function localMultimodalInspection(state: OfflineDemoState, body: Record<string, unknown>): MultimodalInspection {
+  const device = getDevice(state, String(body.deviceId ?? ''));
+  const mediaType = String(body.mediaType ?? '现场照片') as MultimodalInspection['mediaType'];
+  const rag = localRagSearch(state, `${device.deviceName} ${mediaType}`, 3);
+  const size = Number(body.size ?? 0);
+  if (!Number.isFinite(size) || size <= 0 || size > 8 * 1024 * 1024) fail('IMAGE_TOO_LARGE', '图片不能为空且不得超过8MB');
+  return {
+    inspectionId: uid('MM'), deviceId: device.deviceId, fileName: String(body.fileName ?? '未命名图片'), mediaType,
+    mimeType: String(body.mimeType ?? 'image/png'), size,
+    observationSummary: '已接收图片并关联当前设备遥测。离线演示未调用真实视觉模型，不对图片中的具体缺陷作确定识别。',
+    suspiciousRegions: ['设备外观与连接部位', '传感器、密封和紧固区域'],
+    telemetryCorrelation: [`当前工况：${device.operatingCondition}`, `健康度：${device.healthScore}/100，风险等级：${device.riskLevel}`, `当前振动 ${device.vibration} mm/s、温度 ${device.temperature}℃、电流 ${device.current} A`],
+    ragCitations: rag.citations, riskLevel: competitionRisk(device), manualInspectionTargets: ['核对图片拍摄位置', '复核现场仪表读数与遥测一致性', '按安全规程检查可疑部位'],
+    recommendWorkOrder: ['二级预警', '高风险'].includes(device.riskLevel),
+    limitations: ['图像分析仅用于辅助研判，不能替代现场检测和专业人员判断。', '当前未配置真实多模态模型，使用本地演示关联逻辑，不声称已识别具体缺陷。'],
+    provider: 'LocalDemonstrationInspectionProvider', createdAt: nowIso(),
+  };
 }
 
 function resolveUsage(state: OfflineDemoState, items: Array<{ partId: string; quantity: number }>): SparePartUsage[] {
@@ -337,6 +489,13 @@ export async function handleOfflineApi<T>(path: string, init?: RequestInit): Pro
   else if (method === 'POST' && url.pathname === '/spare-parts/outbound') result = stockChange(state, '出库', body);
   else if (segments[0] === 'spare-parts' && segments[1] && segments[2] === 'transactions' && method === 'GET') result = clone(state.spareTransactions.filter((item) => item.partId === segments[1]));
   else if (method === 'GET' && url.pathname === '/knowledge') { const search = url.searchParams.get('search'); result = clone(search ? state.knowledge.filter((item) => JSON.stringify(item).includes(search)) : state.knowledge); }
+  else if (method === 'POST' && url.pathname === '/rag/search') result = localRagSearch(state, String(body.query ?? ''), Number(body.limit ?? 5));
+  else if (method === 'GET' && url.pathname === '/agent/runs') result = [...offlineAgentRuns.values()].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  else if (segments[0] === 'agent' && segments[1] === 'runs' && segments[2] && method === 'GET') result = clone(offlineAgentRuns.get(segments[2]) ?? fail('AGENT_RUN_NOT_FOUND', '未找到Agent执行记录'));
+  else if (method === 'POST' && url.pathname === '/agent/run') result = localAgentRun(state, body);
+  else if (method === 'GET' && url.pathname === '/ai/provider/status') result = { provider: 'rule-based', configured: true, available: true, requests: 0, promptTokens: 0, completionTokens: 0 };
+  else if (method === 'POST' && url.pathname === '/ai/structured-diagnose') result = localStructuredDiagnosis(state, String(body.deviceId ?? ''), String(body.question ?? ''));
+  else if (method === 'POST' && url.pathname === '/multimodal/inspect') result = localMultimodalInspection(state, body);
   else if (method === 'POST' && url.pathname === '/ai/diagnose') result = diagnose(state, typeof body.deviceId === 'string' ? body.deviceId : undefined, String(body.question ?? ''));
   else if (method === 'POST' && url.pathname === '/notifications/test') result = notificationPreview();
   else if (method === 'POST' && url.pathname === '/notifications/alert') result = notificationPreview(getAlert(state, String(body.alertId ?? '')));

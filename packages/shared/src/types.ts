@@ -38,6 +38,16 @@ export interface Equipment {
   location: string;
   dataSource: '模拟数据' | '飞书多维表格';
   updatedAt: string;
+  /** Mock 最终成品数据始终提供；飞书旧表未扩字段时允许缺省并由服务层安全补齐。 */
+  trend24h?: number[];
+  trend7d?: number[];
+  trend30d?: number[];
+  riskContributions?: RiskContribution[];
+  recentAlertIds?: string[];
+  historicalWorkOrderIds?: string[];
+  maintenanceRecordIds?: string[];
+  recommendedMaintenanceAt?: string;
+  modelType?: string;
 }
 
 export interface TelemetryPoint {
@@ -248,3 +258,196 @@ export interface DemoJournalEntry {
 export interface ApiSuccess<T> { success: true; data: T; meta?: Record<string, unknown> }
 export interface ApiFailure { success: false; error: { code: string; message: string; details?: unknown } }
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
+
+/** 比赛最终成品使用的统一领域类型。现有业务类型保持兼容，新增能力均通过这些结构传递。 */
+export type Telemetry = TelemetryPoint;
+export type CompetitionRiskLevel = '正常' | '关注' | '预警' | '严重';
+
+export interface RiskContribution {
+  indicator: IndicatorKey | 'flow' | 'lubrication' | 'seal' | 'other';
+  label: string;
+  score: number;
+  evidence: string;
+}
+
+export interface HealthAssessment {
+  assessmentId: string;
+  deviceId: string;
+  operatingCondition: OperatingCondition;
+  baselineVersion: string;
+  healthScore: number;
+  riskLevel: CompetitionRiskLevel;
+  trendRate: number;
+  sustainedMinutes: number;
+  contributions: RiskContribution[];
+  assessedAt: string;
+  modelBoundary: string;
+}
+
+export interface RagDocument {
+  documentId: string;
+  title: string;
+  sourceType: '设备说明书' | '安全操作规程' | '维修记录' | '工单' | '故障案例' | '预警规则' | '检修指南';
+  sourceRef: string;
+  deviceTypes: string[];
+  faultTypes: string[];
+  riskLevels: CompetitionRiskLevel[];
+  content: string;
+  updatedAt: string;
+}
+
+export interface RagChunk {
+  chunkId: string;
+  documentId: string;
+  section: string;
+  text: string;
+  tokens: string[];
+  deviceTypes: string[];
+  faultTypes: string[];
+  riskLevels: CompetitionRiskLevel[];
+}
+
+export interface RagCitation {
+  citationId: string;
+  documentId: string;
+  chunkId: string;
+  title: string;
+  section: string;
+  sourceRef: string;
+  excerpt: string;
+  relevance: number;
+}
+
+export interface RagSearchRequest {
+  query: string;
+  deviceType?: string;
+  faultType?: string;
+  riskLevel?: CompetitionRiskLevel;
+  limit?: number;
+}
+
+export interface RagSearchResult {
+  query: string;
+  citations: RagCitation[];
+  matchedDocumentCount: number;
+  degraded: boolean;
+  message: string;
+}
+
+export interface DiagnosisResult {
+  diagnosisId: string;
+  deviceId: string;
+  alertId?: string;
+  summary: string;
+  evidence: string[];
+  multiParameterAnalysis: string[];
+  possibleCauses: string[];
+  confidenceSupport: string;
+  riskLevel: CompetitionRiskLevel;
+  inspectionSteps: string[];
+  recommendedActions: string[];
+  recommendedDeadline: string;
+  requiredParts: string[];
+  createWorkOrder: boolean;
+  citations: RagCitation[];
+  limitations: string[];
+  provider: string;
+  generatedAt: string;
+}
+
+export type AgentStepStatus = 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+
+export interface AgentStep {
+  stepId: string;
+  toolName: string;
+  status: AgentStepStatus;
+  inputSummary: string;
+  outputSummary: string;
+  startedAt: string;
+  completedAt?: string;
+  citationIds: string[];
+  errorCode?: string;
+}
+
+export interface AgentRun {
+  agentRunId: string;
+  task: string;
+  deviceId: string;
+  alertId?: string;
+  diagnosisId?: string;
+  workOrderId?: string;
+  status: 'running' | 'completed' | 'partial' | 'failed' | 'awaiting_confirmation';
+  steps: AgentStep[];
+  citations: RagCitation[];
+  riskConclusion: string;
+  startedAt: string;
+  completedAt?: string;
+  maxSteps: number;
+  requiresHumanConfirmation: boolean;
+}
+
+export interface MaintenanceRecord {
+  maintenanceRecordId: string;
+  deviceId: string;
+  workOrderId: string;
+  inspectionResult: string;
+  repairResult: string;
+  healthScoreBefore: number;
+  healthScoreAfter: number;
+  consumedSparePartIds: string[];
+  completedAt: string;
+}
+
+export interface KnowledgeCase {
+  knowledgeCaseId: string;
+  deviceId: string;
+  alertId?: string;
+  diagnosisId?: string;
+  agentRunId?: string;
+  workOrderId?: string;
+  title: string;
+  symptom: string;
+  cause: string;
+  action: string;
+  result: string;
+  source: '演示故障案例' | '维修闭环候选' | '人工审核';
+  createdAt: string;
+}
+
+export interface IntegrationCapabilityStatus {
+  mode: 'mock' | 'feishu' | 'local';
+  configured: boolean;
+  authenticated?: boolean;
+  safeErrorCode?: string;
+}
+
+export interface IntegrationStatus {
+  requestedMode: 'mock' | 'feishu';
+  effectiveMode: 'mock' | 'feishu' | 'partial';
+  feishuClient: boolean;
+  capabilities: Record<string, IntegrationCapabilityStatus>;
+  aiProvider: {
+    provider: 'doubao' | 'rule-based';
+    configured: boolean;
+    available: boolean;
+  };
+}
+
+export interface MultimodalInspection {
+  inspectionId: string;
+  deviceId: string;
+  fileName: string;
+  mediaType: '现场照片' | '仪表照片' | '泄漏照片' | '振动频谱截图' | '温度趋势截图';
+  mimeType: string;
+  size: number;
+  observationSummary: string;
+  suspiciousRegions: string[];
+  telemetryCorrelation: string[];
+  ragCitations: RagCitation[];
+  riskLevel: CompetitionRiskLevel;
+  manualInspectionTargets: string[];
+  recommendWorkOrder: boolean;
+  limitations: string[];
+  provider: string;
+  createdAt: string;
+}
