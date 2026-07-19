@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "workspaces": ["apps/*", "packages/*"],
+  "dependencies": { "@vercel/functions": "^3.7.5" },
   "scripts": {
     "dev": "concurrently -n server,web -c blue,cyan \"npm run dev -w @fengsui/server\" \"npm run dev -w @fengsui/web\"",
     "dev:server": "npm run dev -w @fengsui/server",

@@ -1,24 +1,24 @@
-import { createDecipheriv, createHash, timingSafeEqual } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import type { AiDiagnosis, OperationLog, WorkOrder } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
 import { buildHighRiskWorkOrderCard, type NotificationProvider } from '../providers/notification-provider.js';
 import type { DataRepository } from '../repositories/data-repository.js';
+import {
+  asFeishuCallbackObject,
+  decryptFeishuEnvelope,
+  safeSecretEqual,
+} from './feishu-callback-envelope.js';
 import type { OperationsService } from './operations-service.js';
 
 type JsonObject = Record<string, unknown>;
 
 function asObject(value: unknown): JsonObject {
-  return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as JsonObject : {};
+  return asFeishuCallbackObject(value);
 }
 
 export function decryptFeishuPayload(encrypted: string, encryptKey: string): JsonObject {
   try {
-    const payload = Buffer.from(encrypted, 'base64');
-    if (payload.length <= 16) throw new Error('encrypted payload is too short');
-    const key = createHash('sha256').update(encryptKey).digest();
-    const decipher = createDecipheriv('aes-256-cbc', key, payload.subarray(0, 16));
-    const plaintext = Buffer.concat([decipher.update(payload.subarray(16)), decipher.final()]).toString('utf8');
-    return asObject(JSON.parse(plaintext));
+    return decryptFeishuEnvelope(encrypted, encryptKey);
   } catch {
     throw new AppError(401, 'INVALID_ENCRYPTED_EVENT', '飞书加密回调解密失败');
   }
@@ -30,12 +30,7 @@ export function redactSensitiveText(value: string) {
     .replace(/Bearer\s+[A-Za-z0-9._~+/-]+/gi, 'Bearer [REDACTED]');
 }
 
-export function safeSecretEqual(actual: unknown, expected?: string) {
-  if (!expected || typeof actual !== 'string') return false;
-  const left = Buffer.from(actual);
-  const right = Buffer.from(expected);
-  return left.length === right.length && timingSafeEqual(left, right);
-}
+export { safeSecretEqual };
 
 function parseTextMessage(payload: JsonObject) {
   const event = asObject(payload.event);

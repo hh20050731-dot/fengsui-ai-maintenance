@@ -4,9 +4,15 @@
   "outputDirectory": "apps/web/dist",
   "framework": "vite",
   "functions": {
-    "api/index.ts": { "maxDuration": 30, "includeFiles": "packages/shared/dist/**" }
+    "api/index.ts": { "maxDuration": 30, "includeFiles": "packages/shared/dist/**" },
+    "api/feishu/events.ts": {
+      "maxDuration": 30,
+      "regions": ["hkg1"],
+      "includeFiles": "packages/shared/dist/**"
+    }
   },
   "rewrites": [
+    { "source": "/api/feishu/events", "destination": "/api/feishu/events" },
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
