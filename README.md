@@ -2,6 +2,8 @@
 
 飞书 AI 创新比赛原型。项目交付形态为“飞书企业自建网页应用 + 飞书应用机器人 + 飞书多维表格数据底座”，同时支持普通浏览器独立演示。
 
+当前正式版本采用深色工业指挥中心主题；全站统一使用 `AppSidebar`、`TopStatusBar` 和工业主题变量，3D 数字孪生默认加载增强模型 v1，并保留原模型回退入口。
+
 > 当前仓库内置的设备、监测、诊断、预警和维修数据均为模拟演示数据，不代表真实设备诊断结果。健康度和诊断结论来自可解释规则模型，未宣称接入真实垃圾焚烧厂或取得生产准确率。
 
 ## 已实现能力
@@ -145,6 +147,18 @@ NODE_ENV=production npm run start -w @fengsui/server
 普通 Node 服务器会从 `apps/web/dist` 提供前端并托管 `/api`。Vercel 配置见 `vercel.json` 和 [Vercel 部署指南](docs/09-Vercel部署指南.md)。生产飞书网页应用必须使用 HTTPS。
 
 腾讯云 EdgeOne Makers 备用站点保持仓库根目录构建，使用 `npm ci`、`npm run build:edgeone`、输出 `apps/web/dist`；该构建命令已强制启用离线演示模式，平台可额外设置 `VITE_OFFLINE_DEMO=true` 作为显式标识。仓库已提供 `edgeone.json` 与只处理 HTML 导航的 `middleware.js`，用于 `/digital-twin` 等 SPA 路由刷新回退；不会影响现有 Vercel 配置。完整控制台填写项见 [EdgeOne Pages 备用部署指南](docs/14-EdgeOne-Pages备用部署指南.md)。
+
+### 正式发布流程
+
+正式发布只以 GitHub `main` 为唯一生产来源：
+
+1. 从最新 `main` 创建 feature branch；
+2. 推送 feature branch，由 Vercel Preview 验证页面、API、3D 模型和飞书安全降级；
+3. 质量门禁全部通过后，将 feature branch 合并回 `main`；
+4. 推送 `main`，由 Vercel Production 自动发布并更新正式域名；
+5. 不得将未合并的功能分支长期设置为 Production Branch，也不得回滚到旧浅色界面提交。
+
+`npm run verify:production` 会检查深色工业 `MainLayout` 标识、共享包生产入口、Vercel Function、双版本 GLB、浏览器 Secret 隔离和 Service Worker 缓存风险。生产飞书凭证失效时，`/api/integration/status` 会分别返回 `configured`、`authenticated`、`effectiveMode` 和 `safeErrorCode`；演示模块继续加载 Mock 数据，飞书工单写入明确暂停且不会伪装成 Mock 成功。
 
 ## 需要用户完成
 

@@ -10,6 +10,9 @@ const serverDistEntry = path.join(root, 'apps', 'server', 'dist', 'index.js');
 const apiEntry = path.join(root, 'api', 'index.ts');
 const webPublicModels = path.join(root, 'apps', 'web', 'public', 'models');
 const webDistModels = path.join(root, 'apps', 'web', 'dist', 'models');
+const webDist = path.join(root, 'apps', 'web', 'dist');
+const webDistAssets = path.join(webDist, 'assets');
+const mainLayoutSource = path.join(root, 'apps', 'web', 'src', 'layouts', 'MainLayout.tsx');
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`[production-check] ${message}`);
@@ -58,6 +61,18 @@ for (const fileName of ['induced-draft-fan.glb', 'induced-draft-fan-enhanced-v1.
   assertGlb(builtModel);
   assert(statSync(sourceModel).size === statSync(builtModel).size, `${fileName} 未完整复制到前端构建产物`);
 }
+
+const mainLayout = readFileSync(mainLayoutSource, 'utf8');
+assert(mainLayout.includes('AppSidebar') && mainLayout.includes('TopStatusBar'), 'MainLayout 必须使用工业版 AppSidebar 与 TopStatusBar');
+assert(mainLayout.includes('--industrial-bg'), 'MainLayout 缺少工业主题背景标识');
+assert(!mainLayout.includes('bg-[#F7F7F7]'), 'MainLayout 不得恢复旧浅色页面背景');
+
+const builtAssetFiles = readdirSync(webDistAssets).filter((name) => /\.(?:js|css)$/.test(name));
+const builtAssetSource = builtAssetFiles.map((name) => readFileSync(path.join(webDistAssets, name), 'utf8')).join('\n');
+assert(builtAssetSource.includes('--industrial-bg'), '前端构建产物未包含深色工业主题变量');
+assert(!builtAssetSource.includes('FEISHU_APP_SECRET'), '浏览器构建产物不得包含 FEISHU_APP_SECRET');
+assert(!builtAssetSource.includes('navigator.serviceWorker'), '当前版本不得注册旧 Service Worker 缓存');
+assert(!['sw.js', 'service-worker.js'].some((name) => existsSync(path.join(webDist, name))), '构建产物不得包含旧 Service Worker');
 
 await import(pathToFileURL(sharedJsEntry).href);
 process.env.NODE_ENV = 'test';

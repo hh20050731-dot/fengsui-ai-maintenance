@@ -1,6 +1,8 @@
 import { createMockData } from '@fengsui/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { buildFeishuCapabilities } from '../config/env.js';
+import { AppError } from '../middleware/errors.js';
+import { FeishuIntegrationState } from '../services/feishu-integration-state.js';
 import { FeishuBitableRepository, fromFeishuWorkOrderFields, toFeishuWorkOrderFields } from './feishu-bitable-repository.js';
 
 const partialCapabilities = buildFeishuCapabilities({
@@ -149,5 +151,31 @@ describe('飞书多维表格混合 Repository', () => {
 
     await expect(repository.updateWorkOrder('WO-NOT-EXISTS', { status: '已接单' })).rejects.toMatchObject({ status: 404, code: 'WORK_ORDER_NOT_FOUND' });
     expect(updateRecord).not.toHaveBeenCalled();
+  });
+
+  it('飞书凭证失效时读取降级为演示数据且禁止工单写入Mock', async () => {
+    const integrationState = new FeishuIntegrationState(true);
+    const createRecord = vi.fn();
+    const repository = new FeishuBitableRepository({
+      client: {
+        listRecords: vi.fn(async () => { throw new AppError(502, 'FEISHU_AUTH_INVALID', '飞书应用凭证无效'); }),
+        createRecord,
+        updateRecord: vi.fn(),
+        getRecord: vi.fn(),
+      },
+      appToken: 'configured-app-token',
+      tableIds: { workOrders: 'configured-work-order-table' },
+      capabilities: partialCapabilities,
+      integrationState,
+    });
+
+    const fallbackRows = await repository.listWorkOrders();
+    expect(fallbackRows.length).toBeGreaterThan(0);
+    expect(integrationState.snapshot()).toMatchObject({ authenticated: false, safeErrorCode: 'FEISHU_AUTH_INVALID' });
+    await expect(repository.createWorkOrder(createMockData().workOrders[0]!)).rejects.toMatchObject({
+      status: 503,
+      code: 'FEISHU_WORK_ORDER_UNAVAILABLE',
+    });
+    expect(createRecord).not.toHaveBeenCalled();
   });
 });

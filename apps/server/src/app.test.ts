@@ -56,6 +56,7 @@ describe('Mock API', () => {
     const integration = await request(app).get('/api/integration/status').expect(200);
     expect(integration.body.data.capabilities.workOrders.mode).toBe('mock');
     expect(integration.body.data.capabilities.equipment.mode).toBe('mock');
+    expect(integration.body.data).toMatchObject({ configured: false, authenticated: false, effectiveMode: 'mock', safeErrorCode: null });
     const notification = await request(app).post('/api/notifications/test').send({}).expect(200);
     expect(notification.body.data.delivered).toBe(true); expect(notification.body.data.messageId).toContain('mock');
   });

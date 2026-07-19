@@ -10,24 +10,36 @@ export class FeishuClient {
 
   async getTenantAccessToken(): Promise<string> {
     if (this.tenantToken && this.tenantToken.expiresAt > Date.now() + 60_000) return this.tenantToken.value;
-    const response = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ app_id: env.FEISHU_APP_ID, app_secret: env.FEISHU_APP_SECRET }),
-    });
+    let response: Response;
+    try {
+      response = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ app_id: env.FEISHU_APP_ID, app_secret: env.FEISHU_APP_SECRET }),
+      });
+    } catch {
+      throw new AppError(503, 'FEISHU_AUTH_UNAVAILABLE', '飞书鉴权服务暂不可用');
+    }
     const result = await response.json() as FeishuEnvelope<never>;
-    if (!response.ok || result.code !== 0 || !result.tenant_access_token) throw new AppError(502, 'FEISHU_TOKEN_ERROR', `无法获取飞书应用凭证：${result.msg ?? response.status}`);
+    if (!response.ok) throw new AppError(503, 'FEISHU_AUTH_UNAVAILABLE', '飞书鉴权服务暂不可用');
+    if (result.code !== 0 || !result.tenant_access_token) throw new AppError(502, 'FEISHU_AUTH_INVALID', '飞书应用凭证无效');
     this.tenantToken = { value: result.tenant_access_token, expiresAt: Date.now() + (result.expire ?? 7200) * 1000 };
     return result.tenant_access_token;
   }
 
   async getAppAccessToken(): Promise<string> {
     if (this.appToken && this.appToken.expiresAt > Date.now() + 60_000) return this.appToken.value;
-    const response = await fetch('https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ app_id: env.FEISHU_APP_ID, app_secret: env.FEISHU_APP_SECRET }),
-    });
+    let response: Response;
+    try {
+      response = await fetch('https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ app_id: env.FEISHU_APP_ID, app_secret: env.FEISHU_APP_SECRET }),
+      });
+    } catch {
+      throw new AppError(503, 'FEISHU_AUTH_UNAVAILABLE', '飞书鉴权服务暂不可用');
+    }
     const result = await response.json() as FeishuEnvelope<never>;
-    if (!response.ok || result.code !== 0 || !result.app_access_token) throw new AppError(502, 'FEISHU_APP_TOKEN_ERROR', `无法获取飞书应用授权凭证：${result.msg ?? response.status}`);
+    if (!response.ok) throw new AppError(503, 'FEISHU_AUTH_UNAVAILABLE', '飞书鉴权服务暂不可用');
+    if (result.code !== 0 || !result.app_access_token) throw new AppError(502, 'FEISHU_AUTH_INVALID', '飞书应用凭证无效');
     this.appToken = { value: result.app_access_token, expiresAt: Date.now() + (result.expire ?? 7200) * 1000 };
     return result.app_access_token;
   }

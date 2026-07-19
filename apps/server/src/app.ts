@@ -15,21 +15,32 @@ import { AppError, errorHandler, notFound } from './middleware/errors.js';
 import { DemoAuthProvider, FeishuAuthProvider } from './providers/auth-provider.js';
 import { RuleBasedDiagnosisProvider } from './providers/ai-diagnosis-provider.js';
 import { FeishuBotNotificationProvider, MockNotificationProvider } from './providers/notification-provider.js';
+import { FeishuClient } from './providers/feishu-client.js';
 import { FeishuBitableRepository } from './repositories/feishu-bitable-repository.js';
 import { MockRepository } from './repositories/mock-repository.js';
 import { APP_MODE_HEADER, DEMO_JOURNAL_HEADER, DemoStatePersistence } from './services/demo-state-persistence.js';
 import { FeishuCallbackService, safeSecretEqual } from './services/feishu-callback-service.js';
+import { buildRuntimeCapabilities, FeishuIntegrationState } from './services/feishu-integration-state.js';
 import { OperationsJobsService } from './services/operations-jobs-service.js';
 import { OperationsService } from './services/operations-service.js';
 import type { User, WorkOrder } from '@fengsui/shared';
 
 const success = <T>(data: T, meta?: Record<string, unknown>) => ({ success: true as const, data, ...(meta ? { meta } : {}) });
 
-export function createApp(options?: { forceMock?: boolean; cronSecret?: string; verificationToken?: string; encryptKey?: string }) {
+export function createApp(options?: {
+  forceMock?: boolean;
+  cronSecret?: string;
+  verificationToken?: string;
+  encryptKey?: string;
+  feishuAuthProbe?: () => Promise<unknown>;
+}) {
   const mode = options?.forceMock ? 'mock' : effectiveMode;
   const capabilities = buildFeishuCapabilities(env, mode);
-  const partialFeishu = mode === 'feishu' && Object.values(capabilities).some((capability) => capability.mode === 'mock');
-  const repository = mode === 'feishu' ? new FeishuBitableRepository({ capabilities }) : new MockRepository();
+  const integrationState = new FeishuIntegrationState(mode === 'feishu' && feishuClientConfigured);
+  const feishuClient = mode === 'feishu' ? new FeishuClient() : undefined;
+  const repository = mode === 'feishu'
+    ? new FeishuBitableRepository({ capabilities, client: feishuClient, integrationState })
+    : new MockRepository();
   const notificationProvider = mode === 'feishu' ? new FeishuBotNotificationProvider() : new MockNotificationProvider();
   const authProvider = mode === 'feishu' ? new FeishuAuthProvider() : new DemoAuthProvider();
   const service = new OperationsService(repository, new RuleBasedDiagnosisProvider(), notificationProvider, { createKnowledgeCandidates: capabilities.knowledge.mode === 'mock' });
@@ -85,19 +96,38 @@ export function createApp(options?: { forceMock?: boolean; cronSecret?: string; 
   });
 
   app.get('/api/health', (_req, res) => res.json(success({ status: 'ok', version: '1.0.2', mode, time: new Date().toISOString() })));
-  app.get('/api/integration/status', (_req, res) => res.json(success({
-    requestedMode: env.APP_MODE, effectiveMode: mode,
-    degraded: env.APP_MODE !== mode,
-    partial: partialFeishu,
-    feishuClient: mode === 'feishu' && feishuClientConfigured,
-    capabilities,
-    sso: mode === 'feishu' ? '等待端内登录' : '演示身份',
-    bitable: mode === 'feishu' ? Object.values(capabilities).every((capability) => capability.mode === 'feishu') ? '已配置' : '已部分配置' : '模拟数据仓库',
-    robot: mode === 'feishu' && env.FEISHU_NOTIFICATION_CHAT_ID ? '已配置' : mode === 'feishu' ? '缺少默认会话' : '卡片预览',
-    callbacks: { verificationConfigured: Boolean(options?.verificationToken ?? env.FEISHU_VERIFICATION_TOKEN), encryptionConfigured: Boolean(options?.encryptKey ?? env.FEISHU_ENCRYPT_KEY) },
-    scheduledJobs: { configured: Boolean(cronSecret) },
-    aiProvider: 'RuleBasedDiagnosisProvider', version: '1.0.2', lastSyncAt: new Date().toISOString(), missingConfig: missingFeishuConfig,
-  })));
+  app.get('/api/integration/status', async (_req, res) => {
+    if (mode === 'feishu' && feishuClientConfigured && feishuClient) {
+      try {
+        await (options?.feishuAuthProbe ?? (() => feishuClient.getTenantAccessToken()))();
+        integrationState.markAuthenticated();
+      } catch (error) {
+        integrationState.markFailure(error);
+      }
+    }
+    const authentication = integrationState.snapshot();
+    const runtimeCapabilities = buildRuntimeCapabilities(capabilities, authentication);
+    const runtimeMode = mode === 'feishu' && authentication.authenticated ? 'feishu' : 'mock';
+    const partialFeishu = runtimeMode === 'feishu'
+      && Object.values(runtimeCapabilities).some((capability) => capability.effectiveMode === 'mock');
+    res.json(success({
+      requestedMode: env.APP_MODE,
+      effectiveMode: runtimeMode,
+      configured: authentication.configured,
+      authenticated: authentication.authenticated,
+      safeErrorCode: authentication.safeErrorCode,
+      degraded: env.APP_MODE === 'feishu' && runtimeMode !== 'feishu',
+      partial: partialFeishu,
+      feishuClient: authentication.authenticated,
+      capabilities: runtimeCapabilities,
+      sso: runtimeMode === 'feishu' ? '等待端内登录' : env.APP_MODE === 'feishu' ? '飞书鉴权不可用，使用演示身份' : '演示身份',
+      bitable: runtimeMode === 'feishu' ? Object.values(runtimeCapabilities).every((capability) => capability.effectiveMode === 'feishu') ? '已配置' : '已部分配置' : '模拟数据仓库',
+      robot: runtimeMode === 'feishu' && env.FEISHU_NOTIFICATION_CHAT_ID ? '已配置' : runtimeMode === 'feishu' ? '缺少默认会话' : '卡片预览',
+      callbacks: { verificationConfigured: Boolean(options?.verificationToken ?? env.FEISHU_VERIFICATION_TOKEN), encryptionConfigured: Boolean(options?.encryptKey ?? env.FEISHU_ENCRYPT_KEY) },
+      scheduledJobs: { configured: Boolean(cronSecret) },
+      aiProvider: 'RuleBasedDiagnosisProvider', version: '1.0.2', lastSyncAt: new Date().toISOString(), missingConfig: missingFeishuConfig,
+    }));
+  });
 
   app.post('/api/auth/feishu/login', async (req, res) => {
     const code = typeof req.body?.code === 'string' ? req.body.code : undefined;

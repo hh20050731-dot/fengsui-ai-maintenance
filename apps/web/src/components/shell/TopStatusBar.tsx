@@ -4,9 +4,22 @@ import type { User } from '@fengsui/shared';
 import type { IntegrationStatus } from '../../contexts/AppContext';
 import { detectFeishuEnvironment } from '../../feishu/adapter';
 
+export function getIntegrationConnectionPresentation(integration: IntegrationStatus | undefined, inClient: boolean) {
+  const connected = integration?.effectiveMode === 'feishu' && integration.authenticated;
+  const connectionText = connected
+    ? integration?.partial ? '飞书部分能力已连接' : '飞书数据已连接'
+    : integration?.safeErrorCode === 'FEISHU_AUTH_INVALID'
+      ? '飞书凭证无效'
+      : integration?.requestedMode === 'feishu' && integration?.configured
+        ? '飞书暂不可用'
+        : integration?.offlineDemo
+          ? '离线演示模式'
+          : `演示模式${inClient ? ' · 飞书客户端' : ''}`;
+  return { connected, connectionText };
+}
+
 export function TopStatusBar({ clock, user, integration, onOpenMenu }: { clock: Date; user: User; integration?: IntegrationStatus; onOpenMenu: () => void }) {
-  const connected = integration?.effectiveMode === 'feishu';
-  const connectionText = connected ? integration?.partial ? '飞书部分能力已连接' : '飞书数据已连接' : integration?.offlineDemo ? '离线演示模式' : `演示模式${detectFeishuEnvironment().inClient ? ' · 飞书客户端' : ''}`;
+  const { connected, connectionText } = getIntegrationConnectionPresentation(integration, detectFeishuEnvironment().inClient);
   return <header className="top-status-bar">
     <div className="top-status-bar__station">
       <button className="top-status-bar__menu" onClick={onOpenMenu} aria-label="打开导航"><Menu size={19} /></button>

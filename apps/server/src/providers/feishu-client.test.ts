@@ -32,4 +32,22 @@ describe('FeishuClient访问凭证生命周期', () => {
     await expect(new FeishuClient().request('/local/token-retry')).rejects.toMatchObject({ code: 'FEISHU_API_ERROR' });
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
+
+  it('App Secret无效时返回安全错误码且不透传飞书原始错误', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ code: 10003, msg: 'app secret invalid: internal detail' })));
+
+    await expect(new FeishuClient().getTenantAccessToken()).rejects.toMatchObject({
+      code: 'FEISHU_AUTH_INVALID',
+      message: '飞书应用凭证无效',
+    });
+  });
+
+  it('飞书鉴权网络不可用时返回可安全展示的不可用状态', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('local network detail')));
+
+    await expect(new FeishuClient().getTenantAccessToken()).rejects.toMatchObject({
+      code: 'FEISHU_AUTH_UNAVAILABLE',
+      message: '飞书鉴权服务暂不可用',
+    });
+  });
 });

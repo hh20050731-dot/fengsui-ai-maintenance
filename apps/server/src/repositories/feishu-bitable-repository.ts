@@ -5,6 +5,11 @@ import {
 import { env, feishuCapabilities, type FeishuCapabilities, type FeishuCapabilityName } from '../config/env.js';
 import { AppError } from '../middleware/errors.js';
 import { FeishuClient, type FeishuBitableRecord } from '../providers/feishu-client.js';
+import {
+  classifyFeishuIntegrationError,
+  FeishuIntegrationState,
+  feishuWorkOrderUnavailable,
+} from '../services/feishu-integration-state.js';
 import { MockRepository } from './mock-repository.js';
 
 type BitableClient = Pick<FeishuClient, 'listRecords' | 'createRecord' | 'updateRecord' | 'getRecord'>;
@@ -107,6 +112,7 @@ export interface FeishuBitableRepositoryOptions {
   appToken?: string;
   tableIds?: Partial<TableIds>;
   capabilities?: FeishuCapabilities;
+  integrationState?: FeishuIntegrationState;
 }
 
 /** 飞书真实数据适配层。每个业务模块独立判断能力，未配置的模块继续使用内置 Mock 数据。 */
@@ -115,6 +121,7 @@ export class FeishuBitableRepository extends MockRepository {
   private token: string;
   private tableIds: TableIds;
   private capabilities: FeishuCapabilities;
+  private integrationState?: FeishuIntegrationState;
   private recordIds = new Map<string, string>();
   private workOrderCache = new Map<string, WorkOrder>();
 
@@ -124,6 +131,7 @@ export class FeishuBitableRepository extends MockRepository {
     this.token = options.appToken ?? env.FEISHU_BITABLE_APP_TOKEN ?? '';
     this.tableIds = { ...defaultTableIds, ...options.tableIds };
     this.capabilities = options.capabilities ?? feishuCapabilities;
+    this.integrationState = options.integrationState;
   }
 
   private usesFeishu(module: FeishuCapabilityName) { return this.capabilities[module].mode === 'feishu'; }
@@ -133,6 +141,20 @@ export class FeishuBitableRepository extends MockRepository {
     return tableId;
   }
   private recordKey(tableId: string, id: string) { return `${tableId}:${id}`; }
+
+  private workOrderRemoteAvailable() {
+    return !this.integrationState || this.integrationState.canAttemptRemote();
+  }
+
+  private markWorkOrderReadFailure(error: unknown) {
+    if (!classifyFeishuIntegrationError(error)) return false;
+    this.integrationState?.markFailure(error);
+    return true;
+  }
+
+  private assertWorkOrderWriteAvailable() {
+    if (!this.workOrderRemoteAvailable()) throw feishuWorkOrderUnavailable();
+  }
 
   private cacheWorkOrder(order: WorkOrder) {
     const tableId = this.tableId('workOrders');
@@ -219,26 +241,46 @@ export class FeishuBitableRepository extends MockRepository {
 
   override async listWorkOrders() {
     if (!this.usesFeishu('workOrders')) return super.listWorkOrders();
-    const records = await this.client.listRecords(this.token, this.tableId('workOrders'));
-    return records.map((record) => this.mapWorkOrderRecord(record)).filter((order) => Boolean(order.workOrderNo));
+    if (!this.workOrderRemoteAvailable()) return super.listWorkOrders();
+    try {
+      const records = await this.client.listRecords(this.token, this.tableId('workOrders'));
+      this.integrationState?.markAuthenticated();
+      return records.map((record) => this.mapWorkOrderRecord(record)).filter((order) => Boolean(order.workOrderNo));
+    } catch (error) {
+      if (this.markWorkOrderReadFailure(error)) return super.listWorkOrders();
+      throw error;
+    }
   }
   override async getWorkOrder(identifier: string) {
     if (!this.usesFeishu('workOrders')) return super.getWorkOrder(identifier);
+    if (!this.workOrderRemoteAvailable()) return super.getWorkOrder(identifier);
     const tableId = this.tableId('workOrders');
     if (isFeishuRecordId(identifier)) {
-      try { return await this.getWorkOrderByRecordId(identifier); }
+      try {
+        const order = await this.getWorkOrderByRecordId(identifier);
+        this.integrationState?.markAuthenticated();
+        return order;
+      }
       catch (error) {
+        this.markWorkOrderReadFailure(error);
         const cached = this.workOrderCache.get(identifier);
         if (cached) return { ...cached, syncStatus: 'pending' as const, syncMessage: '数据同步刷新中' };
+        if (this.integrationState && classifyFeishuIntegrationError(error)) return super.getWorkOrder(identifier);
         throw error;
       }
     }
     const cached = this.workOrderCache.get(identifier);
     const recordId = cached?.recordId ?? this.recordIds.get(this.recordKey(tableId, identifier));
     if (recordId) {
-      try { return await this.getWorkOrderByRecordId(recordId, identifier); }
+      try {
+        const order = await this.getWorkOrderByRecordId(recordId, identifier);
+        this.integrationState?.markAuthenticated();
+        return order;
+      }
       catch (error) {
+        this.markWorkOrderReadFailure(error);
         if (cached) return { ...cached, syncStatus: 'pending' as const, syncMessage: '数据同步刷新中' };
+        if (this.integrationState && classifyFeishuIntegrationError(error)) return super.getWorkOrder(identifier);
         throw error;
       }
     }
@@ -246,19 +288,35 @@ export class FeishuBitableRepository extends MockRepository {
   }
   override async createWorkOrder(value: WorkOrder) {
     if (!this.usesFeishu('workOrders')) return super.createWorkOrder(value);
-    const normalized = normalizeWorkOrderIdentity(value) as WorkOrder;
-    const result = await this.client.createRecord(this.token, this.tableId('workOrders'), toFeishuWorkOrderFields(normalized));
-    this.cacheWorkOrder({ ...normalized, recordId: result.record.record_id });
-    return this.mapWorkOrderRecord(result.record, normalized.workOrderNo);
+    this.assertWorkOrderWriteAvailable();
+    try {
+      const normalized = normalizeWorkOrderIdentity(value) as WorkOrder;
+      const result = await this.client.createRecord(this.token, this.tableId('workOrders'), toFeishuWorkOrderFields(normalized));
+      this.integrationState?.markAuthenticated();
+      this.cacheWorkOrder({ ...normalized, recordId: result.record.record_id });
+      return this.mapWorkOrderRecord(result.record, normalized.workOrderNo);
+    } catch (error) {
+      if (this.markWorkOrderReadFailure(error)) throw feishuWorkOrderUnavailable(error);
+      throw error;
+    }
   }
   override async updateWorkOrder(identifier: string, patch: Partial<WorkOrder>) {
     if (!this.usesFeishu('workOrders')) return super.updateWorkOrder(identifier, patch);
+    this.assertWorkOrderWriteAvailable();
     const current = await this.getWorkOrder(identifier);
     if (!current) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', '未找到维修工单');
+    this.assertWorkOrderWriteAvailable();
     const value = normalizeWorkOrderIdentity({ ...current, ...patch }) as WorkOrder;
     const recordId = current.recordId ?? (isFeishuRecordId(identifier) ? identifier : undefined);
     if (!recordId) throw new AppError(404, 'WORK_ORDER_RECORD_NOT_FOUND', '未找到维修工单对应的飞书记录');
-    const updateResult = await this.client.updateRecord(this.token, this.tableId('workOrders'), recordId, toFeishuWorkOrderFields(value));
+    let updateResult;
+    try {
+      updateResult = await this.client.updateRecord(this.token, this.tableId('workOrders'), recordId, toFeishuWorkOrderFields(value));
+      this.integrationState?.markAuthenticated();
+    } catch (error) {
+      if (this.markWorkOrderReadFailure(error)) throw feishuWorkOrderUnavailable(error);
+      throw error;
+    }
     const cachedValue = { ...value, recordId };
     this.cacheWorkOrder(cachedValue);
     if (updateResult?.record) return this.mapWorkOrderRecord(updateResult.record, value.workOrderNo);
