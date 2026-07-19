@@ -20,4 +20,18 @@ describe('IntentRouter', () => {
     expect(new IntentRouter().route('请研判当前设备状态和主要风险', 'IDF-001').intent).toBe('equipment_status');
     expect(new IntentRouter().route('今天天气怎么样？', 'IDF-001').intent).toBe('unsupported_or_ambiguous');
   });
+
+  it.each([
+    '查询1号引风机状态',
+    '查看1号引风机状态',
+    '1号引风机当前状态如何',
+    '1号引风机现在怎么样',
+    '1号引风机健康度',
+    '一号引风机状态',
+    'IDF-001状态',
+    '查询一下1号引风机',
+    '1号引风机有没有异常',
+  ])('将设备状态说法“%s”稳定路由为equipment_status', (question) => {
+    expect(new IntentRouter().route(question).intent).toBe('equipment_status');
+  });
 });

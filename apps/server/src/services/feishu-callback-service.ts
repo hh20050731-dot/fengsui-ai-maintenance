@@ -8,6 +8,7 @@ import {
   decryptFeishuEnvelope,
   safeSecretEqual,
 } from './feishu-callback-envelope.js';
+import { normalizeFeishuMessageText } from './feishu-message-text.js';
 import type { OperationsService } from './operations-service.js';
 
 type JsonObject = Record<string, unknown>;
@@ -35,21 +36,8 @@ export { safeSecretEqual };
 function parseTextMessage(payload: JsonObject) {
   const event = asObject(payload.event);
   const message = asObject(event.message);
-  if (message.message_type !== 'text' || typeof message.content !== 'string') return undefined;
-  try {
-    const content = asObject(JSON.parse(message.content));
-    if (typeof content.text !== 'string') return undefined;
-    let text = content.text;
-    const mentions = Array.isArray(message.mentions) ? message.mentions : [];
-    for (const mention of mentions) {
-      const key = asObject(mention).key;
-      if (typeof key === 'string' && key) text = text.replaceAll(key, ' ');
-    }
-    text = text.replace(/@_user_\d+/g, ' ').replace(/\s+/g, ' ').trim();
-    return text || undefined;
-  } catch {
-    return undefined;
-  }
+  if (message.message_type !== 'text') return undefined;
+  return normalizeFeishuMessageText(message.content, message.mentions);
 }
 
 function trustedOperatorLabel(payload: JsonObject) {
@@ -58,6 +46,10 @@ function trustedOperatorLabel(payload: JsonObject) {
     .find((value): value is string => typeof value === 'string' && value.length > 0);
   if (!identifier) return '飞书用户';
   return `飞书用户#${createHash('sha256').update(identifier).digest('hex').slice(0, 8)}`;
+}
+
+function workOrderIdentifierFromCard(value: JsonObject) {
+  return String(value.recordId ?? value.id ?? value.workOrderId ?? value.workOrderNo ?? '');
 }
 
 export function formatDiagnosisForFeishu(result: AiDiagnosis) {
@@ -156,6 +148,14 @@ export class FeishuCallbackService {
     }
     if (typeof payload.challenge === 'string') return { challenge: payload.challenge };
 
+    return this.handleTrustedEvent(payload);
+  }
+
+  /** 仅供飞书官方 SDK 已完成连接鉴权的 WebSocket 事件使用。 */
+  async handleTrustedEvent(rawPayload: unknown) {
+    const payload = asObject(rawPayload);
+    const header = asObject(payload.header);
+
     const event = asObject(payload.event);
     const action = asObject(event.action);
     const actionValue = asObject(action.value ?? asObject(payload.action).value);
@@ -169,7 +169,7 @@ export class FeishuCallbackService {
     try {
       const operator = trustedOperatorLabel(payload);
       let result: unknown;
-      if (actionValue.action === 'accept_work_order') result = await this.withWorkOrderLock(String(actionValue.workOrderId ?? actionValue.workOrderNo ?? ''), () => this.acceptWorkOrder(actionValue, eventId, operator));
+      if (actionValue.action === 'accept_work_order') result = await this.withWorkOrderLock(workOrderIdentifierFromCard(actionValue), () => this.acceptWorkOrder(actionValue, eventId, operator));
       else if (actionValue.action === 'defer_work_order') result = await this.deferWorkOrder(actionValue, operator);
       else if (actionValue.action === 'acknowledge' && actionValue.alertId) result = await this.acknowledgeAlert(String(actionValue.alertId), operator);
       else if (actionValue.action === 'create_work_order' && actionValue.alertId) result = await this.createWorkOrder(String(actionValue.alertId), eventId, operator);
@@ -205,7 +205,7 @@ export class FeishuCallbackService {
   }
 
   private async acceptWorkOrder(value: JsonObject, eventId: string, operator: string) {
-    const identifier = String(value.workOrderId ?? value.workOrderNo ?? '');
+    const identifier = workOrderIdentifierFromCard(value);
     if (!identifier) throw new AppError(400, 'WORK_ORDER_IDENTIFIER_MISSING', '卡片回调缺少工单标识');
     const current = await this.repository.getWorkOrder(identifier);
     if (!current) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', `未找到维修工单：${String(value.workOrderNo ?? identifier)}`);
@@ -220,7 +220,7 @@ export class FeishuCallbackService {
   }
 
   private async deferWorkOrder(value: JsonObject, operator: string) {
-    const identifier = String(value.workOrderId ?? value.workOrderNo ?? '');
+    const identifier = workOrderIdentifierFromCard(value);
     if (!identifier) throw new AppError(400, 'WORK_ORDER_IDENTIFIER_MISSING', '卡片回调缺少工单标识');
     const order = await this.repository.getWorkOrder(identifier);
     if (!order) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', `未找到维修工单：${String(value.workOrderNo ?? identifier)}`);

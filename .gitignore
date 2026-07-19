@@ -16,3 +16,10 @@ tmp/
 local-secrets/
 
 design/stitch-export/
+
+# 本地飞书长连接诊断脚本（仅用于人工网络排查，不属于交付产物）
+diagnose-feishu-ws.cjs
+
+# 所有本地环境文件均不得提交；保留可公开的变量模板。
+.env.*
+!.env.example

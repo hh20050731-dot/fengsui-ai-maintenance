@@ -4,11 +4,15 @@
   "private": true,
   "type": "module",
   "workspaces": ["apps/*", "packages/*"],
-  "dependencies": { "@vercel/functions": "^3.7.5" },
+  "dependencies": {
+    "@larksuiteoapi/node-sdk": "^1.71.1",
+    "@vercel/functions": "^3.7.5"
+  },
   "scripts": {
     "dev": "concurrently -n server,web -c blue,cyan \"npm run dev -w @fengsui/server\" \"npm run dev -w @fengsui/web\"",
     "dev:server": "npm run dev -w @fengsui/server",
     "dev:web": "npm run dev -w @fengsui/web",
+    "feishu:ws": "npm run build:shared && tsx apps/server/src/feishu-ws.ts",
     "build:shared": "npm run build --workspace=@fengsui/shared",
     "build:server": "npm run build --workspace=@fengsui/server",
     "build:web": "npm run build --workspace=@fengsui/web",

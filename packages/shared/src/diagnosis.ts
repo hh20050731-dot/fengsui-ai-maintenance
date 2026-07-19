@@ -8,7 +8,7 @@ import type {
   TelemetryPoint,
   WorkOrder,
 } from './types.js';
-import { getDiagnosisIntentRoute } from './intent-router.js';
+import { getDiagnosisIntentRoute, normalizeDiagnosisQuestion } from './intent-router.js';
 
 export interface RuleDiagnosisContext {
   question: string;
@@ -41,7 +41,7 @@ export function recognizeDiagnosisIntent(question: string): DiagnosisIntent {
 }
 
 export function resolveDiagnosisDevice(question: string, equipment: Equipment[], selectedDeviceId?: string) {
-  const normalized = question.replace(/[\s？?！!，,。]/g, '').toLowerCase();
+  const normalized = normalizeDiagnosisQuestion(question).replace(/[\s？?！!，,.。]/g, '').toLowerCase();
   const explicit = equipment.find((item) =>
     normalized.includes(item.deviceId.toLowerCase())
     || normalized.includes(item.deviceName.replace(/\s/g, '').toLowerCase()),

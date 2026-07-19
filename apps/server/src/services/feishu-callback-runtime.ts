@@ -2,7 +2,10 @@ import type { FeishuCallbackObject } from './feishu-callback-envelope.js';
 
 type CallbackResult = Record<string, unknown>;
 type CallbackRuntime = {
-  callbackService: { handle(payload: FeishuCallbackObject): Promise<unknown> };
+  callbackService: {
+    handle(payload: FeishuCallbackObject): Promise<unknown>;
+    handleTrustedEvent(payload: FeishuCallbackObject): Promise<unknown>;
+  };
   notificationProvider: {
     updateCard(messageId: string, card: Record<string, unknown>): Promise<{ delivered: boolean }>;
     sendText(text: string, recipient?: string, receiveIdType?: 'chat_id' | 'open_id'): Promise<{ delivered: boolean }>;
@@ -59,9 +62,11 @@ async function notifyCardFailure(runtime: CallbackRuntime, payload: FeishuCallba
   }
 }
 
-async function handleWithRuntime(runtime: CallbackRuntime, payload: FeishuCallbackObject) {
+async function handleWithRuntime(runtime: CallbackRuntime, payload: FeishuCallbackObject, trusted = false) {
   try {
-    const result = await runtime.callbackService.handle(payload);
+    const result = trusted
+      ? await runtime.callbackService.handleTrustedEvent(payload)
+      : await runtime.callbackService.handle(payload);
     const resultObject = asObject(result) as CallbackResult;
     const card = asObject(resultObject.card);
     const cardData = asObject(card.data);
@@ -85,5 +90,6 @@ export async function prepareFeishuCallbackRuntime() {
   const runtime = await getRuntime();
   return {
     handle: (payload: FeishuCallbackObject) => handleWithRuntime(runtime, payload),
+    handleTrusted: (payload: FeishuCallbackObject) => handleWithRuntime(runtime, payload, true),
   };
 }

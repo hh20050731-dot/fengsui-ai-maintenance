@@ -22,6 +22,17 @@ function createFixture() {
 }
 
 describe('飞书回调安全处理', () => {
+  it('官方长连接已鉴权事件可复用业务处理且无需Webhook Token', async () => {
+    const { callbacks } = createFixture();
+    await expect(callbacks.handleTrustedEvent({
+      header: { event_id: 'evt-trusted-ws', event_type: 'im.message.receive_v1' },
+      event: {
+        sender: { sender_type: 'app' },
+        message: { message_id: 'om-trusted-ws', message_type: 'text', content: '{"text":"忽略机器人消息"}' },
+      },
+    })).resolves.toMatchObject({ data: { ignored: true, reason: 'bot-message' } });
+  });
+
   it('支持官方AES-256-CBC格式的加密回调与challenge', async () => {
     const key = 'encrypt-key-for-local-test';
     const plain = { challenge: 'encrypted-challenge', token: 'verification-token-for-test' };
@@ -77,7 +88,7 @@ describe('飞书回调安全处理', () => {
       header: { token: 'verification-token-for-test', event_id: 'evt-accept-001', event_type: 'card.action.trigger' },
       event: {
         operator: { open_id: 'ou_local_operator_001' },
-        action: { tag: 'button', value: { action: 'accept_work_order', workOrderId: order.workOrderNo, workOrderNo: order.workOrderNo } },
+        action: { tag: 'button', value: { action: 'accept_work_order', recordId: order.workOrderNo, id: 'stale-id', workOrderId: 'stale-work-order-id', workOrderNo: order.workOrderNo } },
         context: { open_message_id: 'om_local_card_001', open_chat_id: 'oc_local_chat_001' },
       },
     };
@@ -117,6 +128,34 @@ describe('飞书回调安全处理', () => {
     const transitions = updated?.processingRecord.filter((item) => item.action.includes('待接单 → 已接单')) ?? [];
     expect(transitions).toHaveLength(1);
     expect(transitions[0]?.operator).toMatch(/^飞书用户#[a-f0-9]{8}$/);
+  });
+
+  it.each([
+    { text: '查询1号引风机状态' },
+    { text: '@_user_1 查询1号引风机状态', mentions: [{ key: '@_user_1', name: '烽燧智守' }] },
+    { text: '@烽燧智守 1号引风机当前状态如何' },
+    { text: '一号引风机状态' },
+    { text: 'IDF-001状态' },
+    { text: '  查询   １号引风机，状态？  ' },
+  ])('将飞书文本“$text”标准化后路由到设备状态查询', async ({ text, mentions }, index) => {
+    const { callbacks, notifications } = createFixture();
+    const reply = vi.spyOn(notifications, 'sendText');
+    const response = await callbacks.handleTrustedEvent({
+      header: { event_id: `evt-normalized-message-${index}`, event_type: 'im.message.receive_v1' },
+      event: {
+        sender: { sender_type: 'user' },
+        message: {
+          message_id: `om-normalized-message-${index}`,
+          message_type: 'text',
+          chat_id: 'oc_local_simulation',
+          content: JSON.stringify({ text }),
+          mentions,
+        },
+      },
+    }) as { data: { intent: string } };
+
+    expect(response.data.intent).toBe('equipment_status');
+    expect(reply).toHaveBeenCalledWith(expect.stringContaining('1号引风机当前状态为'), 'oc_local_simulation', 'chat_id');
   });
 
   it('机器人七类问题复用IntentRouter并返回不同意图', async () => {

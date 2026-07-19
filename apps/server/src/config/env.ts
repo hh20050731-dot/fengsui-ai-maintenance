@@ -61,7 +61,7 @@ export const missingFeishuConfig = [
   ...Object.values(feishuCapabilityTableKeys).filter((key) => !env[key]),
 ];
 
-if (env.APP_MODE === 'feishu' && env.NODE_ENV !== 'test') {
+if (env.APP_MODE === 'feishu' && env.NODE_ENV !== 'test' && process.env.FEISHU_WS !== '1') {
   if (!feishuClientConfigured) {
     console.warn(`[integration] 飞书客户端基础配置不完整，飞书能力暂不可用。缺失：${missingFeishuClientConfig.join(', ')}`);
   } else if (feishuCapabilities.workOrders.mode === 'feishu' && Object.entries(feishuCapabilities).some(([name, capability]) => name !== 'workOrders' && capability.mode === 'mock')) {
