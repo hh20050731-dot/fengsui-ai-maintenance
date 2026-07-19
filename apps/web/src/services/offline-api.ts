@@ -27,8 +27,8 @@ import {
 } from '@fengsui/shared';
 import { generateUuid } from '../utils/generateUuid';
 
-const STORAGE_KEY = 'fengsui.offline.demo.state.v1';
-const STATE_VERSION = 1;
+const STORAGE_KEY = 'fengsui.offline.demo.state.v2';
+const STATE_VERSION = 2;
 type MockData = ReturnType<typeof createMockData>;
 
 interface OfflineDemoState extends MockData {
@@ -204,9 +204,18 @@ function competitionRisk(device: Equipment): DiagnosisResult['riskLevel'] {
   return '正常';
 }
 
+function tokenizeLocalRagText(value: string): string[] {
+  const normalized = value.toLowerCase().replace(/[，。；、：？！,.!?;:()（）{}\u005b\u005d]/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = normalized.split(' ').filter((item) => item.length > 1);
+  const compact = normalized.replace(/\s/g, '');
+  const bigrams: string[] = [];
+  for (let index = 0; index < compact.length - 1; index += 1) bigrams.push(compact.slice(index, index + 2));
+  return [...new Set([...words, ...bigrams])];
+}
+
 function localRagSearch(state: OfflineDemoState, query: string, limit = 5): RagSearchResult {
   const normalized = query.trim().toLowerCase();
-  const terms = [...new Set(normalized.split(/[\s，。；、：？！,.!?;:]+/).filter(Boolean))];
+  const terms = tokenizeLocalRagText(normalized);
   const rows = [
     ...state.knowledge.map((entry) => ({
       documentId: entry.knowledgeId,
@@ -225,7 +234,8 @@ function localRagSearch(state: OfflineDemoState, query: string, limit = 5): RagS
   ];
   const citations: RagCitation[] = rows.map((row) => {
     const compact = row.text.toLowerCase();
-    const hits = terms.reduce((score, term) => score + (compact.includes(term) ? 1 : 0), 0);
+    const rowTerms = new Set(tokenizeLocalRagText(compact));
+    const hits = terms.reduce((score, term) => score + (rowTerms.has(term) || compact.includes(term) ? 1 : 0), 0);
     const direct = normalized.length >= 2 && compact.includes(normalized) ? 2 : 0;
     return {
       citationId: `RC-${row.documentId}`,

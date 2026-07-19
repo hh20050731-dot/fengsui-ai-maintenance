@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-阶段 10–14：九大页面回归、产品/业务材料、测试安全与性能验证。
+阶段 15–17：交付物完成、最终质量门禁和发布验证。
 
 ## 已完成
 
@@ -19,27 +19,29 @@
 - 生成电机、轴承、联轴器、给水泵、循环水泵、炉排减速机、空压机、渗滤液泵的Blend、三档GLB、预览、节点映射与报告。
 - 建立通用3D模型注册表和Viewer，支持12台设备自动匹配、模型库切换、LOD、节点点击、测点、故障高亮、机壳透明、防护罩切换和资源释放。
 - 新增六大核心技能映射页，保留深色工业UI。
+- 完成九大页面浏览器回归和15张比赛截图，并验证三种目标分辨率。
+- 完成产品洞察、竞品对比、用户画像、故事线与六大能力证据映射。
+- 生成并逐页验收 DOCX、PDF、PPTX、PPT PDF、路演稿、Q&A和操作手册。
+- E2E强制使用隔离Mock服务，禁止自动测试触碰真实飞书数据。
 
 ## 正在执行
 
-- 完成九大页面信息增强与浏览器真实回归。
-- 生成测试、安全、性能、3D和AI能力验证报告。
+- 执行最终安全检查、Git提交、Preview与Production发布验证。
 
 ## 下一步
 
-1. 运行完整 lint、typecheck、test、build 并修复回归。
-2. 启动本地生产预览，逐页验证并生成15张比赛截图。
-3. 完成用户画像、竞品对比、故事化Demo和真实性边界材料。
-4. 按技能要求生成并逐页渲染验收 DOCX、PDF、PPTX/PDF。
-5. 完成阶段提交、推送、合并和生产部署前的最终安全审计。
+1. 重跑最终 lint、typecheck、test、build、verify和E2E。
+2. 完成提交前Secret、临时文件和Git范围检查。
+3. 推送功能分支并验证Preview。
+4. 合并main，由Vercel自动部署并验证正式域名和Git SHA。
 
 ## 测试结果
 
-- `npm run typecheck`：通过（本阶段中间结果）。
-- `npm run lint`：通过（本阶段中间结果）。
-- 新增后端单元/接口测试：17项通过。
-- 新增3D注册表与GLB资产测试：4项通过。
-- 完整测试和生产构建：待本阶段完成后执行。
+- `npm run lint`：通过。
+- `npm run typecheck`：通过。
+- `npm test`：35个测试文件、162项全部通过。
+- `npm run build` / `npm run verify:production`：通过。
+- `npm run test:e2e`：2项完整流程通过。
 
 ## 阻塞项
 
@@ -47,10 +49,10 @@
 
 ## 最近 commit
 
-`6744c0014c5e9204902703ddf6c1fe18fe25acd8 fix: harden Feishu production fallback and release checks`
+`0538b2d feat: add AI reasoning and semantic model library`
 
 当前改动尚未提交。
 
 ## 是否可部署
 
-否。完整质量门禁、浏览器回归和交付物验收尚未全部完成；Production继续保持稳定基线。
+待最终复核。代码、交付物和本地质量门禁已通过；需完成Git范围检查与Preview验证后方可合并main。

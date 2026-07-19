@@ -18,6 +18,16 @@
 - 飞书 `requestAccess` 免登（旧客户端回退 `requestAuthCode`）、tenant token 缓存、多维表格 CRUD、高风险工单卡片、加密回调、机器人意图查询、自动督办和日报。
 - Vitest 单元/接口测试、Supertest 闭环测试与 Playwright 端到端脚本。
 
+### 比赛最终成品增强
+
+- 内置 10 个可追溯故障案例、轻量本地 RAG 与引用展示；无匹配时不生成虚假来源。
+- `MaintenanceAgent` 复用设备、趋势、预警、历史、知识、库存、诊断、工单、通知和知识候选十类工具，带最大步骤、超时、重复工单检测和默认人工确认。
+- 可选豆包结构化 Provider 只从服务端读取 `DOUBAO_API_KEY`、`DOUBAO_MODEL`、`DOUBAO_BASE_URL`；缺少凭证或调用失败时自动使用规则安全回退。
+- 多模态巡检入口支持 JPG/PNG/WebP 和 8MB 校验；未配置真实视觉模型时明确使用“图片 + 遥测 + RAG”演示关联，不声称识别具体缺陷。
+- 3D 模型库新增工业电机、轴承、联轴器、给水泵、循环水泵、炉排减速机、空压机和渗滤液泵；各含 Blend 源文件、LOD0/1/2、语义节点、预览和验证报告。
+- 新增“六大核心技能映射”页面 `/capabilities`，把比赛能力与功能、技术、Demo 步骤和交付证据对应。
+- 比赛材料、系统说明、真实性边界与截图证据统一位于 `deliverables/`。
+
 ## 技术栈
 
 - 前端：React 19、TypeScript、Vite、Tailwind CSS、React Router、TanStack Query、React Hook Form、Zod、Recharts。

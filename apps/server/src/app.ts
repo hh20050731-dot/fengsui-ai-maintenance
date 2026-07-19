@@ -106,7 +106,13 @@ export function createApp(options?: {
     res.json(success({ reset: true }));
   });
 
-  app.get('/api/health', (_req, res) => res.json(success({ status: 'ok', version: '1.0.2', mode, time: new Date().toISOString() })));
+  app.get('/api/health', (_req, res) => res.json(success({
+    status: 'ok',
+    version: '1.0.2',
+    mode,
+    gitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_COMMIT_SHA ?? 'local',
+    time: new Date().toISOString(),
+  })));
   app.get('/api/integration/status', async (_req, res) => {
     if (mode === 'feishu' && feishuClientConfigured && feishuClient) {
       try {

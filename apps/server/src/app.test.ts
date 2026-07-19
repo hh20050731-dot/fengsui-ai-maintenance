@@ -15,6 +15,12 @@ const persistedDemoFlow: DemoJournalEntry[] = [
 ];
 
 describe('Mock API', () => {
+  it('健康检查返回版本、运行模式与可核对的Git SHA字段', async () => {
+    const { app } = createApp({ forceMock: true });
+    const response = await request(app).get('/api/health').expect(200);
+    expect(response.body.data).toMatchObject({ status: 'ok', version: '1.0.2', mode: 'mock', gitSha: expect.any(String) });
+  });
+
   it('提供可追溯RAG、结构化研判、受控Agent和多模态安全降级接口', async () => {
     const { app } = createApp({ forceMock: true });
     const rag = await request(app).post('/api/rag/search').send({ query: '引风机轴承温升', limit: 5 }).expect(200);
