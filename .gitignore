@@ -13,5 +13,6 @@ tmp/
 *.log
 .DS_Store
 .vercel/
+local-secrets/
 
 design/stitch-export/
