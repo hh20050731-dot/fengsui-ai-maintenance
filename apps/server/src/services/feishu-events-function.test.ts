@@ -1,7 +1,7 @@
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { createFeishuCallbackHandler } from './events.js';
+import { createFeishuCallbackHandler } from '../../../../api/feishu/events.js';
 
 const verificationToken = 'verification-token-for-callback-test';
 
