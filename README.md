@@ -122,6 +122,7 @@ npm run test:e2e
 | `FEISHU_BITABLE_APP_TOKEN` | 多维表格 App Token | 是 | 否 | 多维表格 URL |
 | `FEISHU_*_TABLE_ID` | 各业务表的 table_id；按启用模块分别配置 | 对应模块启用时 | 否 | 多维表格 URL / 初始化脚本输出 |
 | `FEISHU_NOTIFICATION_CHAT_ID` | 机器人默认会话 | 发送群消息时 | 否 | 目标会话 ID |
+| `FEISHU_STOCK_NOTIFICATION_CHAT_ID` | 库存提醒专用会话（可选） | 分群发送库存提醒时 | 否 | 目标会话 ID |
 | `CRON_SECRET` | 保护自动督办与日报接口 | 启用定时任务时 | 否 | 自行生成至少32位随机值；仅服务端 |
 | `AI_PROVIDER` | `rule` / 预留真实 Provider | 否 | 否 | 自行设置 |
 | `OPENAI_API_KEY`、`OPENAI_MODEL` | 预留真实大模型 | 选择相应 Provider 时 | 否 | 模型服务商 |
@@ -135,7 +136,9 @@ npm run test:e2e
 
 ## 飞书原生协同接口
 
-- `POST /api/feishu/events`：challenge、Verification Token、Encrypt Key 加密回调、卡片接单/暂缓、机器人文本消息。
+- `POST /api/feishu/events`：challenge、Verification Token、Encrypt Key 加密回调、七类工单卡片动作与机器人文本消息。
+- `POST /api/work-orders/:id/resync`：对同步失败但已保留的本地工单执行显式重试。
+- `POST /api/rag/documents`：导入受 Zod 校验的比赛演示知识文档，随后由 `/api/rag/search` 切分检索并返回可追溯引用。
 - `POST /api/jobs/work-order-reminders`：高风险30分钟未接单、4小时内到期、待验证与完成提醒。
 - `POST /api/jobs/daily-operations-brief`：生成并发送每日运维简报。
 
