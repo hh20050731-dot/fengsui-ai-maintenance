@@ -130,6 +130,45 @@ describe('飞书回调安全处理', () => {
     expect(transitions[0]?.operator).toMatch(/^飞书用户#[a-f0-9]{8}$/);
   });
 
+  it('新版卡片动作按版本完成接单、处理、验收、知识候选和关闭闭环', async () => {
+    const { callbacks, operations, repository } = createFixture();
+    const order = await operations.createWorkOrderFromAlert('ALT-20260717-001', {
+      assignee: '张工', assigneeUserId: 'zhang-gong', idempotencyKey: 'native-card-flow-create',
+    });
+    const act = async (action: string, eventId: string) => {
+      const current = (await repository.getWorkOrder(order.id))!;
+      return callbacks.handleTrustedEvent({
+        header: { event_id: eventId, event_type: 'card.action.trigger' },
+        event: { operator: { open_id: 'ou_native_operator' }, action: { value: {
+          action, workOrderId: current.id, expectedStatus: current.status, version: current.version ?? 1,
+        } } },
+      });
+    };
+    await act('accept_order', 'evt-native-accept');
+    await act('start_process', 'evt-native-start');
+    await act('submit_acceptance', 'evt-native-submit');
+    await act('return_processing', 'evt-native-return');
+    await act('submit_acceptance', 'evt-native-submit-again');
+    await act('approve_completion', 'evt-native-approve');
+    await act('create_knowledge_candidate', 'evt-native-knowledge');
+    const knowledgeCount = (await repository.listKnowledge()).filter((item) => item.knowledgeId === `KB-CANDIDATE-${order.workOrderNo}`).length;
+    await act('create_knowledge_candidate', 'evt-native-knowledge-repeat');
+    expect((await repository.listKnowledge()).filter((item) => item.knowledgeId === `KB-CANDIDATE-${order.workOrderNo}`)).toHaveLength(knowledgeCount);
+    await act('close_order', 'evt-native-close');
+    expect((await repository.getWorkOrder(order.id))?.status).toBe('已关闭');
+  });
+
+  it('拒绝含额外字段的新版卡片值且旧版本卡片不会重复推进', async () => {
+    const { callbacks, operations, repository } = createFixture();
+    const order = await operations.createWorkOrderFromAlert('ALT-20260717-001', { assignee: '张工', assigneeUserId: 'zhang-gong', idempotencyKey: 'card-value-validation-create' });
+    const base = { action: 'accept_order', workOrderId: order.id, expectedStatus: '待接单', version: 1 };
+    await expect(callbacks.handleTrustedEvent({ header: { event_id: 'evt-extra', event_type: 'card.action.trigger' }, event: { action: { value: { ...base, workOrderNo: order.workOrderNo } } } })).rejects.toMatchObject({ code: 'INVALID_CARD_VALUE' });
+    await callbacks.handleTrustedEvent({ header: { event_id: 'evt-current', event_type: 'card.action.trigger' }, event: { action: { value: base } } });
+    const stale = await callbacks.handleTrustedEvent({ header: { event_id: 'evt-stale', event_type: 'card.action.trigger' }, event: { action: { value: base } } }) as { toast: { content: string } };
+    expect(stale.toast.content).toContain('未重复执行');
+    expect((await repository.getWorkOrder(order.id))?.status).toBe('已接单');
+  });
+
   it.each([
     { text: '查询1号引风机状态' },
     { text: '@_user_1 查询1号引风机状态', mentions: [{ key: '@_user_1', name: '烽燧智守' }] },

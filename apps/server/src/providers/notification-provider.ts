@@ -26,7 +26,7 @@ export interface NotificationProvider {
   sendTest(recipient?: string): Promise<NotificationResult>;
 }
 
-function callbackButton(text: string, value: Record<string, string>, type: 'default' | 'primary' = 'default', disabled = false) {
+function callbackButton(text: string, value: Record<string, string | number>, type: 'default' | 'primary' = 'default', disabled = false) {
   return {
     tag: 'button', text: { tag: 'plain_text', content: text }, type, disabled,
     ...(disabled
@@ -57,13 +57,18 @@ export function buildAlertCard(alert: Alert) {
   };
 }
 
-function workOrderIdentifier(order: WorkOrder) {
-  return order.recordId || order.id || order.workOrderNo;
+function workOrderActionValue(order: WorkOrder, action: string) {
+  return {
+    action,
+    workOrderId: order.id || order.workOrderNo,
+    ...(order.recordId ? { recordId: order.recordId } : {}),
+    expectedStatus: order.status,
+    version: order.version ?? 1,
+  };
 }
 
 export function buildHighRiskWorkOrderCard(order: WorkOrder, context: WorkOrderAlertContext = {}) {
   const baseUrl = env.APP_BASE_URL.replace(/\/$/, '');
-  const workOrderId = workOrderIdentifier(order);
   const healthScore = context.healthScore ?? order.healthScoreBefore;
   const probability = context.failureProbability === undefined ? '待现场复核' : `${context.failureProbability}%`;
   const temperature = context.temperature === undefined ? '未提供' : `${context.temperature}℃`;
@@ -75,7 +80,21 @@ export function buildHighRiskWorkOrderCard(order: WorkOrder, context: WorkOrderA
       : 'impeller-imbalance';
   const twinUrl = `${baseUrl}/digital-twin?equipment=${encodeURIComponent(twinEquipment)}&fault=${twinFault}&model=enhanced-v1`;
   const detailUrl = `${baseUrl}/work-orders/${encodeURIComponent(order.workOrderNo)}`;
-  const terminal = ['已完成', '已取消'].includes(order.status);
+  const aiSummary = `${order.faultDescription}；${order.maintenanceSuggestion.slice(0, 2).join('；') || '建议结合现场检查进一步确认'}`;
+  const handling = order.processingRecord.at(-1)?.detail ?? '尚无处理记录';
+  const parts = order.requiredSpareParts.map((part) => `${part.partName}×${part.quantity}`).join('、') || '按现场检查结果确认';
+  const actions: Record<string, { text: string; type?: 'primary' | 'default' }[]> = {
+    待接单: [{ text: '确认接单', type: 'primary' }],
+    已接单: [{ text: '开始处理', type: 'primary' }],
+    检修中: [{ text: '提交验收', type: 'primary' }],
+    待验证: [{ text: '验收通过', type: 'primary' }, { text: '退回处理' }],
+    已完成: [{ text: '生成知识候选', type: 'primary' }, { text: '关闭工单' }],
+  };
+  const actionByText: Record<string, string> = {
+    确认接单: 'accept_order', 开始处理: 'start_process', 提交验收: 'submit_acceptance',
+    验收通过: 'approve_completion', 退回处理: 'return_processing', 关闭工单: 'close_order',
+    生成知识候选: 'create_knowledge_candidate',
+  };
   return {
     schema: '2.0',
     config: { update_multi: true, enable_forward: true, summary: { content: `【${order.riskLevel}工单】${order.deviceName}需要协同处置` } },
@@ -84,11 +103,10 @@ export function buildHighRiskWorkOrderCard(order: WorkOrder, context: WorkOrderA
       title: { tag: 'plain_text', content: `【${order.riskLevel}工单】${order.deviceName}需要协同处置` },
     },
     body: { direction: 'vertical', vertical_spacing: '8px', elements: [
-      { tag: 'markdown', content: `**工单编号：**${order.workOrderNo}\n**设备名称：**${order.deviceName}\n**设备编号：**${order.deviceId}\n**故障部位：**${order.faultPart}\n**故障类型：**${order.faultType}\n**风险等级：**${order.riskLevel}\n**温度：**${temperature}\n**振动：**${vibration}\n**健康度：**${healthScore}\n**故障概率：**${probability}\n**建议时限：**${suggestedDeadline}\n**当前状态：**${order.status}\n\n> 模拟监测数据与规则型辅助研判，仅供比赛演示和现场复核参考。` },
-      callbackButton(order.status === '待接单' ? '确认接单' : `当前：${order.status}`, { action: 'accept_work_order', workOrderId, workOrderNo: order.workOrderNo }, 'primary', order.status !== '待接单'),
+      { tag: 'markdown', content: `**工单编号：**${order.workOrderNo}\n**设备名称：**${order.deviceName}\n**设备编号：**${order.deviceId}\n**故障部位：**${order.faultPart}\n**故障类型：**${order.faultType}\n**风险等级：**${order.riskLevel}\n**当前状态：**${order.status}\n**温度：**${temperature}\n**振动：**${vibration}\n**健康度：**${healthScore}\n**故障概率：**${probability}\n**辅助研判：**${aiSummary}\n**处理进展：**${handling}\n**建议时限：**${suggestedDeadline}\n**建议备件：**${parts}\n\n> 模拟监测数据与规则型辅助研判，仅供比赛演示和现场复核参考。` },
+      ...(actions[order.status] ?? []).map((item) => callbackButton(item.text, workOrderActionValue(order, actionByText[item.text]!), item.type)),
       linkButton('查看3D定位', twinUrl),
       linkButton('查看工单详情', detailUrl),
-      callbackButton('暂缓处理', { action: 'defer_work_order', workOrderId, workOrderNo: order.workOrderNo }, 'default', terminal),
     ] },
   };
 }

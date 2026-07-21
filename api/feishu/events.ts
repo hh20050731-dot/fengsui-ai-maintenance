@@ -12,6 +12,13 @@ const ALLOWED_CARD_ACTIONS = new Set([
   'defer_work_order',
   'acknowledge',
   'create_work_order',
+  'accept_order',
+  'start_process',
+  'submit_acceptance',
+  'approve_completion',
+  'return_processing',
+  'close_order',
+  'create_knowledge_candidate',
 ]);
 
 type CallbackRequest = AsyncIterable<unknown> & {
@@ -137,6 +144,14 @@ function validateCardAction(payload: FeishuCallbackObject) {
   }
   const hasWorkOrderId = typeof value.workOrderId === 'string' || typeof value.workOrderNo === 'string';
   const hasAlertId = typeof value.alertId === 'string';
+  const nativeWorkOrderActions = ['accept_order', 'start_process', 'submit_acceptance', 'approve_completion', 'return_processing', 'close_order', 'create_knowledge_candidate'];
+  if (nativeWorkOrderActions.includes(actionName)) {
+    const allowed = new Set(['action', 'workOrderId', 'recordId', 'expectedStatus', 'version']);
+    if (Object.keys(value).some((key) => !allowed.has(key))) throw callbackError(400, 'INVALID_CARD_VALUE', '卡片参数不符合当前版本');
+    if (typeof value.workOrderId !== 'string' || !value.workOrderId) throw callbackError(400, 'WORK_ORDER_IDENTIFIER_MISSING', '卡片回调缺少工单标识');
+    if (value.recordId !== undefined && typeof value.recordId !== 'string') throw callbackError(400, 'INVALID_CARD_VALUE', '卡片记录标识格式错误');
+    if (typeof value.expectedStatus !== 'string' || !Number.isInteger(value.version)) throw callbackError(400, 'INVALID_CARD_VALUE', '卡片状态版本信息缺失');
+  }
   if (['accept_work_order', 'defer_work_order'].includes(actionName) && !hasWorkOrderId) {
     throw callbackError(400, 'WORK_ORDER_IDENTIFIER_MISSING', '卡片回调缺少工单标识');
   }

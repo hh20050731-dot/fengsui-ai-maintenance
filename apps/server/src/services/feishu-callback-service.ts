@@ -52,6 +52,24 @@ function workOrderIdentifierFromCard(value: JsonObject) {
   return String(value.recordId ?? value.id ?? value.workOrderId ?? value.workOrderNo ?? '');
 }
 
+const workOrderActions = new Set([
+  'accept_order', 'start_process', 'submit_acceptance', 'approve_completion',
+  'return_processing', 'close_order', 'create_knowledge_candidate',
+]);
+const allowedWorkOrderCardKeys = new Set(['action', 'workOrderId', 'recordId', 'expectedStatus', 'version']);
+
+function parseWorkOrderCardAction(value: JsonObject) {
+  const action = typeof value.action === 'string' ? value.action : '';
+  if (!workOrderActions.has(action)) return undefined;
+  const unexpected = Object.keys(value).find((key) => !allowedWorkOrderCardKeys.has(key));
+  if (unexpected) throw new AppError(400, 'INVALID_CARD_VALUE', '卡片参数不符合当前版本，请刷新后重试');
+  if (typeof value.workOrderId !== 'string' || !value.workOrderId) throw new AppError(400, 'WORK_ORDER_IDENTIFIER_MISSING', '卡片回调缺少工单标识');
+  if (value.recordId !== undefined && typeof value.recordId !== 'string') throw new AppError(400, 'INVALID_CARD_VALUE', '卡片记录标识格式错误');
+  if (typeof value.expectedStatus !== 'string' || !value.expectedStatus) throw new AppError(400, 'INVALID_CARD_VALUE', '卡片状态版本信息缺失');
+  if (!Number.isInteger(value.version) || Number(value.version) < 1) throw new AppError(400, 'INVALID_CARD_VALUE', '卡片版本信息无效');
+  return { action, identifier: workOrderIdentifierFromCard(value), expectedStatus: value.expectedStatus, version: Number(value.version) };
+}
+
 export function formatDiagnosisForFeishu(result: AiDiagnosis) {
   return [
     `风险判断：${result.riskJudgment}`,
@@ -75,16 +93,23 @@ function workOrderCardResponse(order: WorkOrder, content: string) {
 }
 
 class EventIdempotencyStore {
-  private readonly memory = new Set<string>();
+  private readonly memory = new Map<string, number>();
   private readonly inFlight = new Set<string>();
-  constructor(private readonly repository: DataRepository) {}
+  constructor(private readonly repository: DataRepository, private readonly ttlMs = 24 * 60 * 60 * 1000, private readonly maxEntries = 5_000) {}
+
+  private prune() {
+    const now = Date.now();
+    for (const [key, expiresAt] of this.memory) if (expiresAt <= now) this.memory.delete(key);
+    while (this.memory.size > this.maxEntries) this.memory.delete(this.memory.keys().next().value as string);
+  }
 
   async begin(eventId: string) {
-    if (this.memory.has(eventId) || this.inFlight.has(eventId)) return false;
+    this.prune();
+    if ((this.memory.get(eventId) ?? 0) > Date.now() || this.inFlight.has(eventId)) return false;
     try {
       const logs = await this.repository.listOperationLogs(eventId);
       if (logs.some((log) => log.entityType === 'feishu-event' && log.action === '处理飞书回调')) {
-        this.memory.add(eventId);
+        this.memory.set(eventId, Date.now() + this.ttlMs);
         return false;
       }
     } catch {
@@ -96,7 +121,8 @@ class EventIdempotencyStore {
 
   async mark(eventId: string, eventType: string) {
     this.inFlight.delete(eventId);
-    this.memory.add(eventId);
+    this.memory.set(eventId, Date.now() + this.ttlMs);
+    this.prune();
     const log: OperationLog = {
       logId: `LOG-FEISHU-${createHash('sha256').update(eventId).digest('hex').slice(0, 16)}`,
       entityType: 'feishu-event',
@@ -169,7 +195,9 @@ export class FeishuCallbackService {
     try {
       const operator = trustedOperatorLabel(payload);
       let result: unknown;
-      if (actionValue.action === 'accept_work_order') result = await this.withWorkOrderLock(workOrderIdentifierFromCard(actionValue), () => this.acceptWorkOrder(actionValue, eventId, operator));
+      const cardAction = parseWorkOrderCardAction(actionValue);
+      if (cardAction) result = await this.withWorkOrderLock(cardAction.identifier, () => this.handleWorkOrderAction(cardAction, eventId, operator));
+      else if (actionValue.action === 'accept_work_order') result = await this.withWorkOrderLock(workOrderIdentifierFromCard(actionValue), () => this.acceptWorkOrder(actionValue, eventId, operator));
       else if (actionValue.action === 'defer_work_order') result = await this.deferWorkOrder(actionValue, operator);
       else if (actionValue.action === 'acknowledge' && actionValue.alertId) result = await this.acknowledgeAlert(String(actionValue.alertId), operator);
       else if (actionValue.action === 'create_work_order' && actionValue.alertId) result = await this.createWorkOrder(String(actionValue.alertId), eventId, operator);
@@ -217,6 +245,57 @@ export class FeishuCallbackService {
       idempotencyKey: `feishu-event-${eventId}-accept`,
     });
     return workOrderCardResponse(updated, `接单成功：${updated.workOrderNo}`);
+  }
+
+  private async handleWorkOrderAction(
+    action: { action: string; identifier: string; expectedStatus: unknown; version: number },
+    eventId: string,
+    operator: string,
+  ) {
+    const current = await this.repository.getWorkOrder(action.identifier);
+    if (!current) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', '未找到维修工单，请刷新卡片后重试');
+    const currentVersion = current.version ?? 1;
+    if (current.status !== action.expectedStatus || currentVersion !== action.version) {
+      return workOrderCardResponse(current, `工单状态已更新为${current.status}，当前卡片未重复执行`);
+    }
+    const allowedByStatus: Record<string, string[]> = {
+      待接单: ['accept_order'], 已接单: ['start_process'], 检修中: ['submit_acceptance'],
+      待验证: ['approve_completion', 'return_processing'], 已完成: ['close_order', 'create_knowledge_candidate'],
+      已关闭: [], 已取消: [],
+    };
+    if (!(allowedByStatus[current.status] ?? []).includes(action.action)) {
+      return workOrderCardResponse(current, `当前状态“${current.status}”不允许执行此操作`);
+    }
+    const key = `feishu-work-order-${current.workOrderNo}-v${currentVersion}-${action.action}`;
+    if (action.action === 'create_knowledge_candidate') {
+      const updated = await this.operations.createKnowledgeCandidateFromWorkOrder(current.recordId || current.id, operator, key);
+      return workOrderCardResponse(updated, '知识库候选已生成');
+    }
+    const targetByAction = {
+      accept_order: '已接单', start_process: '检修中', submit_acceptance: '待验证',
+      approve_completion: '已完成', return_processing: '检修中', close_order: '已关闭',
+    } as const;
+    const targetStatus = targetByAction[action.action as keyof typeof targetByAction];
+    if (!targetStatus) throw new AppError(400, 'UNSUPPORTED_CARD_ACTION', '不支持的工单操作');
+    const updated = await this.operations.transitionWorkOrder(current.recordId || current.id || current.workOrderNo, {
+      targetStatus,
+      operator,
+      note: `通过飞书工单卡片执行：${action.action}`,
+      ...(targetStatus === '待验证' ? {
+        inspectionResult: current.inspectionResult ?? '通过飞书卡片提交验收，现场检查明细待补充',
+        repairResult: current.repairResult ?? '处理记录已提交，具体维修结果以现场记录为准',
+      } : {}),
+      ...(targetStatus === '已完成' ? {
+        healthScoreAfter: current.healthScoreAfter ?? current.healthScoreBefore,
+        verificationResult: current.verificationResult ?? '通过飞书卡片确认验收，需结合现场记录复核',
+      } : {}),
+      idempotencyKey: key,
+    });
+    const labels: Record<string, string> = {
+      accept_order: '接单成功', start_process: '已开始处理', submit_acceptance: '已提交验收',
+      approve_completion: '验收完成', return_processing: '已退回处理', close_order: '工单已关闭',
+    };
+    return workOrderCardResponse(updated, labels[action.action] ?? '操作成功');
   }
 
   private async deferWorkOrder(value: JsonObject, operator: string) {

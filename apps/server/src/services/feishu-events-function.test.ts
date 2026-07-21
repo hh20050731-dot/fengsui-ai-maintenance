@@ -175,6 +175,26 @@ describe('飞书独立轻量回调入口', () => {
     expect(fixture.backgroundTasks).toHaveLength(0);
   });
 
+  it('新版卡片仅接受受限字段并保持三秒内先响应', async () => {
+    const fixture = handlerFixture();
+    const response = responseFixture();
+    const payload = {
+      header: { token: verificationToken, event_id: 'evt-native-card', event_type: 'card.action.trigger' },
+      event: { action: { value: { action: 'start_process', workOrderId: 'WO-TEST-001', recordId: 'rec_test', expectedStatus: '已接单', version: 2 } } },
+    };
+    const startedAt = performance.now();
+    await fixture.handler(requestWith(payload), response.response);
+    expect(performance.now() - startedAt).toBeLessThan(100);
+    expect(response.status).toBe(200);
+    await Promise.all(fixture.backgroundTasks);
+    expect(fixture.runtimeHandle).toHaveBeenCalledWith(payload);
+
+    const invalidResponse = responseFixture();
+    await fixture.handler(requestWith({ ...payload, header: { ...payload.header, event_id: 'evt-native-invalid' }, event: { action: { value: { ...payload.event.action.value, chatId: 'oc_not_allowed' } } } }), invalidResponse.response);
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidResponse.body).toMatchObject({ error: { code: 'INVALID_CARD_VALUE' } });
+  });
+
   it('后台失败不改变已返回的成功响应且日志不泄露异常内容', async () => {
     const sensitiveErrorText = 'do-not-log-this-value';
     const fixture = handlerFixture({

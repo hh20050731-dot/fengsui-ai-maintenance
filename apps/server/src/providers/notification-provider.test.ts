@@ -4,7 +4,7 @@ import type { FeishuClient } from './feishu-client.js';
 import { FeishuBotNotificationProvider, MockNotificationProvider, buildHighRiskWorkOrderCard } from './notification-provider.js';
 
 describe('飞书高风险工单卡片', () => {
-  it('包含协同字段、真实接单动作与三类辅助按钮', () => {
+  it('包含协同字段、状态动作与辅助入口', () => {
     const pending = createMockData().workOrders.find((item) => item.status === '待接单')!;
     const order = {
       ...pending,
@@ -27,13 +27,32 @@ describe('飞书高风险工单卡片', () => {
     for (const field of ['工单编号', '设备名称', '设备编号', '故障部位', '故障类型', '风险等级', '温度', '振动', '健康度', '故障概率', '建议时限', '当前状态']) {
       expect(serialized).toContain(field);
     }
-    expect(serialized).toContain('accept_work_order');
+    expect(serialized).toContain('accept_order');
+    expect(serialized).toContain('expectedStatus');
+    expect(serialized).toContain('version');
     expect(serialized).toContain('查看3D定位');
     expect(serialized).toContain('查看工单详情');
-    expect(serialized).toContain('defer_work_order');
+    expect(serialized).not.toContain('workOrderNo":');
     expect(serialized).toContain('model=enhanced-v1');
     expect(serialized).toContain('fault=bearing-overheat');
     expect(serialized).toContain(`/work-orders/${order.workOrderNo}`);
+  });
+
+  it('按工单状态只提供合法下一步且卡片value严格受限', () => {
+    const base = createMockData().workOrders[0]!;
+    const cases = [
+      ['待接单', 'accept_order'], ['已接单', 'start_process'], ['检修中', 'submit_acceptance'],
+      ['待验证', 'approve_completion'], ['已完成', 'create_knowledge_candidate'],
+    ] as const;
+    for (const [status, action] of cases) {
+      const card = buildHighRiskWorkOrderCard({ ...base, status, version: 3, recordId: 'rec_local_test' });
+      const json = JSON.stringify(card);
+      expect(json).toContain(action);
+      const values: Array<Record<string, unknown>> = [];
+      JSON.stringify(card, (key, value) => { if (key === 'value' && value?.action) values.push(value); return value; });
+      for (const value of values) expect(Object.keys(value).sort()).toEqual(['action', 'expectedStatus', 'recordId', 'version', 'workOrderId'].sort());
+      expect(Buffer.byteLength(json, 'utf8')).toBeLessThan(30 * 1024);
+    }
   });
 
   it('Mock模式支持发送与更新卡片预览', async () => {
