@@ -123,8 +123,11 @@ export class OperationsService {
       requiredSpareParts: required.map((part) => ({ partId: part.partId, partName: part.partName, quantity: 1, unit: part.unit })),
       consumedSpareParts: [], processingRecord: [{ id: randomUUID(), time: new Date().toISOString(), operator: createdBy, action: '创建工单', detail: twin ? `由预警 ${alert.alertId} 和3D数字孪生“${twin.faultType}”场景生成` : `由预警 ${alert.alertId} 生成` }],
       healthScoreBefore: twin?.healthScore ?? alert.healthScore, status: '待接单',
+      version: 1,
+      source: twin ? 'digital-twin' : 'alert',
+      notificationStatus: 'not_requested',
     };
-    const created = await this.repository.createWorkOrder(order);
+    let created = await this.repository.createWorkOrder(order);
     await this.repository.updateAlert(alertId, { alertStatus: '已生成工单', relatedWorkOrderId: getWorkOrderNo(created) });
     await this.log('work-order', getWorkOrderNo(created), '创建工单', createdBy, `来源预警 ${alertId}`);
     if (created.riskLevel === '高风险' && created.status === '待接单') {
@@ -136,6 +139,11 @@ export class OperationsService {
           failureProbability: twin?.failureProbability,
           suggestedDeadline: twin?.advice?.[0] ?? alert.suggestedDeadline,
         });
+        created = await this.repository.updateWorkOrder(getWorkOrderTransitionIdentifier(created), {
+          notificationStatus: notification.delivered ? 'sent' : 'failed',
+          notificationMessage: notification.delivered ? '飞书工单卡片已发送' : (notification.error ?? '卡片发送失败'),
+          ...(notification.messageId ? { feishuMessageId: notification.messageId } : {}),
+        });
         await this.log(
           'work-order',
           getWorkOrderNo(created),
@@ -146,6 +154,10 @@ export class OperationsService {
             : `${notification.error ?? '未知错误'}；工单已创建，可稍后重试通知`,
         );
       } catch (error) {
+        created = await this.repository.updateWorkOrder(getWorkOrderTransitionIdentifier(created), {
+          notificationStatus: 'failed',
+          notificationMessage: error instanceof Error ? error.message : '卡片发送失败',
+        });
         await this.log('work-order', getWorkOrderNo(created), '高风险工单卡片发送失败', '系统', `${error instanceof Error ? error.message : '未知错误'}；工单已创建，可稍后重试通知`);
       }
     }
@@ -161,7 +173,7 @@ export class OperationsService {
     if (cached) return cached;
     const order = await this.repository.getWorkOrder(id);
     if (!order) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', '未找到维修工单');
-    if (order.status === '已完成') return order;
+    if (order.status === input.targetStatus || ['已关闭', '已取消'].includes(order.status)) return order;
     try { assertWorkOrderTransition(order.status, input.targetStatus); } catch (error) { throw new AppError(409, 'INVALID_TRANSITION', (error as Error).message); }
     if (input.targetStatus === '待验证' && (!input.inspectionResult || !input.repairResult)) throw new AppError(400, 'REQUIRED_FIELDS', '进入待验证前必须填写检查结果和维修结果');
     if (input.targetStatus === '已完成' && (!input.verificationResult || input.healthScoreAfter === undefined)) throw new AppError(400, 'REQUIRED_FIELDS', '完成工单前必须填写验证结果和维修后健康度');
@@ -175,6 +187,7 @@ export class OperationsService {
       repairResult: input.repairResult ?? order.repairResult, consumedSpareParts: consumed,
       healthScoreAfter: input.healthScoreAfter ?? order.healthScoreAfter, verificationResult: input.verificationResult ?? order.verificationResult,
       processingRecord: [...order.processingRecord, record],
+      version: (order.version ?? 1) + 1,
       ...(input.targetStatus === '已完成' ? { completedAt: new Date().toISOString(), completionIdempotencyKey: input.idempotencyKey } : {}),
     });
     if (input.targetStatus === '已完成') await this.completeWorkOrder(updated, input.operator, input.idempotencyKey);
@@ -182,6 +195,53 @@ export class OperationsService {
     await this.log('work-order', getWorkOrderNo(updated), '推进工单状态', input.operator, `${order.status} → ${input.targetStatus}；${input.note}`);
     this.idempotency.set(input.idempotencyKey, updated);
     return updated;
+  }
+
+  async createKnowledgeCandidateFromWorkOrder(id: string, operator: string, idempotencyKey: string) {
+    const cached = this.idempotency.get(idempotencyKey) as WorkOrder | undefined;
+    if (cached) return cached;
+    const order = await this.repository.getWorkOrder(id);
+    if (!order) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', '未找到维修工单');
+    if (!['已完成', '已关闭'].includes(order.status)) throw new AppError(409, 'WORK_ORDER_NOT_COMPLETED', '工单完成后才能生成知识候选');
+    if (order.knowledgeCandidateCreatedAt) return order;
+    if (!this.repository.addKnowledge) throw new AppError(503, 'KNOWLEDGE_WRITE_UNAVAILABLE', '当前知识库不支持写入');
+    const knowledgeId = `KB-CANDIDATE-${order.workOrderNo}`;
+    const existing = (await this.repository.listKnowledge()).find((entry) => entry.knowledgeId === knowledgeId);
+    if (!existing) {
+      const device = await this.mustDevice(order.deviceId);
+      const alert = order.sourceAlertId ? await this.repository.getAlert(order.sourceAlertId) : undefined;
+      await this.repository.addKnowledge({
+        knowledgeId,
+        title: `${device.deviceName}维修闭环候选案例`,
+        deviceType: device.deviceType,
+        faultPhenomenon: order.faultDescription,
+        abnormalIndicators: alert?.abnormalIndicators ?? [],
+        possibleCauses: [alert?.suspectedCause ?? order.faultDescription],
+        inspectionSteps: order.maintenanceSuggestion,
+        handlingMethod: [order.repairResult ?? '按维修工单记录处理'],
+        applicableCondition: device.operatingCondition,
+        safetyReminder: '本条目来自模拟维修闭环，正式采用前需由专业人员复核并结合安全规程。',
+        relatedSpareParts: order.consumedSpareParts.map((item) => item.partName),
+        source: '维修工单闭环候选（模拟数据）',
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    const updated = await this.repository.updateWorkOrder(getWorkOrderTransitionIdentifier(order), {
+      knowledgeCandidateCreatedAt: new Date().toISOString(),
+      version: (order.version ?? 1) + 1,
+    });
+    await this.log('work-order', order.workOrderNo, '生成知识库候选', operator, '由飞书协同动作生成，已执行幂等检查');
+    this.idempotency.set(idempotencyKey, updated);
+    return updated;
+  }
+
+  async resyncWorkOrder(id: string) {
+    const order = await this.repository.getWorkOrder(id);
+    if (!order) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', '未找到维修工单');
+    if (this.repository.resyncWorkOrder) return this.repository.resyncWorkOrder(getWorkOrderTransitionIdentifier(order));
+    return this.repository.updateWorkOrder(getWorkOrderTransitionIdentifier(order), {
+      syncStatus: 'pending', syncMessage: '正在重新同步', syncErrorCode: undefined,
+    });
   }
 
   async addWorkOrderRecord(id: string, input: { operator: string; detail: string }) {

@@ -3,6 +3,7 @@ import { AppError } from '../middleware/errors.js';
 
 interface FeishuEnvelope<T> { code: number; msg?: string; message?: string; data?: T; tenant_access_token?: string; app_access_token?: string; expire?: number }
 export interface FeishuBitableRecord { record_id: string; fields: Record<string, unknown> }
+export interface FeishuContactIdentity { openId: string; userId?: string; name?: string; email?: string; mobile?: string }
 
 export class FeishuClient {
   private tenantToken?: { value: string; expiresAt: number };
@@ -74,6 +75,14 @@ export class FeishuClient {
     return records;
   }
 
+  async searchRecords(appToken: string, tableId: string, fieldName: string, exactValue: string) {
+    const data = await this.request<{ items?: FeishuBitableRecord[] }>(
+      `/bitable/v1/apps/${appToken}/tables/${tableId}/records/search?page_size=100`,
+      { method: 'POST', body: JSON.stringify({ filter: { conjunction: 'and', conditions: [{ field_name: fieldName, operator: 'is', value: [exactValue] }] } }) },
+    );
+    return data.items ?? [];
+  }
+
   async createRecord(appToken: string, tableId: string, fields: Record<string, unknown>) {
     return this.request<{ record: FeishuBitableRecord }>(`/bitable/v1/apps/${appToken}/tables/${tableId}/records`, { method: 'POST', body: JSON.stringify({ fields }) });
   }
@@ -84,6 +93,34 @@ export class FeishuClient {
 
   async getRecord(appToken: string, tableId: string, recordId: string) {
     return this.request<{ record: FeishuBitableRecord }>(`/bitable/v1/apps/${appToken}/tables/${tableId}/records/${recordId}`);
+  }
+
+  async findUsersByEmails(emails: string[]) {
+    return this.findContactIds({ emails });
+  }
+
+  async findUsersByMobiles(mobiles: string[]) {
+    return this.findContactIds({ mobiles });
+  }
+
+  private async findContactIds(input: { emails?: string[]; mobiles?: string[] }) {
+    const data = await this.request<{ user_list?: Array<{ user_id?: string; email?: string; mobile?: string; status?: { is_activated?: boolean } }> }>(
+      '/contact/v3/users/batch_get_id?user_id_type=open_id',
+      { method: 'POST', body: JSON.stringify(input) },
+    );
+    return (data.user_list ?? []).filter((item) => item.user_id).map((item) => ({
+      openId: item.user_id as string, email: item.email, mobile: item.mobile,
+    } satisfies FeishuContactIdentity));
+  }
+
+  async getUserByOpenId(openId: string) {
+    const data = await this.request<{ user: { open_id: string; user_id?: string; name?: string; email?: string; mobile?: string } }>(
+      `/contact/v3/users/${encodeURIComponent(openId)}?user_id_type=open_id`,
+    );
+    return {
+      openId: data.user.open_id, userId: data.user.user_id, name: data.user.name,
+      email: data.user.email, mobile: data.user.mobile,
+    } satisfies FeishuContactIdentity;
   }
 
   async exchangeLoginCode(code: string) {

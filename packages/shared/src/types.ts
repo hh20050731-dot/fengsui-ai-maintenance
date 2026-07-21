@@ -2,7 +2,7 @@ export type RiskLevel = '健康' | '关注' | '二级预警' | '高风险' | '�
 export type OperatingCondition = '停机' | '启动' | '低负荷' | '稳定运行' | '高负荷稳定运行';
 export type RunningStatus = '运行' | '停机' | '检修' | '离线';
 export type AlertStatus = '待确认' | '已确认' | '已生成工单' | '处理中' | '已关闭' | '误报';
-export type WorkOrderStatus = '待接单' | '已接单' | '检修中' | '待验证' | '已完成' | '已取消';
+export type WorkOrderStatus = '待接单' | '已接单' | '检修中' | '待验证' | '已完成' | '已关闭' | '已取消';
 export type StockStatus = '充足' | '偏低' | '缺货';
 
 export interface User {
@@ -139,8 +139,17 @@ export interface WorkOrder {
   completedAt?: string;
   verificationResult?: string;
   completionIdempotencyKey?: string;
-  syncStatus?: 'synced' | 'pending';
+  /** 乐观并发与卡片业务幂等使用；每次有效状态变更后递增。 */
+  version?: number;
+  source?: 'alert' | 'digital-twin' | 'feishu' | 'mock' | 'manual';
+  syncStatus?: 'synced' | 'pending' | 'failed';
   syncMessage?: string;
+  syncErrorCode?: string;
+  lastSyncedAt?: string;
+  notificationStatus?: 'not_requested' | 'pending' | 'sent' | 'failed';
+  notificationMessage?: string;
+  feishuMessageId?: string;
+  knowledgeCandidateCreatedAt?: string;
 }
 
 export interface SparePart {

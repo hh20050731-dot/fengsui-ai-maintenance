@@ -18,7 +18,7 @@ export const serverEnvSchema = z.object({
   FEISHU_ALERT_TABLE_ID: z.string().optional(), FEISHU_WORK_ORDER_TABLE_ID: z.string().optional(),
   FEISHU_SPARE_PART_TABLE_ID: z.string().optional(), FEISHU_SPARE_TRANSACTION_TABLE_ID: z.string().optional(),
   FEISHU_KNOWLEDGE_TABLE_ID: z.string().optional(), FEISHU_OPERATION_LOG_TABLE_ID: z.string().optional(),
-  FEISHU_NOTIFICATION_CHAT_ID: z.string().optional(), AI_PROVIDER: z.string().default('rule'),
+  FEISHU_NOTIFICATION_CHAT_ID: z.string().optional(), FEISHU_STOCK_NOTIFICATION_CHAT_ID: z.string().optional(), AI_PROVIDER: z.string().default('rule'),
   OPENAI_API_KEY: z.string().optional(), OPENAI_MODEL: z.string().optional(),
   DOUBAO_API_KEY: z.string().optional(), DOUBAO_MODEL: z.string().optional(),
   DOUBAO_BASE_URL: z.string().url().default('https://ark.cn-beijing.volces.com/api/v3'),

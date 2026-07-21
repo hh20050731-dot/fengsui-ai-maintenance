@@ -5,7 +5,8 @@ const transitions: Record<WorkOrderStatus, WorkOrderStatus[]> = {
   已接单: ['检修中'],
   检修中: ['待验证'],
   待验证: ['检修中', '已完成'],
-  已完成: [],
+  已完成: ['已关闭'],
+  已关闭: [],
   已取消: [],
 };
 

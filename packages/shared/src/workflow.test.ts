@@ -9,9 +9,10 @@ describe('维修工单状态机', () => {
     expect(canTransitionWorkOrder('待验证', '已完成')).toBe(true);
     expect(canTransitionWorkOrder('待验证', '检修中')).toBe(true);
   });
-  it('只允许待接单取消，已完成不可修改', () => {
+  it('只允许待接单取消，已完成仅允许关闭', () => {
     expect(getNextWorkOrderActions('待接单')).toContain('已取消');
-    expect(getNextWorkOrderActions('已完成')).toEqual([]);
+    expect(getNextWorkOrderActions('已完成')).toEqual(['已关闭']);
+    expect(getNextWorkOrderActions('已关闭')).toEqual([]);
     expect(() => assertWorkOrderTransition('已完成', '检修中')).toThrow('不允许');
   });
   it('状态更新标识优先使用飞书 recordId', () => {

@@ -50,4 +50,25 @@ describe('FeishuClient访问凭证生命周期', () => {
       message: '飞书鉴权服务暂不可用',
     });
   });
+
+  it('多维表格精确搜索使用字段条件且不把值拼入URL', async () => {
+    const client = new FeishuClient();
+    vi.spyOn(client, 'request').mockResolvedValue({ items: [{ record_id: 'rec_local', fields: { 工单编号: 'WO-LOCAL-001' } }] });
+    await expect(client.searchRecords('app_local', 'tbl_local', '工单编号', 'WO-LOCAL-001')).resolves.toHaveLength(1);
+    expect(client.request).toHaveBeenCalledWith(expect.stringContaining('/records/search?page_size=100'), expect.objectContaining({
+      method: 'POST', body: expect.stringContaining('WO-LOCAL-001'),
+    }));
+  });
+
+  it('通讯录支持邮箱、手机号和openId三种解析接口', async () => {
+    const client = new FeishuClient();
+    const request = vi.spyOn(client, 'request')
+      .mockResolvedValueOnce({ user_list: [{ user_id: 'ou_email', email: 'demo@example.com' }] })
+      .mockResolvedValueOnce({ user_list: [{ user_id: 'ou_mobile', mobile: '13800000000' }] })
+      .mockResolvedValueOnce({ user: { open_id: 'ou_direct', name: '演示用户' } });
+    await expect(client.findUsersByEmails(['demo@example.com'])).resolves.toEqual([{ openId: 'ou_email', email: 'demo@example.com' }]);
+    await expect(client.findUsersByMobiles(['13800000000'])).resolves.toEqual([{ openId: 'ou_mobile', mobile: '13800000000' }]);
+    await expect(client.getUserByOpenId('ou_direct')).resolves.toMatchObject({ openId: 'ou_direct', name: '演示用户' });
+    expect(request).toHaveBeenCalledTimes(3);
+  });
 });

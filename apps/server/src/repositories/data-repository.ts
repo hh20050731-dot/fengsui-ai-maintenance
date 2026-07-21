@@ -16,6 +16,7 @@ export interface DataRepository {
   getWorkOrder(id: string): Promise<WorkOrder | undefined>;
   createWorkOrder(order: WorkOrder): Promise<WorkOrder>;
   updateWorkOrder(id: string, patch: Partial<WorkOrder>): Promise<WorkOrder>;
+  resyncWorkOrder?(id: string): Promise<WorkOrder>;
   listSpareParts(): Promise<SparePart[]>;
   getSparePart(id: string): Promise<SparePart | undefined>;
   updateSparePart(id: string, patch: Partial<SparePart>): Promise<SparePart>;

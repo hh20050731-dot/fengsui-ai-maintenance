@@ -36,6 +36,20 @@ describe('飞书多维表格混合 Repository', () => {
     expect(created.workOrderNo).toBe(order.workOrderNo);
   });
 
+  it('创建前按“工单编号”精确查重，命中后不重复创建', async () => {
+    const order = createMockData().workOrders[0]!;
+    const record = { record_id: 'rec-existing-work-order', fields: toFeishuWorkOrderFields(order) };
+    const searchRecords = vi.fn(async () => [record]);
+    const createRecord = vi.fn();
+    const repository = new FeishuBitableRepository({
+      client: { searchRecords, listRecords: vi.fn(), createRecord, updateRecord: vi.fn(), getRecord: vi.fn() },
+      appToken: 'configured-app-token', tableIds: { workOrders: 'configured-work-order-table' }, capabilities: partialCapabilities,
+    });
+    await expect(repository.createWorkOrder(order)).resolves.toMatchObject({ recordId: 'rec-existing-work-order', workOrderNo: order.workOrderNo });
+    expect(searchRecords).toHaveBeenCalledWith('configured-app-token', 'configured-work-order-table', '工单编号', order.workOrderNo);
+    expect(createRecord).not.toHaveBeenCalled();
+  });
+
   it('未配置设备表时设备模块继续使用 Mock，且不访问飞书', async () => {
     const listRecords = vi.fn(async () => []);
     const repository = new FeishuBitableRepository({
@@ -153,7 +167,7 @@ describe('飞书多维表格混合 Repository', () => {
     expect(updateRecord).not.toHaveBeenCalled();
   });
 
-  it('飞书凭证失效时读取降级为演示数据且禁止工单写入Mock', async () => {
+  it('飞书凭证失效时读取降级为演示数据且写入明确标记为同步失败', async () => {
     const integrationState = new FeishuIntegrationState(true);
     const createRecord = vi.fn();
     const repository = new FeishuBitableRepository({
@@ -172,10 +186,30 @@ describe('飞书多维表格混合 Repository', () => {
     const fallbackRows = await repository.listWorkOrders();
     expect(fallbackRows.length).toBeGreaterThan(0);
     expect(integrationState.snapshot()).toMatchObject({ authenticated: false, safeErrorCode: 'FEISHU_AUTH_INVALID' });
-    await expect(repository.createWorkOrder(createMockData().workOrders[0]!)).rejects.toMatchObject({
-      status: 503,
-      code: 'FEISHU_WORK_ORDER_UNAVAILABLE',
+    await expect(repository.createWorkOrder(createMockData().workOrders[0]!)).resolves.toMatchObject({
+      syncStatus: 'failed',
+      syncErrorCode: 'FEISHU_AUTH_UNAVAILABLE',
     });
     expect(createRecord).not.toHaveBeenCalled();
+  });
+
+  it('用户重新同步时会重新探测远端并恢复为已同步', async () => {
+    const integrationState = new FeishuIntegrationState(true);
+    let unavailable = true;
+    const order = { ...createMockData().workOrders[0]!, workOrderNo: 'WO-RESYNC-001', workOrderId: 'WO-RESYNC-001', id: 'WO-RESYNC-001' };
+    const searchRecords = vi.fn(async () => {
+      if (unavailable) throw new AppError(503, 'FEISHU_AUTH_UNAVAILABLE', 'network unavailable');
+      return [];
+    });
+    const createRecord = vi.fn(async (_token: string, _table: string, fields: Record<string, unknown>) => ({ record: { record_id: 'rec_resynced', fields } }));
+    const repository = new FeishuBitableRepository({
+      client: { searchRecords, listRecords: vi.fn(async () => []), createRecord, updateRecord: vi.fn(), getRecord: vi.fn() },
+      appToken: 'configured-app-token', tableIds: { workOrders: 'configured-work-order-table' }, capabilities: partialCapabilities, integrationState,
+    });
+    const failed = await repository.createWorkOrder(order);
+    expect(failed.syncStatus).toBe('failed');
+    unavailable = false;
+    await expect(repository.resyncWorkOrder(order.id)).resolves.toMatchObject({ recordId: 'rec_resynced', syncStatus: 'synced' });
+    expect(createRecord).toHaveBeenCalledOnce();
   });
 });

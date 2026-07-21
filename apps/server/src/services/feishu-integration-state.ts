@@ -56,6 +56,13 @@ export class FeishuIntegrationState {
     return this.configured && this.safeErrorCode === null;
   }
 
+  /** 仅由明确的用户重试操作调用；不会把状态误标为已鉴权。 */
+  allowRetry() {
+    if (!this.configured) return;
+    this.safeErrorCode = null;
+    this.authenticated = false;
+  }
+
   snapshot(): FeishuAuthenticationSnapshot {
     return {
       configured: this.configured,

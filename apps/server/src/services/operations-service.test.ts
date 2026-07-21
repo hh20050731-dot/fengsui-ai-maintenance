@@ -89,6 +89,8 @@ describe('数字孪生工单上下文', () => {
       },
     });
     expect(highRisk.status).toBe('待接单');
+    expect(highRisk.notificationStatus).toBe('failed');
+    expect(highRisk.source).toBe('digital-twin');
     expect(await repository.getWorkOrder(highRisk.id)).toBeTruthy();
     expect(send).toHaveBeenCalledOnce();
     const duplicate = await service.createWorkOrderFromAlert('ALT-20260717-001', {
