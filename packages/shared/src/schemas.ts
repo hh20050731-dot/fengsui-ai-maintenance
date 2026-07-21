@@ -39,7 +39,7 @@ export const createWorkOrderSchema = z.object({
 });
 export type CreateWorkOrderInput = z.infer<typeof createWorkOrderSchema>;
 export const transitionWorkOrderSchema = z.object({
-  targetStatus: z.enum(['待接单', '已接单', '检修中', '待验证', '已完成', '已取消']),
+  targetStatus: z.enum(['待接单', '已接单', '检修中', '待验证', '已完成', '已关闭', '已取消']),
   operator: z.string().min(1).default('黄浩'),
   note: z.string().optional().default(''),
   inspectionResult: z.string().optional(),
@@ -68,6 +68,18 @@ export const ragSearchRequestSchema = z.object({
   faultType: z.string().trim().min(1).max(80).optional(),
   riskLevel: z.enum(['正常', '关注', '预警', '严重']).optional(),
   limit: z.number().int().min(1).max(10).default(5),
+});
+
+export const ragDocumentImportSchema = z.object({
+  documentId: z.string().trim().min(3).max(100).regex(/^[A-Za-z0-9_-]+$/),
+  title: z.string().trim().min(2).max(160),
+  sourceType: z.enum(['设备说明书', '安全操作规程', '维修记录', '工单', '故障案例', '预警规则', '检修指南']),
+  sourceRef: z.string().trim().min(1).max(240),
+  deviceTypes: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
+  faultTypes: z.array(z.string().trim().min(1).max(100)).max(30).default([]),
+  riskLevels: z.array(z.enum(['正常', '关注', '预警', '严重'])).max(4).default([]),
+  content: z.string().trim().min(10).max(100_000),
+  updatedAt: z.string().datetime().optional(),
 });
 
 export const multimodalInspectionRequestSchema = z.object({

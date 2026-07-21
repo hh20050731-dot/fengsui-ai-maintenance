@@ -25,4 +25,16 @@ describe('LocalRagService', () => {
     expect(result.citations).toEqual([]);
     expect(result.message).toContain('未生成虚构引用');
   });
+
+  it('导入文档后完成切分、过滤并返回章节与关联来源', async () => {
+    const service = new LocalRagService(new MockRepository());
+    const imported = service.importDocument({
+      documentId: 'DOC-LOCAL-MANUAL', title: '引风机维护说明', sourceType: '设备说明书', sourceRef: 'manual:local-demo',
+      deviceTypes: ['引风机'], faultTypes: ['轴承温升'], riskLevels: ['预警'],
+      content: '轴承温升时应先确认工况和温度传感器。检查润滑油状态、轴承间隙和冷却条件。',
+    });
+    expect(imported.chunkCount).toBe(2);
+    const result = await service.search({ query: '引风机轴承温升润滑检查', deviceType: '引风机', faultType: '轴承温升' });
+    expect(result.citations).toEqual(expect.arrayContaining([expect.objectContaining({ documentId: 'DOC-LOCAL-MANUAL', section: expect.stringMatching(/^第/), sourceRef: 'manual:local-demo' })]));
+  });
 });

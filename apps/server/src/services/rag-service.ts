@@ -62,7 +62,14 @@ function includesLoose(values: string[], expected?: string): boolean {
 }
 
 export class LocalRagService implements RagRepository {
+  private readonly importedDocuments = new Map<string, RagDocument>();
   constructor(private readonly repository: DataRepository) {}
+
+  importDocument(document: Omit<RagDocument, 'updatedAt'> & { updatedAt?: string }) {
+    const normalized: RagDocument = { ...document, updatedAt: document.updatedAt ?? new Date().toISOString() };
+    this.importedDocuments.set(normalized.documentId, normalized);
+    return { documentId: normalized.documentId, chunkCount: chunkDocument(normalized).length, updatedAt: normalized.updatedAt };
+  }
 
   async search(request: RagSearchRequest): Promise<RagSearchResult> {
     try {
@@ -142,6 +149,6 @@ export class LocalRagService implements RagRepository {
       content: `设备：${order.deviceName}。故障：${order.faultDescription}。检修建议：${order.maintenanceSuggestion.join('；')}。处理状态：${order.status}。维修结果：${order.repairResult ?? '尚未填写'}。`,
       updatedAt: order.completedAt ?? order.createdAt,
     }));
-    return [...knowledgeDocuments, ...caseDocuments, ...orderDocuments];
+    return [...this.importedDocuments.values(), ...knowledgeDocuments, ...caseDocuments, ...orderDocuments];
   }
 }

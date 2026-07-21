@@ -7,7 +7,7 @@ import path from 'node:path';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import {
-  acknowledgeAlertSchema, agentRunRequestSchema, createWorkOrderSchema, diagnosisRequestSchema, equipmentInputSchema, multimodalInspectionRequestSchema, ragSearchRequestSchema,
+  acknowledgeAlertSchema, agentRunRequestSchema, createWorkOrderSchema, diagnosisRequestSchema, equipmentInputSchema, multimodalInspectionRequestSchema, ragDocumentImportSchema, ragSearchRequestSchema,
   stockChangeSchema, transitionWorkOrderSchema, workOrderRecordSchema,
 } from '@fengsui/shared';
 import { buildFeishuCapabilities, effectiveMode, env, feishuClientConfigured, missingFeishuConfig } from './config/env.js';
@@ -124,9 +124,18 @@ export function createApp(options?: {
     }
     const authentication = integrationState.snapshot();
     const runtimeCapabilities = buildRuntimeCapabilities(capabilities, authentication);
+    const workOrderCapability = runtimeCapabilities.workOrders!;
+    const knowledgeCapability = runtimeCapabilities.knowledge!;
+    const operationLogCapability = runtimeCapabilities.operationLogs!;
     const runtimeMode = mode === 'feishu' && authentication.authenticated ? 'feishu' : 'mock';
     const partialFeishu = runtimeMode === 'feishu'
       && Object.values(runtimeCapabilities).some((capability) => capability.effectiveMode === 'mock');
+    const checkedAt = authentication.checkedAt ?? new Date().toISOString();
+    const serviceState = (configured: boolean, available: boolean, serviceMode: string, safeErrorCode: string | null = null, authenticated = configured && authentication.authenticated) => ({
+      configured, authenticated, available, mode: serviceMode,
+      safeErrorCode, lastSuccessAt: available ? checkedAt : null,
+    });
+    const aiStatus = structuredAiProvider.status();
     res.json(success({
       requestedMode: env.APP_MODE,
       effectiveMode: runtimeMode,
@@ -142,6 +151,26 @@ export function createApp(options?: {
       robot: runtimeMode === 'feishu' && env.FEISHU_NOTIFICATION_CHAT_ID ? '已配置' : runtimeMode === 'feishu' ? '缺少默认会话' : '卡片预览',
       callbacks: { verificationConfigured: Boolean(options?.verificationToken ?? env.FEISHU_VERIFICATION_TOKEN), encryptionConfigured: Boolean(options?.encryptKey ?? env.FEISHU_ENCRYPT_KEY) },
       scheduledJobs: { configured: Boolean(cronSecret) },
+      services: {
+        applicationCredentials: serviceState(feishuClientConfigured, authentication.authenticated, runtimeMode, authentication.safeErrorCode),
+        tenantAccessToken: serviceState(authentication.configured, authentication.authenticated, runtimeMode, authentication.safeErrorCode),
+        workOrderTable: serviceState(capabilities.workOrders.configured, workOrderCapability.effectiveMode === 'feishu', workOrderCapability.effectiveMode, workOrderCapability.safeErrorCode),
+        equipmentTable: serviceState(capabilities.equipment.configured, runtimeCapabilities.equipment!.effectiveMode === 'feishu', runtimeCapabilities.equipment!.effectiveMode, runtimeCapabilities.equipment!.safeErrorCode),
+        alertTable: serviceState(capabilities.alerts.configured, runtimeCapabilities.alerts!.effectiveMode === 'feishu', runtimeCapabilities.alerts!.effectiveMode, runtimeCapabilities.alerts!.safeErrorCode),
+        sparePartTable: serviceState(capabilities.spareParts.configured, runtimeCapabilities.spareParts!.effectiveMode === 'feishu', runtimeCapabilities.spareParts!.effectiveMode, runtimeCapabilities.spareParts!.safeErrorCode),
+        knowledgeTable: serviceState(capabilities.knowledge.configured, knowledgeCapability.effectiveMode === 'feishu', knowledgeCapability.effectiveMode, knowledgeCapability.safeErrorCode),
+        operationLogTable: serviceState(capabilities.operationLogs.configured, operationLogCapability.effectiveMode === 'feishu', operationLogCapability.effectiveMode, operationLogCapability.safeErrorCode),
+        notificationChat: serviceState(Boolean(env.FEISHU_NOTIFICATION_CHAT_ID), runtimeMode === 'feishu' && Boolean(env.FEISHU_NOTIFICATION_CHAT_ID), runtimeMode === 'feishu' ? 'feishu' : 'mock'),
+        stockNotificationChat: serviceState(Boolean(env.FEISHU_STOCK_NOTIFICATION_CHAT_ID), runtimeMode === 'feishu' && Boolean(env.FEISHU_STOCK_NOTIFICATION_CHAT_ID), runtimeMode === 'feishu' ? 'feishu' : 'mock'),
+        websocket: serviceState(feishuClientConfigured, process.env.FEISHU_WS === '1' && authentication.authenticated, process.env.FEISHU_WS === '1' ? 'local-ws' : 'standby', process.env.FEISHU_WS === '1' ? authentication.safeErrorCode : 'NOT_RUNNING_IN_THIS_PROCESS'),
+        messageEvents: serviceState(Boolean(env.FEISHU_VERIFICATION_TOKEN) || process.env.FEISHU_WS === '1', authentication.authenticated && (Boolean(env.FEISHU_VERIFICATION_TOKEN) || process.env.FEISHU_WS === '1'), process.env.FEISHU_WS === '1' ? 'websocket' : 'webhook'),
+        cardCallbacks: serviceState(Boolean(env.FEISHU_VERIFICATION_TOKEN) || process.env.FEISHU_WS === '1', authentication.authenticated && (Boolean(env.FEISHU_VERIFICATION_TOKEN) || process.env.FEISHU_WS === '1'), process.env.FEISHU_WS === '1' ? 'websocket' : 'webhook'),
+        directory: serviceState(feishuClientConfigured, false, 'permission-check-required', 'CONTACT_PERMISSION_NOT_PROBED'),
+        doubao: { configured: aiStatus.configured, authenticated: aiStatus.available, available: aiStatus.available, mode: aiStatus.provider, safeErrorCode: aiStatus.safeErrorCode ?? null, lastSuccessAt: aiStatus.available ? checkedAt : null },
+        rag: serviceState(true, true, 'local-rag', null, true),
+        agent: serviceState(true, true, 'controlled-agent', null, true),
+        multimodal: serviceState(true, true, 'rule-fallback', null, true),
+      },
       aiProvider: 'RuleBasedDiagnosisProvider', version: '1.0.2', lastSyncAt: new Date().toISOString(), missingConfig: missingFeishuConfig,
     }));
   });
@@ -202,6 +231,7 @@ export function createApp(options?: {
     throw new AppError(400, 'SOURCE_REQUIRED', '比赛原型中的工单需从预警创建');
   });
   app.post('/api/work-orders/:id/transition', async (req, res) => res.json(success(await service.transitionWorkOrder(req.params.id, transitionWorkOrderSchema.parse(req.body)))));
+  app.post('/api/work-orders/:id/resync', async (req, res) => res.json(success(await service.resyncWorkOrder(req.params.id))));
   app.post('/api/work-orders/:id/record', async (req, res) => res.json(success(await service.addWorkOrderRecord(req.params.id, workOrderRecordSchema.parse(req.body)))));
   app.post('/api/work-orders/:id/verify', async (req, res) => res.json(success(await service.transitionWorkOrder(req.params.id, transitionWorkOrderSchema.parse({ ...req.body, targetStatus: '已完成' })))));
 
@@ -212,6 +242,7 @@ export function createApp(options?: {
 
   app.get('/api/knowledge', async (req, res) => { let rows = await repository.listKnowledge(); if (req.query.search) rows = rows.filter((row) => JSON.stringify(row).includes(String(req.query.search))); res.json(success(rows)); });
   app.post('/api/rag/search', async (req, res) => res.json(success(await ragService.search(ragSearchRequestSchema.parse(req.body)))));
+  app.post('/api/rag/documents', (req, res) => res.status(201).json(success(ragService.importDocument(ragDocumentImportSchema.parse(req.body)))));
   app.get('/api/agent/runs', (_req, res) => res.json(success(maintenanceAgent.listRuns())));
   app.get('/api/agent/runs/:id', (req, res) => { const run = maintenanceAgent.getRun(req.params.id); if (!run) throw new AppError(404, 'AGENT_RUN_NOT_FOUND', '未找到Agent执行记录'); res.json(success(run)); });
   app.post('/api/agent/run', async (req, res) => res.json(success(await maintenanceAgent.run(agentRunRequestSchema.parse(req.body)))));

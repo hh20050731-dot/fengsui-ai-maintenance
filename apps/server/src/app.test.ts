@@ -21,11 +21,28 @@ describe('Mock API', () => {
     expect(response.body.data).toMatchObject({ status: 'ok', version: '1.0.2', mode: 'mock', gitSha: expect.any(String) });
   });
 
+  it('集成状态逐模块返回安全状态且不暴露内部标识', async () => {
+    const { app } = createApp({ forceMock: true });
+    const response = await request(app).get('/api/integration/status').expect(200);
+    expect(response.body.data.services).toMatchObject({
+      applicationCredentials: { configured: expect.any(Boolean), available: expect.any(Boolean), mode: expect.any(String) },
+      workOrderTable: { safeErrorCode: null },
+      directory: { safeErrorCode: 'CONTACT_PERMISSION_NOT_PROBED' },
+      rag: { available: true, authenticated: true },
+      agent: { available: true },
+      multimodal: { available: true },
+    });
+    expect(JSON.stringify(response.body)).not.toMatch(/app_secret|tenant_access_token|chat_id/i);
+  });
+
   it('提供可追溯RAG、结构化研判、受控Agent和多模态安全降级接口', async () => {
     const { app } = createApp({ forceMock: true });
     const rag = await request(app).post('/api/rag/search').send({ query: '引风机轴承温升', limit: 5 }).expect(200);
     expect(rag.body.data.citations.length).toBeGreaterThan(0);
     expect(rag.body.data.citations[0]).toMatchObject({ title: expect.any(String), sourceRef: expect.any(String), excerpt: expect.any(String) });
+    await request(app).post('/api/rag/documents').send({ documentId: 'DOC-API-LOCAL', title: '本地检修规程', sourceType: '检修指南', sourceRef: 'manual:api-test', deviceTypes: ['引风机'], faultTypes: ['轴承温升'], riskLevels: ['预警'], content: '检查轴承温度与润滑状态。复核轴承间隙、联轴器对中和冷却条件。' }).expect(201);
+    const importedRag = await request(app).post('/api/rag/search').send({ query: '轴承温升润滑状态联轴器', deviceType: '引风机', limit: 5 }).expect(200);
+    expect(importedRag.body.data.citations).toEqual(expect.arrayContaining([expect.objectContaining({ documentId: 'DOC-API-LOCAL', sourceRef: 'manual:api-test' })]));
 
     const structured = await request(app).post('/api/ai/structured-diagnose').send({ deviceId: 'IDF-001', question: '为什么存在轴承温升风险？' }).expect(200);
     expect(structured.body.data.deviceId).toBe('IDF-001');
