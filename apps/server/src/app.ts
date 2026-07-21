@@ -136,6 +136,7 @@ export function createApp(options?: {
       safeErrorCode, lastSuccessAt: available ? checkedAt : null,
     });
     const aiStatus = structuredAiProvider.status();
+    const doubaoConfigured = Boolean(env.DOUBAO_API_KEY && env.DOUBAO_MODEL);
     res.json(success({
       requestedMode: env.APP_MODE,
       effectiveMode: runtimeMode,
@@ -166,7 +167,7 @@ export function createApp(options?: {
         messageEvents: serviceState(Boolean(env.FEISHU_VERIFICATION_TOKEN) || process.env.FEISHU_WS === '1', authentication.authenticated && (Boolean(env.FEISHU_VERIFICATION_TOKEN) || process.env.FEISHU_WS === '1'), process.env.FEISHU_WS === '1' ? 'websocket' : 'webhook'),
         cardCallbacks: serviceState(Boolean(env.FEISHU_VERIFICATION_TOKEN) || process.env.FEISHU_WS === '1', authentication.authenticated && (Boolean(env.FEISHU_VERIFICATION_TOKEN) || process.env.FEISHU_WS === '1'), process.env.FEISHU_WS === '1' ? 'websocket' : 'webhook'),
         directory: serviceState(feishuClientConfigured, false, 'permission-check-required', 'CONTACT_PERMISSION_NOT_PROBED'),
-        doubao: { configured: aiStatus.configured, authenticated: aiStatus.available, available: aiStatus.available, mode: aiStatus.provider, safeErrorCode: aiStatus.safeErrorCode ?? null, lastSuccessAt: aiStatus.available ? checkedAt : null },
+        doubao: { configured: doubaoConfigured, authenticated: doubaoConfigured && aiStatus.provider === 'doubao' && aiStatus.available, available: doubaoConfigured && aiStatus.provider === 'doubao' && aiStatus.available, mode: doubaoConfigured ? aiStatus.provider : 'rule-based-fallback', safeErrorCode: doubaoConfigured ? (aiStatus.safeErrorCode ?? null) : 'DOUBAO_NOT_CONFIGURED', lastSuccessAt: doubaoConfigured && aiStatus.provider === 'doubao' && aiStatus.available ? checkedAt : null },
         rag: serviceState(true, true, 'local-rag', null, true),
         agent: serviceState(true, true, 'controlled-agent', null, true),
         multimodal: serviceState(true, true, 'rule-fallback', null, true),
