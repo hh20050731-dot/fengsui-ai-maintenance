@@ -1,4 +1,5 @@
 import { BoxGeometry, Color, Group, Mesh, MeshStandardMaterial } from 'three';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   applyCasingDisplayMode,
@@ -51,5 +52,11 @@ describe('增强模型运行时状态', () => {
     const root = new Group();
     expect(applyCasingDisplayMode(root, 'hidden')).toBe(false);
     expect(applyCouplingGuardVisibility(root, false)).toBe(false);
+  });
+
+  it('场景动画不再读取已弃用的THREE.Clock', () => {
+    const source = readFileSync('apps/web/src/features/digital-twin/components/ModelScene.tsx', 'utf8');
+    expect(source).not.toMatch(/new\s+(?:THREE\.)?Clock|getElapsedTime\s*\(|\{\s*clock\s*\}/);
+    expect(source).toContain('elapsedSeconds.current += Math.min(delta, 0.1)');
   });
 });

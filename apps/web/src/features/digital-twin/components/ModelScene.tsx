@@ -251,8 +251,10 @@ export function ModelScene({
 
   useEffect(() => () => disposeClonedModel(prepared.root), [prepared.root]);
 
-  useFrame(({ clock }, delta) => {
-    const elapsed = clock.getElapsedTime();
+  const elapsedSeconds = useRef(0);
+  useFrame((_state, delta) => {
+    elapsedSeconds.current += Math.min(delta, 0.1);
+    const elapsed = elapsedSeconds.current;
     if (modelVersion === 'enhanced-v1' && prepared.impeller) {
       prepared.impeller.rotation.z += delta * (scenario.id === 'normal' ? 0.22 : 0.38);
       const base = prepared.objectSnapshots.get(prepared.impeller.uuid);

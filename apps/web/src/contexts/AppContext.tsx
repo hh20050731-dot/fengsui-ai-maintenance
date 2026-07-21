@@ -16,6 +16,10 @@ export interface IntegrationStatus {
     safeErrorCode: string | null;
   }>;
   offlineDemo?: boolean;
+  services?: Record<string, {
+    configured: boolean; authenticated: boolean; available: boolean; mode: string;
+    safeErrorCode: string | null; lastSuccessAt: string | null;
+  }>;
 }
 export const AppContext = createContext<{ user: User; integration?: IntegrationStatus }>({ user: { id: 'demo-user', name: '黄浩', role: '项目演示员', source: 'demo' } });
 export const useAppContext = () => useContext(AppContext);
