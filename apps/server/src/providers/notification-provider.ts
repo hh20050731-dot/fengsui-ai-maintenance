@@ -1,4 +1,4 @@
-import type { Alert, WorkOrder } from '@fengsui/shared';
+import type { AiDiagnosis, Alert, Equipment, WorkOrder } from '@fengsui/shared';
 import { env } from '../config/env.js';
 import { FeishuClient } from './feishu-client.js';
 
@@ -15,6 +15,12 @@ export interface WorkOrderAlertContext {
   healthScore?: number;
   failureProbability?: number;
   suggestedDeadline?: string;
+}
+
+export interface DiagnosisWorkOrderCardContext {
+  diagnosis: AiDiagnosis;
+  device: Equipment;
+  alert?: Alert;
 }
 
 export interface NotificationProvider {
@@ -108,6 +114,54 @@ export function buildHighRiskWorkOrderCard(order: WorkOrder, context: WorkOrderA
       linkButton('查看3D定位', twinUrl),
       linkButton('查看工单详情', detailUrl),
     ] },
+  };
+}
+
+export function buildDiagnosisWorkOrderCard({ diagnosis, device, alert }: DiagnosisWorkOrderCardContext) {
+  const baseUrl = env.APP_BASE_URL.replace(/\/$/, '');
+  const deviceUrl = `${baseUrl}/equipment/${encodeURIComponent(device.deviceId)}`;
+  const twinUrl = `${baseUrl}/digital-twin?equipment=${encodeURIComponent(device.deviceId === 'IDF-001' ? 'IDF-01' : device.deviceId)}&fault=bearing-overheat&model=enhanced-v1`;
+  const canCreateWorkOrder = Boolean(
+    alert
+    && !alert.relatedWorkOrderId
+    && !['已关闭', '误报'].includes(alert.alertStatus)
+    && device.riskLevel !== '健康',
+  );
+  const headerTemplate = device.riskLevel === '高风险' ? 'red'
+    : device.riskLevel === '二级预警' ? 'orange'
+      : device.riskLevel === '关注' ? 'blue'
+        : 'green';
+  const title = `【设备研判】${device.deviceName} · ${device.riskLevel}`;
+  const evidence = diagnosis.trendEvidence.join('；') || '暂无显著趋势证据';
+  const causes = diagnosis.suspectedCauses.join('；') || '建议结合现场检查进一步确认';
+  const inspections = diagnosis.inspectionItems.join('；') || '按计划点检';
+
+  return {
+    schema: '2.0',
+    config: {
+      update_multi: true,
+      enable_forward: true,
+      summary: { content: `${device.deviceName}当前健康度 ${device.healthScore}，风险等级${device.riskLevel}` },
+    },
+    header: {
+      template: headerTemplate,
+      title: { tag: 'plain_text', content: title },
+    },
+    body: {
+      direction: 'vertical',
+      vertical_spacing: '8px',
+      elements: [
+        {
+          tag: 'markdown',
+          content: `**设备名称：**${device.deviceName}\n**设备编号：**${device.deviceId}\n**运行状态：**${device.runningStatus}\n**当前工况：**${device.operatingCondition}\n**健康度：**${device.healthScore}\n**风险等级：**${device.riskLevel}\n**振动：**${device.vibration} mm/s\n**温度：**${device.temperature}℃\n**异常指标：**${diagnosis.abnormalIndicators.join('、') || '无'}\n**趋势证据：**${evidence}\n**疑似原因：**${causes}\n**推荐检查：**${inspections}\n**建议时限：**${diagnosis.suggestedDeadline}\n**规则匹配度：**${Math.round(diagnosis.confidence * 100)}%\n\n> 本结果根据模拟监测数据和规则库生成，仅供比赛演示与现场复核参考。`,
+        },
+        ...(canCreateWorkOrder
+          ? [callbackButton('生成维修工单', { action: 'create_work_order', alertId: alert!.alertId }, 'primary')]
+          : []),
+        ...(device.deviceId === 'IDF-001' ? [linkButton('查看3D定位', twinUrl)] : []),
+        linkButton('查看设备详情', deviceUrl),
+      ],
+    },
   };
 }
 

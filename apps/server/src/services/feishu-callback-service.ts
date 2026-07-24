@@ -1,7 +1,12 @@
 import { createHash } from 'node:crypto';
 import type { AiDiagnosis, OperationLog, WorkOrder } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
-import { buildHighRiskWorkOrderCard, type NotificationProvider } from '../providers/notification-provider.js';
+import {
+  buildDiagnosisWorkOrderCard,
+  buildHighRiskWorkOrderCard,
+  type NotificationProvider,
+  type WorkOrderAlertContext,
+} from '../providers/notification-provider.js';
 import type { DataRepository } from '../repositories/data-repository.js';
 import {
   asFeishuCallbackObject,
@@ -90,6 +95,13 @@ function workOrderCardResponse(order: WorkOrder, content: string) {
     toast: { type: 'success', content },
     card: { type: 'raw', data: buildHighRiskWorkOrderCard(order) },
   };
+}
+
+function rawCardFromResult(result: unknown) {
+  const resultObject = asObject(result);
+  const card = asObject(resultObject.card);
+  const data = asObject(card.data);
+  return card.type === 'raw' && data.schema === '2.0' ? data : undefined;
 }
 
 class EventIdempotencyStore {
@@ -204,6 +216,7 @@ export class FeishuCallbackService {
       else if (eventType === 'im.message.receive_v1') result = await this.replyToMessage(payload);
       else result = { success: true, data: { received: true, eventId } };
 
+      if (eventType === 'card.action.trigger') await this.refreshSourceCard(payload, result, eventId);
       await this.events.mark(eventId, eventType);
       return result;
     } catch (error) {
@@ -329,6 +342,63 @@ export class FeishuCallbackService {
     return workOrderCardResponse(order, `已创建工单 ${order.workOrderNo}`);
   }
 
+  private async refreshSourceCard(payload: JsonObject, result: unknown, eventId: string) {
+    const event = asObject(payload.event);
+    const context = asObject(event.context);
+    const messageId = context.open_message_id;
+    const card = rawCardFromResult(result);
+    if (typeof messageId !== 'string' || !messageId || !card) return;
+
+    const delivery = await this.notifications.updateCard(messageId, card);
+    if (delivery.delivered) return;
+    try {
+      await this.repository.addOperationLog({
+        logId: `LOG-CARD-REFRESH-${createHash('sha256').update(eventId).digest('hex').slice(0, 16)}`,
+        entityType: 'feishu-event',
+        entityId: eventId,
+        action: '更新飞书工单卡片失败',
+        operator: '系统',
+        detail: '工单状态已更新，卡片刷新失败，可重新查询工单获取最新状态',
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      console.warn('[feishu-callback] 卡片刷新失败且操作日志暂不可用');
+    }
+  }
+
+  private async buildInteractiveDiagnosisReply(diagnosis: AiDiagnosis) {
+    if (!['equipment_status', 'abnormal_metrics', 'diagnosis_reason'].includes(diagnosis.intent)) return undefined;
+    const device = await this.repository.getEquipment(diagnosis.deviceId);
+    if (!device) return undefined;
+    const [alerts, orders] = await Promise.all([
+      this.repository.listAlerts(),
+      this.repository.listWorkOrders(),
+    ]);
+    const deviceAlerts = alerts
+      .filter((alert) => alert.deviceId === device.deviceId && alert.alertStatus !== '误报')
+      .sort((left, right) => right.alertTime.localeCompare(left.alertTime));
+    const currentAlert = deviceAlerts.find((alert) => !['已关闭', '误报'].includes(alert.alertStatus)) ?? deviceAlerts[0];
+    const relatedOrder = currentAlert?.relatedWorkOrderId
+      ? orders.find((order) => [order.id, order.workOrderNo, order.workOrderId, order.recordId].includes(currentAlert.relatedWorkOrderId))
+      : undefined;
+    const activeStatuses = new Set(['待接单', '已接单', '检修中', '待验证']);
+    const activeOrder = relatedOrder ?? orders
+      .filter((order) => order.deviceId === device.deviceId && activeStatuses.has(order.status))
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0];
+
+    if (activeOrder) {
+      const context: WorkOrderAlertContext = {
+        temperature: device.temperature,
+        vibration: device.vibration,
+        healthScore: device.healthScore,
+        failureProbability: currentAlert ? Math.round(currentAlert.confidence * 100) : undefined,
+        suggestedDeadline: currentAlert?.suggestedDeadline,
+      };
+      return buildHighRiskWorkOrderCard(activeOrder, context);
+    }
+    return buildDiagnosisWorkOrderCard({ diagnosis, device, alert: currentAlert });
+  }
+
   private async replyToMessage(payload: JsonObject) {
     const event = asObject(payload.event);
     const sender = asObject(event.sender);
@@ -341,8 +411,19 @@ export class FeishuCallbackService {
     const chatId = typeof message.chat_id === 'string' ? message.chat_id : undefined;
     if (!chatId) throw new AppError(400, 'CHAT_ID_MISSING', '消息事件缺少会话 ID');
     const diagnosis = await this.operations.diagnose(undefined, question);
-    const delivery = await this.notifications.sendText(formatDiagnosisForFeishu(diagnosis), chatId, 'chat_id');
+    const interactiveCard = await this.buildInteractiveDiagnosisReply(diagnosis);
+    const delivery = interactiveCard
+      ? await this.notifications.sendCard(interactiveCard, chatId)
+      : await this.notifications.sendText(formatDiagnosisForFeishu(diagnosis), chatId, 'chat_id');
     if (!delivery.delivered) throw new AppError(502, 'BOT_REPLY_FAILED', delivery.error ?? '机器人回复发送失败');
-    return { success: true, data: { replied: true, messageId: delivery.messageId, intent: diagnosis.intent } };
+    return {
+      success: true,
+      data: {
+        replied: true,
+        replyType: interactiveCard ? 'interactive' : 'text',
+        messageId: delivery.messageId,
+        intent: diagnosis.intent,
+      },
+    };
   }
 }

@@ -178,7 +178,7 @@ describe('飞书回调安全处理', () => {
     { text: '  查询   １号引风机，状态？  ' },
   ])('将飞书文本“$text”标准化后路由到设备状态查询', async ({ text, mentions }, index) => {
     const { callbacks, notifications } = createFixture();
-    const reply = vi.spyOn(notifications, 'sendText');
+    const reply = vi.spyOn(notifications, 'sendCard');
     const response = await callbacks.handleTrustedEvent({
       header: { event_id: `evt-normalized-message-${index}`, event_type: 'im.message.receive_v1' },
       event: {
@@ -191,15 +191,18 @@ describe('飞书回调安全处理', () => {
           mentions,
         },
       },
-    }) as { data: { intent: string } };
+    }) as { data: { intent: string; replyType: string } };
 
     expect(response.data.intent).toBe('equipment_status');
-    expect(reply).toHaveBeenCalledWith(expect.stringContaining('1号引风机当前状态为'), 'oc_local_simulation', 'chat_id');
+    expect(response.data.replyType).toBe('interactive');
+    expect(reply).toHaveBeenCalledWith(expect.objectContaining({ schema: '2.0' }), 'oc_local_simulation');
+    expect(JSON.stringify(reply.mock.calls[0]?.[0])).toContain('create_work_order');
   });
 
   it('机器人七类问题复用IntentRouter并返回不同意图', async () => {
     const { callbacks, notifications } = createFixture();
-    const reply = vi.spyOn(notifications, 'sendText');
+    const textReply = vi.spyOn(notifications, 'sendText');
+    const cardReply = vi.spyOn(notifications, 'sendCard');
     const questions = [
       '当前风险最高的设备是什么？',
       '当前有哪些高风险设备？',
@@ -221,8 +224,80 @@ describe('飞书回调安全处理', () => {
       intents.push(response.data.intent);
     }
     expect(new Set(intents)).toHaveLength(7);
-    expect(reply).toHaveBeenCalledTimes(7);
-    expect(new Set(reply.mock.calls.map((call) => call[0]))).toHaveLength(7);
+    expect(textReply.mock.calls.length + cardReply.mock.calls.length).toBe(7);
+    expect(cardReply).toHaveBeenCalledTimes(2);
+    expect(textReply).toHaveBeenCalledTimes(5);
+  });
+
+  it('设备查询卡片可创建工单并主动刷新为可接单卡片', async () => {
+    const { callbacks, notifications, repository } = createFixture();
+    const sendCard = vi.spyOn(notifications, 'sendCard');
+    const updateCard = vi.spyOn(notifications, 'updateCard');
+
+    const query = await callbacks.handleTrustedEvent({
+      header: { event_id: 'evt-query-to-card', event_type: 'im.message.receive_v1' },
+      event: {
+        sender: { sender_type: 'user' },
+        message: {
+          message_id: 'om_query_to_card',
+          message_type: 'text',
+          chat_id: 'oc_query_to_card',
+          content: JSON.stringify({ text: '查询1号引风机状态' }),
+        },
+      },
+    }) as { data: { replyType: string } };
+    expect(query.data.replyType).toBe('interactive');
+    expect(JSON.stringify(sendCard.mock.calls[0]?.[0])).toContain('create_work_order');
+
+    const created = await callbacks.handleTrustedEvent({
+      header: { event_id: 'evt-create-from-query-card', event_type: 'card.action.trigger' },
+      event: {
+        operator: { open_id: 'ou_query_card_operator' },
+        action: { value: { action: 'create_work_order', alertId: 'ALT-20260717-001' } },
+        context: { open_message_id: 'om_query_card_reply', open_chat_id: 'oc_query_to_card' },
+      },
+    }) as { toast: { content: string } };
+
+    expect(created.toast.content).toContain('已创建工单');
+    const order = await repository.getWorkOrder('WO-20260717-001');
+    expect(order).toMatchObject({ status: '待接单', deviceId: 'IDF-001' });
+    expect(updateCard).toHaveBeenCalledWith(
+      'om_query_card_reply',
+      expect.objectContaining({ schema: '2.0' }),
+    );
+    expect(JSON.stringify(updateCard.mock.calls.at(-1)?.[1])).toContain('accept_order');
+  });
+
+  it('工单按钮推进成功后主动刷新原交互卡片且刷新失败不回滚状态', async () => {
+    const { callbacks, notifications, operations, repository } = createFixture();
+    const order = await operations.createWorkOrderFromAlert('ALT-20260717-001', {
+      assignee: '张工', assigneeUserId: 'zhang-gong', idempotencyKey: 'card-refresh-create',
+    });
+    const updateCard = vi.spyOn(notifications, 'updateCard').mockResolvedValueOnce({
+      messageId: 'om_card_refresh',
+      delivered: false,
+      preview: {},
+      error: 'local simulated refresh failure',
+    });
+
+    const response = await callbacks.handleTrustedEvent({
+      header: { event_id: 'evt-card-refresh-accept', event_type: 'card.action.trigger' },
+      event: {
+        operator: { open_id: 'ou_card_refresh_operator' },
+        action: { value: {
+          action: 'accept_order',
+          workOrderId: order.id,
+          expectedStatus: '待接单',
+          version: order.version ?? 1,
+        } },
+        context: { open_message_id: 'om_card_refresh', open_chat_id: 'oc_card_refresh' },
+      },
+    }) as { toast: { content: string } };
+
+    expect(response.toast.content).toContain('接单成功');
+    expect(updateCard).toHaveBeenCalledWith('om_card_refresh', expect.objectContaining({ schema: '2.0' }));
+    expect((await repository.getWorkOrder(order.id))?.status).toBe('已接单');
+    expect((await repository.listOperationLogs('evt-card-refresh-accept')).some((log) => log.action === '更新飞书工单卡片失败')).toBe(true);
   });
 
   it('相同message_id不会重复回复且机器人自己的消息不会形成循环', async () => {

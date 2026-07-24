@@ -1,7 +1,13 @@
 import { createMockData } from '@fengsui/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { FeishuClient } from './feishu-client.js';
-import { FeishuBotNotificationProvider, MockNotificationProvider, buildHighRiskWorkOrderCard } from './notification-provider.js';
+import { RuleBasedDiagnosisProvider } from './ai-diagnosis-provider.js';
+import {
+  FeishuBotNotificationProvider,
+  MockNotificationProvider,
+  buildDiagnosisWorkOrderCard,
+  buildHighRiskWorkOrderCard,
+} from './notification-provider.js';
 
 describe('飞书高风险工单卡片', () => {
   it('包含协同字段、状态动作与辅助入口', () => {
@@ -63,6 +69,69 @@ describe('飞书高风险工单卡片', () => {
     expect(sent.delivered).toBe(true);
     expect(updated.delivered).toBe(true);
     expect(updated.messageId).toBe(sent.messageId);
+  });
+
+  it('设备研判卡片包含真实交互按钮且正常状态不误建工单', async () => {
+    const data = createMockData();
+    const device = data.equipment.find((item) => item.deviceId === 'IDF-001')!;
+    const alert = data.alerts.find((item) => item.deviceId === device.deviceId)!;
+    const diagnosis = await new RuleBasedDiagnosisProvider().diagnose({
+      question: '查询1号引风机状态',
+      intent: 'equipment_status',
+      device,
+      equipment: data.equipment,
+      telemetry: data.telemetry[device.deviceId],
+      knowledge: data.knowledge,
+      alerts: data.alerts,
+    });
+    const card = buildDiagnosisWorkOrderCard({ diagnosis, device, alert });
+    const serialized = JSON.stringify(card);
+    expect(card).toMatchObject({ schema: '2.0', body: { elements: expect.any(Array) } });
+    expect(serialized).toContain('生成维修工单');
+    expect(serialized).toContain('create_work_order');
+    expect(serialized).toContain(alert.alertId);
+    expect(serialized).toContain('查看3D定位');
+
+    const healthy = data.equipment.find((item) => item.riskLevel === '健康')!;
+    const healthyDiagnosis = await new RuleBasedDiagnosisProvider().diagnose({
+      question: `${healthy.deviceName}当前状态如何`,
+      intent: 'equipment_status',
+      device: healthy,
+      equipment: data.equipment,
+      telemetry: data.telemetry[healthy.deviceId],
+      knowledge: data.knowledge,
+      alerts: data.alerts,
+    });
+    expect(JSON.stringify(buildDiagnosisWorkOrderCard({ diagnosis: healthyDiagnosis, device: healthy }))).not.toContain('create_work_order');
+  });
+
+  it('真实Provider使用interactive消息发送并按message_id更新原卡片', async () => {
+    const request = vi.fn()
+      .mockResolvedValueOnce({ message_id: 'om_interactive_reply' })
+      .mockResolvedValueOnce({});
+    const provider = new FeishuBotNotificationProvider({ request } as unknown as Pick<FeishuClient, 'request'>);
+    const card = { schema: '2.0', body: { elements: [] } };
+    const sent = await provider.sendCard(card, 'oc_current_chat');
+    const updated = await provider.updateCard(sent.messageId, card);
+
+    expect(sent).toMatchObject({ delivered: true, messageId: 'om_interactive_reply' });
+    expect(updated).toMatchObject({ delivered: true, messageId: 'om_interactive_reply' });
+    expect(request).toHaveBeenNthCalledWith(
+      1,
+      '/im/v1/messages?receive_id_type=chat_id',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"msg_type":"interactive"'),
+      }),
+    );
+    expect(request).toHaveBeenNthCalledWith(
+      2,
+      '/im/v1/messages/om_interactive_reply',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: expect.stringContaining('"msg_type":"interactive"'),
+      }),
+    );
   });
 
   it('真实Provider的发送超时或卡片更新失败会返回可重试失败而不抛出', async () => {
