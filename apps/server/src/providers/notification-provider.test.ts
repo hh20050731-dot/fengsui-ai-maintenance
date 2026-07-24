@@ -36,6 +36,7 @@ describe('飞书高风险工单卡片', () => {
     expect(serialized).toContain('accept_order');
     expect(serialized).toContain('expectedStatus');
     expect(serialized).toContain('version');
+    expect(serialized).toContain('待分派');
     expect(serialized).toContain('查看3D定位');
     expect(serialized).toContain('查看工单详情');
     expect(serialized).not.toContain('workOrderNo":');

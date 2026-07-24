@@ -3,6 +3,17 @@ import { IntentRouter } from './intent-router.js';
 
 describe('IntentRouter', () => {
   it.each([
+    '创建1号引风机演示工单',
+    '生成1号引风机维修工单',
+    '给1号引风机建一个工单',
+    '发送IDF-001工单卡片',
+    '为1号引风机创建工单',
+    '1号引风机创建演示工单',
+  ])('将创建工单说法“%s”稳定路由为CREATE_DEMO_WORK_ORDER', (question) => {
+    expect(new IntentRouter().route(question).intent).toBe('CREATE_DEMO_WORK_ORDER');
+  });
+
+  it.each([
     ['当前风险最高的设备是什么？', 'highest_risk_equipment'],
     ['当前有哪些高风险设备？', 'high_risk_equipment_list'],
     ['1号引风机当前状态如何？', 'equipment_status'],

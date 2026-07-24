@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { AiDiagnosis, OperationLog, WorkOrder } from '@fengsui/shared';
+import { getDiagnosisIntentRoute, type AiDiagnosis, type OperationLog, type WorkOrder } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
 import {
   buildDiagnosisWorkOrderCard,
@@ -213,7 +213,7 @@ export class FeishuCallbackService {
       else if (actionValue.action === 'defer_work_order') result = await this.deferWorkOrder(actionValue, operator);
       else if (actionValue.action === 'acknowledge' && actionValue.alertId) result = await this.acknowledgeAlert(String(actionValue.alertId), operator);
       else if (actionValue.action === 'create_work_order' && actionValue.alertId) result = await this.createWorkOrder(String(actionValue.alertId), eventId, operator);
-      else if (eventType === 'im.message.receive_v1') result = await this.replyToMessage(payload);
+      else if (eventType === 'im.message.receive_v1') result = await this.replyToMessage(payload, eventId, operator);
       else result = { success: true, data: { received: true, eventId } };
 
       if (eventType === 'card.action.trigger') await this.refreshSourceCard(payload, result, eventId);
@@ -399,7 +399,65 @@ export class FeishuCallbackService {
     return buildDiagnosisWorkOrderCard({ diagnosis, device, alert: currentAlert });
   }
 
-  private async replyToMessage(payload: JsonObject) {
+  private async handleCreateDemoWorkOrderCommand(
+    question: string,
+    chatId: string,
+    eventId: string,
+    operator: string,
+  ) {
+    const command = await this.operations.createDemoWorkOrderFromCommand(
+      question,
+      operator,
+      `feishu-demo-command-${eventId}`,
+    );
+    const delivery = await this.notifications.sendWorkOrderAlert(command.order, {
+      temperature: command.device.temperature,
+      vibration: command.device.vibration,
+      healthScore: command.device.healthScore,
+      failureProbability: Math.round(command.alert.confidence * 100),
+      suggestedDeadline: command.alert.suggestedDeadline,
+      notice: command.created ? '演示工单已创建' : '已存在进行中的演示工单',
+    }, chatId);
+    if (!delivery.delivered) {
+      throw new AppError(502, 'BOT_CARD_REPLY_FAILED', delivery.error ?? '交互式工单卡片发送失败');
+    }
+
+    const identifier = command.order.recordId || command.order.id || command.order.workOrderNo;
+    const saved = await this.repository.updateWorkOrder(identifier, {
+      feishuMessageId: delivery.messageId,
+      notificationStatus: 'sent',
+      notificationMessage: command.created ? '演示工单交互卡片已发送' : '进行中工单交互卡片已重新发送',
+    });
+    try {
+      await this.repository.addOperationLog({
+        logId: `LOG-DEMO-CARD-${createHash('sha256').update(`${eventId}:${saved.workOrderNo}`).digest('hex').slice(0, 16)}`,
+        entityType: 'work-order',
+        entityId: saved.workOrderNo,
+        action: command.created ? '机器人创建演示工单并发送卡片' : '机器人返回进行中演示工单卡片',
+        operator,
+        detail: '已使用当前消息会话发送交互式卡片，消息映射已保存',
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      console.warn('[feishu-callback] 演示工单卡片日志暂不可用');
+    }
+    return {
+      success: true,
+      data: {
+        intent: 'CREATE_DEMO_WORK_ORDER',
+        created: command.created,
+        duplicate: !command.created,
+        msgType: 'interactive',
+        messageId: delivery.messageId,
+        workOrderId: saved.id,
+        workOrderNo: saved.workOrderNo,
+        recordId: saved.recordId,
+        status: saved.status,
+      },
+    };
+  }
+
+  private async replyToMessage(payload: JsonObject, eventId: string, operator: string) {
     const event = asObject(payload.event);
     const sender = asObject(event.sender);
     if (sender.sender_type === 'app' || sender.sender_type === 'bot') {
@@ -410,6 +468,10 @@ export class FeishuCallbackService {
     const message = asObject(event.message);
     const chatId = typeof message.chat_id === 'string' ? message.chat_id : undefined;
     if (!chatId) throw new AppError(400, 'CHAT_ID_MISSING', '消息事件缺少会话 ID');
+    const route = getDiagnosisIntentRoute(question);
+    if (route.intent === 'CREATE_DEMO_WORK_ORDER') {
+      return this.handleCreateDemoWorkOrderCommand(question, chatId, eventId, operator);
+    }
     const diagnosis = await this.operations.diagnose(undefined, question);
     const interactiveCard = await this.buildInteractiveDiagnosisReply(diagnosis);
     const delivery = interactiveCard

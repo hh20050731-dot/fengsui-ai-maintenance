@@ -226,6 +226,7 @@ export interface AiDiagnosis {
 }
 
 export type DiagnosisIntent =
+  | 'CREATE_DEMO_WORK_ORDER'
   | 'highest_risk_equipment'
   | 'high_risk_equipment_list'
   | 'equipment_status'

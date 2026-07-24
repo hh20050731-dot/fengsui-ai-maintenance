@@ -15,6 +15,7 @@ export interface WorkOrderAlertContext {
   healthScore?: number;
   failureProbability?: number;
   suggestedDeadline?: string;
+  notice?: string;
 }
 
 export interface DiagnosisWorkOrderCardContext {
@@ -89,6 +90,15 @@ export function buildHighRiskWorkOrderCard(order: WorkOrder, context: WorkOrderA
   const aiSummary = `${order.faultDescription}；${order.maintenanceSuggestion.slice(0, 2).join('；') || '建议结合现场检查进一步确认'}`;
   const handling = order.processingRecord.at(-1)?.detail ?? '尚无处理记录';
   const parts = order.requiredSpareParts.map((part) => `${part.partName}×${part.quantity}`).join('、') || '按现场检查结果确认';
+  const displayStatus: Record<string, string> = {
+    待接单: '待分派',
+    已接单: '已接单',
+    检修中: '处理中',
+    待验证: '待验收',
+    已完成: '已完成',
+    已关闭: '已关闭',
+    已取消: '已取消',
+  };
   const actions: Record<string, { text: string; type?: 'primary' | 'default' }[]> = {
     待接单: [{ text: '确认接单', type: 'primary' }],
     已接单: [{ text: '开始处理', type: 'primary' }],
@@ -109,7 +119,7 @@ export function buildHighRiskWorkOrderCard(order: WorkOrder, context: WorkOrderA
       title: { tag: 'plain_text', content: `【${order.riskLevel}工单】${order.deviceName}需要协同处置` },
     },
     body: { direction: 'vertical', vertical_spacing: '8px', elements: [
-      { tag: 'markdown', content: `**工单编号：**${order.workOrderNo}\n**设备名称：**${order.deviceName}\n**设备编号：**${order.deviceId}\n**故障部位：**${order.faultPart}\n**故障类型：**${order.faultType}\n**风险等级：**${order.riskLevel}\n**当前状态：**${order.status}\n**温度：**${temperature}\n**振动：**${vibration}\n**健康度：**${healthScore}\n**故障概率：**${probability}\n**辅助研判：**${aiSummary}\n**处理进展：**${handling}\n**建议时限：**${suggestedDeadline}\n**建议备件：**${parts}\n\n> 模拟监测数据与规则型辅助研判，仅供比赛演示和现场复核参考。` },
+      { tag: 'markdown', content: `${context.notice ? `**协同提示：**${context.notice}\n` : ''}**工单编号：**${order.workOrderNo}\n**设备名称：**${order.deviceName}\n**设备编号：**${order.deviceId}\n**故障部位：**${order.faultPart}\n**故障类型：**${order.faultType}\n**风险等级：**${order.riskLevel}\n**当前状态：**${displayStatus[order.status] ?? order.status}\n**温度：**${temperature}\n**振动：**${vibration}\n**健康度：**${healthScore}\n**故障概率：**${probability}\n**辅助研判：**${aiSummary}\n**处理进展：**${handling}\n**建议时限：**${suggestedDeadline}\n**建议备件：**${parts}\n\n> 模拟监测数据与规则型辅助研判，仅供比赛演示和现场复核参考。` },
       ...(actions[order.status] ?? []).map((item) => callbackButton(item.text, workOrderActionValue(order, actionByText[item.text]!), item.type)),
       linkButton('查看3D定位', twinUrl),
       linkButton('查看工单详情', detailUrl),
@@ -176,12 +186,12 @@ export function buildTextCard(title: string, content: string, template = 'blue')
 
 export class MockNotificationProvider implements NotificationProvider {
   private sequence = 0;
-  async sendAlert(alert: Alert) { return this.deliver(buildAlertCard(alert), 'alert'); }
-  async sendWorkOrderAlert(order: WorkOrder, context?: WorkOrderAlertContext) { return this.deliver(buildHighRiskWorkOrderCard(order, context), 'work-order'); }
-  async sendCard(card: Record<string, unknown>) { return this.deliver(card, 'card'); }
-  async sendText(text: string) { return this.deliver({ msg_type: 'text', content: { text } }, 'text'); }
+  async sendAlert(alert: Alert, _recipient?: string) { return this.deliver(buildAlertCard(alert), 'alert'); }
+  async sendWorkOrderAlert(order: WorkOrder, context?: WorkOrderAlertContext, _recipient?: string) { return this.deliver(buildHighRiskWorkOrderCard(order, context), 'work-order'); }
+  async sendCard(card: Record<string, unknown>, _recipient?: string) { return this.deliver(card, 'card'); }
+  async sendText(text: string, _recipient?: string, _receiveIdType: 'chat_id' | 'open_id' = 'chat_id') { return this.deliver({ msg_type: 'text', content: { text } }, 'text'); }
   async updateCard(messageId: string, card: Record<string, unknown>) { return { ...this.deliver(card, 'update'), messageId }; }
-  async sendTest() {
+  async sendTest(_recipient?: string) {
     return this.deliver(buildTextCard('烽燧测试消息', '机器人通道测试成功（本地模拟），未向真实会话发送。'), 'test');
   }
   private deliver(preview: Record<string, unknown>, kind: string): NotificationResult {

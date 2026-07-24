@@ -15,6 +15,7 @@ export interface IntentRoute {
 }
 
 const routeRequirements: Record<DiagnosisIntent, IntentRoute> = {
+  CREATE_DEMO_WORK_ORDER: { intent: 'CREATE_DEMO_WORK_ORDER', requirements: ['equipment', 'alerts', 'workOrders'], requiresDevice: true },
   highest_risk_equipment: { intent: 'highest_risk_equipment', requirements: ['equipment'], requiresDevice: false },
   high_risk_equipment_list: { intent: 'high_risk_equipment_list', requirements: ['equipment'], requiresDevice: false },
   equipment_status: { intent: 'equipment_status', requirements: ['equipment', 'telemetry', 'alerts', 'knowledge'], requiresDevice: true },
@@ -54,6 +55,9 @@ const deviceStatusKeywords = [
   '查看',
 ];
 
+const createWorkOrderActionKeywords = ['创建', '生成', '建立', '建一个', '发送'];
+const workOrderObjectKeywords = ['工单', '维修工单', '演示工单', '工单卡片'];
+
 /** 统一设备名称、全角字符和常用标点，供网站与飞书共用。 */
 export function normalizeDiagnosisQuestion(question: string) {
   return question
@@ -72,6 +76,12 @@ export class IntentRouter {
   route(question: string, selectedDeviceId?: string): IntentRoute {
     const text = normalizeDiagnosisQuestion(question).replace(/[？?！!，,.。\s]/g, '');
     const hasDeviceReference = /(?:\d+号)?(?:引风机|循环水泵|垃圾给料机|炉排减速机|汽轮机|发电机|空压机|渗滤液处理泵)|IDF-\d+/i.test(text);
+    const requestsWorkOrderCreation = createWorkOrderActionKeywords.some((keyword) => text.includes(keyword))
+      && workOrderObjectKeywords.some((keyword) => text.includes(keyword));
+
+    if (hasDeviceReference && requestsWorkOrderCreation) {
+      return routeRequirements.CREATE_DEMO_WORK_ORDER;
+    }
 
     if ((text.includes('为什么') || text.includes('原因') || text.includes('如何判断'))
       && (text.includes('温升') || text.includes('故障') || text.includes('风险') || hasDeviceReference)) {

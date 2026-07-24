@@ -53,6 +53,9 @@ export class OperationsService {
   async diagnose(selectedDeviceId: string | undefined, question: string): Promise<AiDiagnosis> {
     const route = getDiagnosisIntentRoute(question, selectedDeviceId);
     const intent = route.intent;
+    if (intent === 'CREATE_DEMO_WORK_ORDER') {
+      throw new AppError(400, 'WORK_ORDER_COMMAND_REQUIRES_EXECUTION', '创建演示工单指令必须由机器人命令处理器执行');
+    }
     const base: RuleDiagnosisContext = { question, intent, selectedDeviceId };
     if (intent === 'unsupported_or_ambiguous') {
       return this.ai.diagnose(base);
@@ -88,7 +91,45 @@ export class OperationsService {
     return this.ai.diagnose({ ...base, equipment, device, telemetry, knowledge, alerts });
   }
 
-  async createWorkOrderFromAlert(alertId: string, input: CreateWorkOrderInput & { replayWorkOrderId?: string }, createdBy = '黄浩') {
+  async createDemoWorkOrderFromCommand(question: string, operator: string, idempotencyKey: string) {
+    const route = getDiagnosisIntentRoute(question);
+    if (route.intent !== 'CREATE_DEMO_WORK_ORDER') {
+      throw new AppError(400, 'NOT_WORK_ORDER_COMMAND', '当前消息不是创建演示工单指令');
+    }
+    const equipment = await this.repository.listEquipment();
+    const device = resolveDiagnosisDevice(question, equipment);
+    if (!device) throw new AppError(404, 'COMMAND_DEVICE_NOT_FOUND', '创建工单指令中未识别到有效设备');
+
+    const [alerts, orders] = await Promise.all([
+      this.repository.listAlerts(),
+      this.repository.listWorkOrders(),
+    ]);
+    const alert = alerts
+      .filter((item) => item.deviceId === device.deviceId && !['已关闭', '误报'].includes(item.alertStatus))
+      .sort((left, right) => right.alertTime.localeCompare(left.alertTime))[0];
+    if (!alert) throw new AppError(409, 'ACTIVE_ALERT_REQUIRED', `${device.deviceName}当前没有可用于生成演示工单的未关闭预警`);
+
+    const activeStatuses = new Set<WorkOrderStatus>(['待接单', '已接单', '检修中', '待验证']);
+    const existing = orders
+      .filter((order) => order.deviceId === device.deviceId && activeStatuses.has(order.status))
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+      .find((order) => order.sourceAlertId === alert.alertId || order.deviceId === device.deviceId);
+    if (existing) return { created: false, order: existing, device, alert };
+
+    const order = await this.createWorkOrderFromAlert(alert.alertId, {
+      assignee: device.responsiblePerson || '待分配',
+      assigneeUserId: device.responsibleUserId || '',
+      idempotencyKey,
+      suppressNotification: true,
+    }, operator);
+    return { created: true, order, device, alert };
+  }
+
+  async createWorkOrderFromAlert(
+    alertId: string,
+    input: CreateWorkOrderInput & { replayWorkOrderId?: string; suppressNotification?: boolean },
+    createdBy = '黄浩',
+  ) {
     const cached = this.idempotency.get(input.idempotencyKey) as WorkOrder | undefined;
     if (cached) return cached;
     const alert = await this.repository.getAlert(alertId);
@@ -130,7 +171,7 @@ export class OperationsService {
     let created = await this.repository.createWorkOrder(order);
     await this.repository.updateAlert(alertId, { alertStatus: '已生成工单', relatedWorkOrderId: getWorkOrderNo(created) });
     await this.log('work-order', getWorkOrderNo(created), '创建工单', createdBy, `来源预警 ${alertId}`);
-    if (created.riskLevel === '高风险' && created.status === '待接单') {
+    if (!input.suppressNotification && created.riskLevel === '高风险' && created.status === '待接单') {
       try {
         const notification = await this.notifications.sendWorkOrderAlert(created, {
           temperature: twin?.temperature,

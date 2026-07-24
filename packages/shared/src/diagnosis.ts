@@ -303,6 +303,7 @@ function unsupportedDiagnosis(context: RuleDiagnosisContext) {
 
 export function buildRuleBasedDiagnosis(context: RuleDiagnosisContext): AiDiagnosis {
   switch (context.intent) {
+    case 'CREATE_DEMO_WORK_ORDER': throw new Error('创建演示工单意图必须由工单业务服务执行');
     case 'highest_risk_equipment': return highestRiskDiagnosis(context);
     case 'high_risk_equipment_list': return highRiskDiagnosis(context);
     case 'pending_work_orders': return pendingOrdersDiagnosis(context);

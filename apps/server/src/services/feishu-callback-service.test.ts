@@ -229,6 +229,81 @@ describe('飞书回调安全处理', () => {
     expect(textReply).toHaveBeenCalledTimes(5);
   });
 
+  it('创建演示工单命令使用当前群发送interactive卡片且不进入诊断兜底', async () => {
+    const { callbacks, notifications, repository } = createFixture();
+    const sendWorkOrderAlert = vi.spyOn(notifications, 'sendWorkOrderAlert');
+    const sendText = vi.spyOn(notifications, 'sendText');
+
+    const response = await callbacks.handleTrustedEvent({
+      header: { event_id: 'evt-create-demo-order', event_type: 'im.message.receive_v1' },
+      event: {
+        sender: { sender_type: 'user' },
+        message: {
+          message_id: 'om_create_demo_order',
+          message_type: 'text',
+          chat_id: 'oc_current_command_chat',
+          content: JSON.stringify({ text: '@_user_1 创建1号引风机演示工单' }),
+          mentions: [{ key: '@_user_1', name: '烽燧智守' }],
+        },
+      },
+    }) as { data: { intent: string; created: boolean; msgType: string; workOrderNo: string } };
+
+    expect(response.data).toMatchObject({
+      intent: 'CREATE_DEMO_WORK_ORDER',
+      created: true,
+      msgType: 'interactive',
+    });
+    expect(sendText).not.toHaveBeenCalled();
+    expect(sendWorkOrderAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ deviceId: 'IDF-001', status: '待接单' }),
+      expect.objectContaining({ notice: '演示工单已创建' }),
+      'oc_current_command_chat',
+    );
+    const order = await repository.getWorkOrder(response.data.workOrderNo);
+    expect(order).toMatchObject({
+      deviceId: 'IDF-001',
+      status: '待接单',
+      notificationStatus: 'sent',
+      feishuMessageId: expect.stringMatching(/^mock-work-order-/),
+    });
+  });
+
+  it('重复创建命令不重复建未关闭工单并返回最新交互卡片', async () => {
+    const { callbacks, notifications, repository } = createFixture();
+    const sendWorkOrderAlert = vi.spyOn(notifications, 'sendWorkOrderAlert');
+    const command = async (eventId: string, messageId: string, text: string) => callbacks.handleTrustedEvent({
+      header: { event_id: eventId, event_type: 'im.message.receive_v1' },
+      event: {
+        sender: { sender_type: 'user' },
+        message: {
+          message_id: messageId,
+          message_type: 'text',
+          chat_id: 'oc_duplicate_command_chat',
+          content: JSON.stringify({ text }),
+        },
+      },
+    }) as Promise<{ data: { created: boolean; duplicate: boolean; msgType: string; workOrderNo: string } }>;
+
+    const first = await command('evt-demo-first', 'om_demo_first', '生成1号引风机维修工单');
+    const second = await command('evt-demo-second', 'om_demo_second', '发送IDF-001工单卡片');
+    const active = (await repository.listWorkOrders())
+      .filter((order) => order.deviceId === 'IDF-001' && ['待接单', '已接单', '检修中', '待验证'].includes(order.status));
+
+    expect(first.data.created).toBe(true);
+    expect(second.data).toMatchObject({
+      created: false,
+      duplicate: true,
+      msgType: 'interactive',
+      workOrderNo: first.data.workOrderNo,
+    });
+    expect(active).toHaveLength(1);
+    expect(sendWorkOrderAlert).toHaveBeenCalledTimes(2);
+    expect(sendWorkOrderAlert.mock.calls[1]?.[1]).toEqual(expect.objectContaining({
+      notice: '已存在进行中的演示工单',
+    }));
+    expect(sendWorkOrderAlert.mock.calls[1]?.[2]).toBe('oc_duplicate_command_chat');
+  });
+
   it('设备查询卡片可创建工单并主动刷新为可接单卡片', async () => {
     const { callbacks, notifications, repository } = createFixture();
     const sendCard = vi.spyOn(notifications, 'sendCard');
