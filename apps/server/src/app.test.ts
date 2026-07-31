@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import type { DemoJournalEntry, WorkOrder } from '@fengsui/shared';
+import type { DemoJournalEntry, InspectionRecord, WorkOrder } from '@fengsui/shared';
 import { createApp } from './app.js';
 import { DEMO_JOURNAL_HEADER, encodeDemoJournal } from './services/demo-state-persistence.js';
 
@@ -111,6 +111,95 @@ describe('Mock API', () => {
     expect(integration.body.data).toMatchObject({ configured: false, authenticated: false, effectiveMode: 'mock', safeErrorCode: null });
     const notification = await request(app).post('/api/notifications/test').send({}).expect(200);
     expect(notification.body.data.delivered).toBe(true); expect(notification.body.data.messageId).toContain('mock');
+  });
+
+  it('巡检 API 完成持久化、幂等、预警和工单关联闭环', async () => {
+    const { app } = createApp({ forceMock: true });
+    const body = {
+      deviceId: 'IDF-001',
+      inspectorName: '移动巡检员',
+      inspectorUserId: 'miaoda-test-user',
+      runningStatus: '运行',
+      vibration: 6.8,
+      temperature: 86,
+      pressure: 0.86,
+      current: 101,
+      abnormalDescription: '轴承振动与温度偏高',
+      imageUrls: ['https://example.com/inspection/idf-001.png'],
+      riskLevel: '预警',
+      aiSummary: '建议人工复核轴承和润滑状态',
+      aiRecommendManualInspection: true,
+      isAbnormal: true,
+      status: '已提交',
+      source: 'miaoda',
+      idempotencyKey: 'api-inspection-create-001',
+    };
+    const created = await request(app).post('/api/inspections').send(body).expect(201);
+    const duplicate = await request(app).post('/api/inspections').send(body).expect(201);
+    const inspection = created.body.data as InspectionRecord;
+    expect(duplicate.body.data.inspectionId).toBe(inspection.inspectionId);
+    expect(created.body.meta).toMatchObject({
+      inspectionId: inspection.inspectionId,
+      saveMode: 'local_repository',
+    });
+    const list = await request(app).get('/api/inspections').expect(200);
+    expect(list.body.data.filter((item: InspectionRecord) => (
+      item.inspectionId === inspection.inspectionId
+    ))).toHaveLength(1);
+
+    const generated = await request(app)
+      .post(`/api/inspections/${inspection.inspectionId}/generate-alert`)
+      .send({ operator: '移动巡检员', idempotencyKey: 'api-inspection-alert-001' })
+      .expect(201);
+    expect(generated.body.data.alert.sourceInspectionId).toBe(inspection.inspectionId);
+    const order = await request(app)
+      .post(`/api/inspections/${inspection.inspectionId}/create-work-order`)
+      .send({
+        assignee: '移动巡检员',
+        assigneeUserId: 'miaoda-test-user',
+        operator: '移动巡检员',
+        idempotencyKey: 'api-inspection-order-001',
+      })
+      .expect(201);
+    expect(order.body.data.workOrder).toMatchObject({
+      sourceInspectionId: inspection.inspectionId,
+      sourceAlertId: generated.body.data.alert.alertId,
+    });
+    const duplicateOrder = await request(app)
+      .post(`/api/inspections/${inspection.inspectionId}/create-work-order`)
+      .send({
+        assignee: '移动巡检员',
+        assigneeUserId: 'miaoda-test-user',
+        operator: '移动巡检员',
+        idempotencyKey: 'api-inspection-order-002',
+      })
+      .expect(201);
+    expect(duplicateOrder.body.data.workOrder.workOrderNo)
+      .toBe(order.body.data.workOrder.workOrderNo);
+  });
+
+  it('巡检 API 拒绝 Base64 图片写入记录', async () => {
+    const { app } = createApp({ forceMock: true });
+    const response = await request(app).post('/api/inspections').send({
+      deviceId: 'CWP-001',
+      inspectorName: '移动巡检员',
+      inspectorUserId: 'miaoda-test-user',
+      runningStatus: '运行',
+      vibration: 2.5,
+      temperature: 60,
+      pressure: 0.64,
+      current: 69,
+      abnormalDescription: '',
+      imageUrls: ['data:image/png;base64,AAAA'],
+      riskLevel: '正常',
+      aiSummary: '',
+      aiRecommendManualInspection: false,
+      isAbnormal: false,
+      status: '已提交',
+      source: 'miaoda',
+      idempotencyKey: 'api-inspection-invalid-image',
+    }).expect(400);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
 
   it('完成1号引风机预警—工单—库存—健康恢复闭环并保证幂等', async () => {

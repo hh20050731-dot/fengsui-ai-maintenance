@@ -1,4 +1,4 @@
-import { createMockData } from '@fengsui/shared';
+import { createMockData, type InspectionRecord } from '@fengsui/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { buildFeishuCapabilities } from '../config/env.js';
 import { AppError } from '../middleware/errors.js';
@@ -12,7 +12,98 @@ const partialCapabilities = buildFeishuCapabilities({
   FEISHU_WORK_ORDER_TABLE_ID: 'configured-work-order-table',
 }, 'feishu');
 
+const inspectionCapabilities = buildFeishuCapabilities({
+  FEISHU_APP_ID: 'configured-app-id',
+  FEISHU_APP_SECRET: 'configured-app-secret',
+  FEISHU_BITABLE_APP_TOKEN: 'configured-app-token',
+  FEISHU_INSPECTION_TABLE_ID: 'configured-inspection-table',
+}, 'feishu');
+
+function inspectionRecord(): InspectionRecord {
+  const now = new Date().toISOString();
+  return {
+    inspectionId: 'INS-TEST-001',
+    deviceId: 'IDF-001',
+    deviceName: '1号引风机',
+    inspectorName: '测试巡检员',
+    inspectorUserId: 'test-user',
+    inspectionTime: now,
+    runningStatus: '运行',
+    vibration: 6.8,
+    temperature: 86,
+    pressure: 0.86,
+    current: 101,
+    abnormalDescription: '振动与温度偏高',
+    imageUrls: ['https://example.com/inspection/test.png'],
+    riskLevel: '预警',
+    aiSummary: '建议人工检查轴承',
+    aiRecommendManualInspection: true,
+    isAbnormal: true,
+    alertRecommended: true,
+    alertReasons: ['巡检员主动标记异常'],
+    status: '已提交',
+    createdAt: now,
+    updatedAt: now,
+    source: 'miaoda',
+    idempotencyKey: 'inspection-bitable-001',
+    saveMode: 'local_repository',
+  };
+}
+
 describe('飞书多维表格混合 Repository', () => {
+  it('配置巡检表时写入同一 Base 的指定表且不包含 Base64', async () => {
+    const createRecord = vi.fn(async (
+      _appToken: string,
+      _tableId: string,
+      fields: Record<string, unknown>,
+    ) => ({ record: { record_id: 'rec-inspection-001', fields } }));
+    const repository = new FeishuBitableRepository({
+      client: {
+        listRecords: vi.fn(async () => []),
+        createRecord,
+        updateRecord: vi.fn(async () => ({})),
+        getRecord: vi.fn(),
+      },
+      appToken: 'configured-app-token',
+      tableIds: { inspections: 'configured-inspection-table' },
+      capabilities: inspectionCapabilities,
+    });
+
+    const created = await repository.createInspection(inspectionRecord());
+
+    expect(createRecord).toHaveBeenCalledWith(
+      'configured-app-token',
+      'configured-inspection-table',
+      expect.objectContaining({ inspectionId: 'INS-TEST-001' }),
+    );
+    expect(JSON.stringify(createRecord.mock.calls[0]![2])).not.toContain('base64');
+    expect(created.saveMode).toBe('feishu_bitable');
+    expect(created.syncStatus).toBe('synced');
+  });
+
+  it('飞书巡检表写入失败时保留本地巡检记录', async () => {
+    const repository = new FeishuBitableRepository({
+      client: {
+        listRecords: vi.fn(async () => []),
+        createRecord: vi.fn(async () => { throw new Error('remote unavailable'); }),
+        updateRecord: vi.fn(async () => ({})),
+        getRecord: vi.fn(),
+      },
+      appToken: 'configured-app-token',
+      tableIds: { inspections: 'configured-inspection-table' },
+      capabilities: inspectionCapabilities,
+    });
+
+    const created = await repository.createInspection(inspectionRecord());
+
+    expect(created.saveMode).toBe('local_repository');
+    expect(created.syncStatus).toBe('failed');
+    expect(await repository.getInspection(created.inspectionId)).toMatchObject({
+      inspectionId: created.inspectionId,
+      saveMode: 'local_repository',
+    });
+  });
+
   it('工单使用八个中文字段并将创建时间写为毫秒时间戳', async () => {
     const createRecord = vi.fn(async (_appToken: string, _tableId: string, fields: Record<string, unknown>) => ({ record: { record_id: 'rec-test-work-order', fields } }));
     const client = { listRecords: vi.fn(async () => []), createRecord, updateRecord: vi.fn(async () => ({})), getRecord: vi.fn() };

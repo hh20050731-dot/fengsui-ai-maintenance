@@ -99,7 +99,7 @@ describe('数字孪生工单上下文', () => {
     expect(duplicate.id).toBe(highRisk.id);
     expect(send).toHaveBeenCalledOnce();
     const logs = await repository.listOperationLogs(highRisk.workOrderNo);
-    expect(logs.some((item) => item.action === '高风险工单卡片发送失败')).toBe(true);
+    expect(logs.some((item) => item.action === '工单卡片发送失败')).toBe(true);
     const warning = await service.createWorkOrderFromAlert('ALT-20260717-002', {
       assignee: '陈工', assigneeUserId: 'chen-gong', idempotencyKey: 'notify-normal-warning',
     });
