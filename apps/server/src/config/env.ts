@@ -10,6 +10,7 @@ export const serverEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   APP_MODE: z.enum(['mock', 'feishu']).default('mock'),
   APP_BASE_URL: z.string().url().default('http://localhost:5173'),
+  CORS_ALLOWED_ORIGINS: z.string().optional(),
   PORT: z.coerce.number().default(3001),
   FEISHU_APP_ID: z.string().optional(), FEISHU_APP_SECRET: z.string().optional(),
   FEISHU_VERIFICATION_TOKEN: z.string().optional(), FEISHU_ENCRYPT_KEY: z.string().optional(),

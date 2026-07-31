@@ -15,6 +15,7 @@ import {
   updateInspectionSchema,
 } from '@fengsui/shared';
 import { buildFeishuCapabilities, effectiveMode, env, feishuClientConfigured, missingFeishuConfig } from './config/env.js';
+import { buildCorsOptions, resolveAllowedOrigins } from './config/cors.js';
 import { AppError, errorHandler, notFound } from './middleware/errors.js';
 import { DemoAuthProvider, FeishuAuthProvider } from './providers/auth-provider.js';
 import { RuleBasedDiagnosisProvider } from './providers/ai-diagnosis-provider.js';
@@ -42,6 +43,7 @@ export function createApp(options?: {
   verificationToken?: string;
   encryptKey?: string;
   feishuAuthProbe?: () => Promise<unknown>;
+  allowedOrigins?: string[];
 }) {
   const mode = options?.forceMock ? 'mock' : effectiveMode;
   const capabilities = buildFeishuCapabilities(env, mode);
@@ -73,7 +75,10 @@ export function createApp(options?: {
 
   app.disable('x-powered-by');
   app.use(helmet({ contentSecurityPolicy: false }));
-  app.use(cors({ origin: true, credentials: true, exposedHeaders: [APP_MODE_HEADER] }));
+  app.use(cors(buildCorsOptions(
+    options?.allowedOrigins ?? resolveAllowedOrigins(env.CORS_ALLOWED_ORIGINS),
+    [APP_MODE_HEADER],
+  )));
   app.use(express.json({ limit: '12mb' }));
   app.use(cookieParser());
   if (env.NODE_ENV !== 'test') app.use(morgan('tiny'));

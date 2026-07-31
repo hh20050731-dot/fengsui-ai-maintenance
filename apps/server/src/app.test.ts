@@ -15,6 +15,29 @@ const persistedDemoFlow: DemoJournalEntry[] = [
 ];
 
 describe('Mock API', () => {
+  it('CORS 只允许明确白名单来源和必要方法、请求头', async () => {
+    const allowedOrigin = 'https://dcniaqwtmoca.aiforce.cloud';
+    const { app } = createApp({ forceMock: true, allowedOrigins: [allowedOrigin] });
+    const allowed = await request(app)
+      .options('/api/inspections')
+      .set('origin', allowedOrigin)
+      .set('access-control-request-method', 'POST')
+      .set('access-control-request-headers', 'Content-Type,X-Request-Id,X-Idempotency-Key')
+      .expect(204);
+    expect(allowed.headers['access-control-allow-origin']).toBe(allowedOrigin);
+    expect(allowed.headers['access-control-allow-methods']).toBe('GET,POST,PATCH,OPTIONS');
+    expect(allowed.headers['access-control-allow-headers'])
+      .toBe('Content-Type,Authorization,X-Request-Id,X-Idempotency-Key');
+
+    const denied = await request(app)
+      .options('/api/inspections')
+      .set('origin', 'https://untrusted.example')
+      .set('access-control-request-method', 'POST')
+      .expect(404);
+    expect(denied.headers['access-control-allow-origin']).toBeUndefined();
+    expect(denied.body.error.code).toBe('NOT_FOUND');
+  });
+
   it('健康检查返回版本、运行模式与可核对的Git SHA字段', async () => {
     const { app } = createApp({ forceMock: true });
     const response = await request(app).get('/api/health').expect(200);
