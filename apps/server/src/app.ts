@@ -7,8 +7,12 @@ import path from 'node:path';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import {
-  acknowledgeAlertSchema, agentRunRequestSchema, createWorkOrderSchema, diagnosisRequestSchema, equipmentInputSchema, multimodalInspectionRequestSchema, ragDocumentImportSchema, ragSearchRequestSchema,
+  acknowledgeAlertSchema, agentRunRequestSchema, createInspectionAlertSchema,
+  createInspectionSchema, createInspectionWorkOrderSchema, createWorkOrderSchema,
+  diagnosisRequestSchema, equipmentInputSchema, multimodalInspectionRequestSchema,
+  ragDocumentImportSchema, ragSearchRequestSchema,
   stockChangeSchema, transitionWorkOrderSchema, workOrderRecordSchema,
+  updateInspectionSchema,
 } from '@fengsui/shared';
 import { buildFeishuCapabilities, effectiveMode, env, feishuClientConfigured, missingFeishuConfig } from './config/env.js';
 import { AppError, errorHandler, notFound } from './middleware/errors.js';
@@ -27,6 +31,7 @@ import { OperationsService } from './services/operations-service.js';
 import { LocalRagService } from './services/rag-service.js';
 import { MaintenanceAgent } from './services/maintenance-agent.js';
 import { MultimodalInspectionService } from './services/multimodal-inspection-service.js';
+import { InspectionService } from './services/inspection-service.js';
 import type { User, WorkOrder } from '@fengsui/shared';
 
 const success = <T>(data: T, meta?: Record<string, unknown>) => ({ success: true as const, data, ...(meta ? { meta } : {}) });
@@ -48,6 +53,7 @@ export function createApp(options?: {
   const notificationProvider = mode === 'feishu' ? new FeishuBotNotificationProvider() : new MockNotificationProvider();
   const authProvider = mode === 'feishu' ? new FeishuAuthProvider() : new DemoAuthProvider();
   const service = new OperationsService(repository, new RuleBasedDiagnosisProvider(), notificationProvider, { createKnowledgeCandidates: capabilities.knowledge.mode === 'mock' });
+  const inspectionService = new InspectionService(repository, service);
   const demoPersistence = mode === 'mock' ? new DemoStatePersistence(repository as MockRepository, service) : undefined;
   const sessions = new Map<string, User>();
   const callbackService = new FeishuCallbackService(repository, service, notificationProvider, {
@@ -127,6 +133,7 @@ export function createApp(options?: {
     const workOrderCapability = runtimeCapabilities.workOrders!;
     const knowledgeCapability = runtimeCapabilities.knowledge!;
     const operationLogCapability = runtimeCapabilities.operationLogs!;
+    const inspectionCapability = runtimeCapabilities.inspections!;
     const runtimeMode = mode === 'feishu' && authentication.authenticated ? 'feishu' : 'mock';
     const partialFeishu = runtimeMode === 'feishu'
       && Object.values(runtimeCapabilities).some((capability) => capability.effectiveMode === 'mock');
@@ -158,6 +165,7 @@ export function createApp(options?: {
         workOrderTable: serviceState(capabilities.workOrders.configured, workOrderCapability.effectiveMode === 'feishu', workOrderCapability.effectiveMode, workOrderCapability.safeErrorCode),
         equipmentTable: serviceState(capabilities.equipment.configured, runtimeCapabilities.equipment!.effectiveMode === 'feishu', runtimeCapabilities.equipment!.effectiveMode, runtimeCapabilities.equipment!.safeErrorCode),
         alertTable: serviceState(capabilities.alerts.configured, runtimeCapabilities.alerts!.effectiveMode === 'feishu', runtimeCapabilities.alerts!.effectiveMode, runtimeCapabilities.alerts!.safeErrorCode),
+        inspectionTable: serviceState(capabilities.inspections.configured, inspectionCapability.effectiveMode === 'feishu', inspectionCapability.effectiveMode, inspectionCapability.safeErrorCode),
         sparePartTable: serviceState(capabilities.spareParts.configured, runtimeCapabilities.spareParts!.effectiveMode === 'feishu', runtimeCapabilities.spareParts!.effectiveMode, runtimeCapabilities.spareParts!.safeErrorCode),
         knowledgeTable: serviceState(capabilities.knowledge.configured, knowledgeCapability.effectiveMode === 'feishu', knowledgeCapability.effectiveMode, knowledgeCapability.safeErrorCode),
         operationLogTable: serviceState(capabilities.operationLogs.configured, operationLogCapability.effectiveMode === 'feishu', operationLogCapability.effectiveMode, operationLogCapability.safeErrorCode),
@@ -213,6 +221,39 @@ export function createApp(options?: {
   });
   app.get('/api/equipment/:id/history', async (req, res) => res.json(success(await service.history(req.params.id))));
 
+  app.get('/api/inspections', async (req, res) => {
+    let rows = await inspectionService.list();
+    if (req.query.deviceId) rows = rows.filter((row) => row.deviceId === req.query.deviceId);
+    if (req.query.status) rows = rows.filter((row) => row.status === req.query.status);
+    if (req.query.from) rows = rows.filter((row) => row.inspectionTime >= String(req.query.from));
+    rows.sort((left, right) => right.inspectionTime.localeCompare(left.inspectionTime));
+    res.json(success(rows, { total: rows.length }));
+  });
+  app.post('/api/inspections', async (req, res) => {
+    const record = await inspectionService.create(createInspectionSchema.parse(req.body));
+    res.status(201).json(success(record, {
+      inspectionId: record.inspectionId,
+      saveMode: record.saveMode,
+    }));
+  });
+  app.post('/api/inspections/:id/generate-alert', async (req, res) => {
+    const input = createInspectionAlertSchema.parse(req.body);
+    res.status(201).json(success(await inspectionService.createAlert(req.params.id, input)));
+  });
+  app.post('/api/inspections/:id/create-work-order', async (req, res) => {
+    const input = createInspectionWorkOrderSchema.parse(req.body);
+    res.status(201).json(success(await inspectionService.createWorkOrder(req.params.id, input)));
+  });
+  app.get('/api/inspections/:id', async (req, res) => {
+    res.json(success(await inspectionService.get(req.params.id)));
+  });
+  app.patch('/api/inspections/:id', async (req, res) => {
+    res.json(success(await inspectionService.update(
+      req.params.id,
+      updateInspectionSchema.parse(req.body),
+    )));
+  });
+
   app.get('/api/alerts', async (req, res) => {
     let rows = await repository.listAlerts();
     for (const key of ['riskLevel', 'deviceId', 'alertStatus'] as const) if (req.query[key]) rows = rows.filter((row) => row[key] === req.query[key]);
@@ -233,6 +274,12 @@ export function createApp(options?: {
   });
   app.post('/api/work-orders/:id/transition', async (req, res) => res.json(success(await service.transitionWorkOrder(req.params.id, transitionWorkOrderSchema.parse(req.body)))));
   app.post('/api/work-orders/:id/resync', async (req, res) => res.json(success(await service.resyncWorkOrder(req.params.id))));
+  app.post('/api/work-orders/:id/resend-notification', async (req, res) => {
+    const operator = typeof req.body?.operator === 'string' && req.body.operator.trim()
+      ? req.body.operator.trim()
+      : '当前操作人';
+    res.json(success(await service.resendWorkOrderNotification(req.params.id, operator)));
+  });
   app.post('/api/work-orders/:id/record', async (req, res) => res.json(success(await service.addWorkOrderRecord(req.params.id, workOrderRecordSchema.parse(req.body)))));
   app.post('/api/work-orders/:id/verify', async (req, res) => res.json(success(await service.transitionWorkOrder(req.params.id, transitionWorkOrderSchema.parse({ ...req.body, targetStatus: '已完成' })))));
 
@@ -289,5 +336,5 @@ export function createApp(options?: {
     }
   }
   app.use(notFound); app.use(errorHandler);
-  return { app, service, repository, notificationProvider, callbackService, jobsService };
+  return { app, service, inspectionService, repository, notificationProvider, callbackService, jobsService };
 }

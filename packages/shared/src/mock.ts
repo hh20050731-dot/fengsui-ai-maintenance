@@ -1,5 +1,5 @@
 import type {
-  Alert, Equipment, KnowledgeEntry, OperationLog, SparePart, SparePartTransaction, TelemetryPoint, WorkOrder,
+  Alert, Equipment, InspectionRecord, KnowledgeEntry, OperationLog, SparePart, SparePartTransaction, TelemetryPoint, WorkOrder,
 } from './types.js';
 import { getStockStatus } from './health.js';
 
@@ -152,6 +152,7 @@ export function createMockData() {
     equipment,
     telemetry: createMockTelemetry(equipment),
     alerts: createMockAlerts(),
+    inspections: [] as InspectionRecord[],
     workOrders: createMockWorkOrders(),
     spareParts: createMockSpareParts(),
     spareTransactions: [] as SparePartTransaction[],

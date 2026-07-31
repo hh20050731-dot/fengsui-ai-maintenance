@@ -1,6 +1,6 @@
 import {
   getWorkOrderIdentifiers, getWorkOrderNo, isFeishuRecordId, matchesWorkOrderIdentifier, normalizeWorkOrderIdentity,
-  type Alert, type Equipment, type KnowledgeEntry, type OperationLog, type SparePart, type SparePartTransaction, type TelemetryPoint, type WorkOrder,
+  type Alert, type Equipment, type InspectionRecord, type KnowledgeEntry, type OperationLog, type SparePart, type SparePartTransaction, type TelemetryPoint, type WorkOrder,
 } from '@fengsui/shared';
 import { env, feishuCapabilities, type FeishuCapabilities, type FeishuCapabilityName } from '../config/env.js';
 import { AppError } from '../middleware/errors.js';
@@ -20,6 +20,7 @@ const defaultTableIds: TableIds = {
   equipment: env.FEISHU_EQUIPMENT_TABLE_ID,
   telemetry: env.FEISHU_TELEMETRY_TABLE_ID,
   health: env.FEISHU_HEALTH_TABLE_ID,
+  inspections: env.FEISHU_INSPECTION_TABLE_ID,
   alerts: env.FEISHU_ALERT_TABLE_ID,
   workOrders: env.FEISHU_WORK_ORDER_TABLE_ID,
   spareParts: env.FEISHU_SPARE_PART_TABLE_ID,
@@ -250,10 +251,81 @@ export class FeishuBitableRepository extends MockRepository {
 
   override async listAlerts() { return this.usesFeishu('alerts') ? this.listRemote<Alert>('alerts', 'alertId') : super.listAlerts(); }
   override async getAlert(id: string) { return this.usesFeishu('alerts') ? (await this.listAlerts()).find((item) => item.alertId === id) : super.getAlert(id); }
+  override async createAlert(value: Alert) { return this.usesFeishu('alerts') ? this.createRemote('alerts', value, 'alertId') : super.createAlert(value); }
   override async updateAlert(id: string, patch: Partial<Alert>) {
     if (!this.usesFeishu('alerts')) return super.updateAlert(id, patch);
     const value = { ...(await this.getAlert(id)), ...patch } as Alert;
     return this.updateRemote('alerts', id, value, 'alertId');
+  }
+
+  override async listInspections() {
+    if (!this.usesFeishu('inspections')) return super.listInspections();
+    try {
+      const remote = await this.listRemote<InspectionRecord>('inspections', 'inspectionId');
+      const local = await super.listInspections();
+      const merged = new Map(local.map((item) => [item.inspectionId, item]));
+      remote.forEach((item) => merged.set(item.inspectionId, {
+        ...item,
+        saveMode: 'feishu_bitable',
+        syncStatus: 'synced',
+      }));
+      return [...merged.values()];
+    } catch {
+      return super.listInspections();
+    }
+  }
+  override async getInspection(id: string) {
+    return (await this.listInspections()).find((item) => item.inspectionId === id);
+  }
+  override async createInspection(value: InspectionRecord) {
+    if (!this.usesFeishu('inspections')) return super.createInspection(value);
+    const remoteValue: InspectionRecord = {
+      ...value,
+      saveMode: 'feishu_bitable',
+      syncStatus: 'synced',
+      syncMessage: '巡检记录已写入飞书多维表格',
+    };
+    try {
+      return await this.createRemote('inspections', remoteValue, 'inspectionId');
+    } catch {
+      return super.createInspection({
+        ...value,
+        saveMode: 'local_repository',
+        syncStatus: 'failed',
+        syncMessage: '飞书巡检表写入失败，记录已保存在本地 Repository',
+      });
+    }
+  }
+  override async updateInspection(
+    id: string,
+    patch: Partial<InspectionRecord>,
+  ): Promise<InspectionRecord> {
+    const current = await this.getInspection(id);
+    if (!current) throw new AppError(404, 'INSPECTION_NOT_FOUND', `未找到巡检记录：${id}`);
+    const value: InspectionRecord = { ...current, ...patch };
+    if (!this.usesFeishu('inspections') || current.saveMode === 'local_repository') {
+      return super.updateInspection(id, patch);
+    }
+    try {
+      await this.updateRemote('inspections', id, value, 'inspectionId');
+      const synced: InspectionRecord = {
+        ...value,
+        saveMode: 'feishu_bitable',
+        syncStatus: 'synced',
+      };
+      return synced;
+    } catch {
+      const local = await super.getInspection(id);
+      const failed: InspectionRecord = {
+        ...value,
+        saveMode: 'local_repository',
+        syncStatus: 'failed',
+        syncMessage: '飞书巡检表更新失败，最新状态已保存在本地 Repository',
+      };
+      return local
+        ? super.updateInspection(id, failed)
+        : super.createInspection(failed);
+    }
   }
 
   override async listWorkOrders() {

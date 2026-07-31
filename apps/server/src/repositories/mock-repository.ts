@@ -1,4 +1,4 @@
-import { createMockData, matchesWorkOrderIdentifier, normalizeWorkOrderIdentity, type Alert, type Equipment, type KnowledgeEntry, type OperationLog, type SparePart, type SparePartTransaction, type TelemetryPoint, type WorkOrder } from '@fengsui/shared';
+import { createMockData, matchesWorkOrderIdentifier, normalizeWorkOrderIdentity, type Alert, type Equipment, type InspectionRecord, type KnowledgeEntry, type OperationLog, type SparePart, type SparePartTransaction, type TelemetryPoint, type WorkOrder } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
 import type { DataRepository } from './data-repository.js';
 
@@ -13,7 +13,31 @@ export class MockRepository implements DataRepository {
   async setTelemetry(id: string, points: TelemetryPoint[]) { this.data.telemetry[id] = points; }
   async listAlerts() { return this.data.alerts; }
   async getAlert(id: string) { return this.data.alerts.find((item) => item.alertId === id); }
+  async createAlert(input: Alert) {
+    const existing = await this.getAlert(input.alertId);
+    if (existing) return existing;
+    this.data.alerts.unshift(input);
+    return input;
+  }
   async updateAlert(id: string, patch: Partial<Alert>) { return this.update('alerts', 'alertId', id, patch); }
+  async listInspections() { return this.data.inspections; }
+  async getInspection(id: string) { return this.data.inspections.find((item) => item.inspectionId === id); }
+  async createInspection(input: InspectionRecord) {
+    const existing = this.data.inspections.find((item) => (
+      item.inspectionId === input.inspectionId
+      || item.idempotencyKey === input.idempotencyKey
+    ));
+    if (existing) return existing;
+    this.data.inspections.unshift(input);
+    return input;
+  }
+  async updateInspection(id: string, patch: Partial<InspectionRecord>) {
+    const index = this.data.inspections.findIndex((item) => item.inspectionId === id);
+    if (index < 0) throw new AppError(404, 'INSPECTION_NOT_FOUND', `未找到巡检记录：${id}`);
+    const updated: InspectionRecord = { ...this.data.inspections[index]!, ...patch };
+    this.data.inspections[index] = updated;
+    return updated;
+  }
   async listWorkOrders() { return this.data.workOrders; }
   async getWorkOrder(identifier: string) { return this.data.workOrders.find((item) => matchesWorkOrderIdentifier(item, identifier)); }
   async createWorkOrder(input: WorkOrder) { const normalized = normalizeWorkOrderIdentity(input) as WorkOrder; this.data.workOrders.unshift(normalized); return normalized; }

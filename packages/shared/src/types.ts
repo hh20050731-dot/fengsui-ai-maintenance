@@ -4,6 +4,8 @@ export type RunningStatus = '运行' | '停机' | '检修' | '离线';
 export type AlertStatus = '待确认' | '已确认' | '已生成工单' | '处理中' | '已关闭' | '误报';
 export type WorkOrderStatus = '待接单' | '已接单' | '检修中' | '待验证' | '已完成' | '已关闭' | '已取消';
 export type StockStatus = '充足' | '偏低' | '缺货';
+export type InspectionStatus = '草稿' | '已提交' | '已生成预警' | '已生成工单' | '已关闭';
+export type InspectionSaveMode = 'local_repository' | 'feishu_bitable';
 
 export interface User {
   id: string;
@@ -83,6 +85,7 @@ export interface Alert {
   alertStatus: AlertStatus;
   confidence: number;
   source: string;
+  sourceInspectionId?: string;
   relatedWorkOrderId?: string;
   acknowledgedBy?: string;
   acknowledgedAt?: string;
@@ -114,6 +117,7 @@ export interface WorkOrder {
   /** @deprecated 兼容既有业务代码；值始终与 workOrderNo 一致。 */
   workOrderId: string;
   sourceAlertId?: string;
+  sourceInspectionId?: string;
   deviceId: string;
   deviceName: string;
   riskLevel: RiskLevel;
@@ -150,6 +154,51 @@ export interface WorkOrder {
   notificationMessage?: string;
   feishuMessageId?: string;
   knowledgeCandidateCreatedAt?: string;
+}
+
+export interface InspectionRecord {
+  inspectionId: string;
+  deviceId: string;
+  deviceName: string;
+  inspectorName: string;
+  inspectorUserId: string;
+  inspectionTime: string;
+  runningStatus: RunningStatus;
+  vibration: number;
+  temperature: number;
+  pressure: number;
+  current: number;
+  abnormalDescription: string;
+  imageUrls: string[];
+  riskLevel: CompetitionRiskLevel;
+  aiSummary: string;
+  aiRecommendManualInspection: boolean;
+  isAbnormal: boolean;
+  alertRecommended: boolean;
+  alertReasons: string[];
+  alertId?: string;
+  workOrderId?: string;
+  status: InspectionStatus;
+  createdAt: string;
+  updatedAt: string;
+  source: 'miaoda' | 'web' | 'api' | 'feishu';
+  idempotencyKey: string;
+  saveMode: InspectionSaveMode;
+  syncStatus?: 'synced' | 'local_only' | 'failed';
+  syncMessage?: string;
+}
+
+export interface InspectionAlertResult {
+  inspection: InspectionRecord;
+  alert: Alert;
+  created: boolean;
+}
+
+export interface InspectionWorkOrderResult {
+  inspection: InspectionRecord;
+  alert: Alert;
+  workOrder: WorkOrder;
+  created: boolean;
 }
 
 export interface SparePart {

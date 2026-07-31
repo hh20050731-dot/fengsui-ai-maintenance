@@ -1,5 +1,5 @@
 import type {
-  Alert, Equipment, KnowledgeEntry, OperationLog, SparePart, SparePartTransaction, TelemetryPoint, WorkOrder,
+  Alert, Equipment, InspectionRecord, KnowledgeEntry, OperationLog, SparePart, SparePartTransaction, TelemetryPoint, WorkOrder,
 } from '@fengsui/shared';
 
 export interface DataRepository {
@@ -11,7 +11,12 @@ export interface DataRepository {
   setTelemetry(id: string, points: TelemetryPoint[]): Promise<void>;
   listAlerts(): Promise<Alert[]>;
   getAlert(id: string): Promise<Alert | undefined>;
+  createAlert(alert: Alert): Promise<Alert>;
   updateAlert(id: string, patch: Partial<Alert>): Promise<Alert>;
+  listInspections(): Promise<InspectionRecord[]>;
+  getInspection(id: string): Promise<InspectionRecord | undefined>;
+  createInspection(inspection: InspectionRecord): Promise<InspectionRecord>;
+  updateInspection(id: string, patch: Partial<InspectionRecord>): Promise<InspectionRecord>;
   listWorkOrders(): Promise<WorkOrder[]>;
   getWorkOrder(id: string): Promise<WorkOrder | undefined>;
   createWorkOrder(order: WorkOrder): Promise<WorkOrder>;

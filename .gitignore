@@ -24,6 +24,9 @@ deliverables/report-final.pdf
 
 design/stitch-export/
 
+# 妙搭应用使用独立的妙搭 Git 仓库，避免父仓库误提交为 gitlink。
+apps/miaoda-inspection/
+
 # 本地飞书长连接诊断脚本（仅用于人工网络排查，不属于交付产物）
 diagnose-feishu-ws.cjs
 

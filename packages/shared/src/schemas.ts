@@ -91,6 +91,59 @@ export const multimodalInspectionRequestSchema = z.object({
   dataUrl: z.string().startsWith('data:image/').max(12 * 1024 * 1024),
 });
 
+const inspectionImageReferenceSchema = z.string().trim().min(1).max(2048).refine(
+  (value) => /^(https:\/\/|attachment:\/\/|file_token:)/u.test(value),
+  '图片必须是 HTTPS 资源地址或受支持的附件引用',
+);
+
+export const createInspectionSchema = z.object({
+  deviceId: z.string().trim().min(1).max(64),
+  inspectorName: z.string().trim().min(1).max(80),
+  inspectorUserId: z.string().trim().min(1).max(128),
+  inspectionTime: z.string().datetime().optional(),
+  runningStatus: z.enum(['运行', '停机', '检修', '离线']),
+  vibration: z.number().min(0).max(1000),
+  temperature: z.number().min(-50).max(500),
+  pressure: z.number().min(0).max(100),
+  current: z.number().min(0).max(100_000),
+  abnormalDescription: z.string().trim().max(2000).default(''),
+  imageUrls: z.array(inspectionImageReferenceSchema).max(8).default([]),
+  riskLevel: z.enum(['正常', '关注', '预警', '严重']).default('正常'),
+  aiSummary: z.string().trim().max(4000).default(''),
+  aiRecommendManualInspection: z.boolean().default(false),
+  isAbnormal: z.boolean().default(false),
+  status: z.enum(['草稿', '已提交']).default('已提交'),
+  source: z.enum(['miaoda', 'web', 'api', 'feishu']).default('miaoda'),
+  idempotencyKey: z.string().trim().min(8).max(128),
+});
+export type CreateInspectionInput = z.infer<typeof createInspectionSchema>;
+
+export const updateInspectionSchema = z.object({
+  runningStatus: z.enum(['运行', '停机', '检修', '离线']).optional(),
+  vibration: z.number().min(0).max(1000).optional(),
+  temperature: z.number().min(-50).max(500).optional(),
+  pressure: z.number().min(0).max(100).optional(),
+  current: z.number().min(0).max(100_000).optional(),
+  abnormalDescription: z.string().trim().max(2000).optional(),
+  imageUrls: z.array(inspectionImageReferenceSchema).max(8).optional(),
+  riskLevel: z.enum(['正常', '关注', '预警', '严重']).optional(),
+  aiSummary: z.string().trim().max(4000).optional(),
+  aiRecommendManualInspection: z.boolean().optional(),
+  isAbnormal: z.boolean().optional(),
+  status: z.enum(['草稿', '已提交', '已关闭']).optional(),
+  idempotencyKey: z.string().trim().min(8).max(128),
+});
+export type UpdateInspectionInput = z.infer<typeof updateInspectionSchema>;
+
+export const createInspectionAlertSchema = z.object({
+  operator: z.string().trim().min(1).max(80),
+  idempotencyKey: z.string().trim().min(8).max(128),
+});
+
+export const createInspectionWorkOrderSchema = createWorkOrderSchema.extend({
+  operator: z.string().trim().min(1).max(80),
+});
+
 export const agentRunRequestSchema = z.object({
   deviceId: z.string().trim().min(1).max(64),
   alertId: z.string().trim().min(1).max(80).optional(),

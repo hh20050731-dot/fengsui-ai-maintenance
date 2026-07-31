@@ -5,7 +5,11 @@ import {
 } from '@fengsui/shared';
 import { AppError } from '../middleware/errors.js';
 import type { AiDiagnosisProvider } from '../providers/ai-diagnosis-provider.js';
-import type { NotificationProvider } from '../providers/notification-provider.js';
+import {
+  buildHighRiskWorkOrderCard,
+  type NotificationProvider,
+  type NotificationResult,
+} from '../providers/notification-provider.js';
 import type { DataRepository } from '../repositories/data-repository.js';
 
 export class OperationsService {
@@ -127,7 +131,11 @@ export class OperationsService {
 
   async createWorkOrderFromAlert(
     alertId: string,
-    input: CreateWorkOrderInput & { replayWorkOrderId?: string; suppressNotification?: boolean },
+    input: CreateWorkOrderInput & {
+      replayWorkOrderId?: string;
+      suppressNotification?: boolean;
+      forceNotification?: boolean;
+    },
     createdBy = '黄浩',
   ) {
     const cached = this.idempotency.get(input.idempotencyKey) as WorkOrder | undefined;
@@ -157,7 +165,9 @@ export class OperationsService {
     const faultType = twin?.faultType ?? alert.suspectedCause;
     const order: WorkOrder = {
       id: workOrderNo, workOrderNo, workOrderId: workOrderNo,
-      sourceAlertId: alert.alertId, deviceId: alert.deviceId, deviceName: alert.deviceName, riskLevel,
+      sourceAlertId: alert.alertId,
+      sourceInspectionId: alert.sourceInspectionId,
+      deviceId: alert.deviceId, deviceName: alert.deviceName, riskLevel,
       faultPart, faultType, faultDescription,
       maintenanceSuggestion: twin?.advice ?? alert.maintenanceSuggestion, assignee: input.assignee, assigneeUserId: input.assigneeUserId,
       createdBy, createdAt, createdTime: createdAt, deadline: input.deadline ?? new Date(Date.now() + 24 * 3_600_000).toISOString(),
@@ -171,7 +181,11 @@ export class OperationsService {
     let created = await this.repository.createWorkOrder(order);
     await this.repository.updateAlert(alertId, { alertStatus: '已生成工单', relatedWorkOrderId: getWorkOrderNo(created) });
     await this.log('work-order', getWorkOrderNo(created), '创建工单', createdBy, `来源预警 ${alertId}`);
-    if (!input.suppressNotification && created.riskLevel === '高风险' && created.status === '待接单') {
+    if (
+      !input.suppressNotification
+      && (input.forceNotification || created.riskLevel === '高风险')
+      && created.status === '待接单'
+    ) {
       try {
         const notification = await this.notifications.sendWorkOrderAlert(created, {
           temperature: twin?.temperature,
@@ -180,15 +194,11 @@ export class OperationsService {
           failureProbability: twin?.failureProbability,
           suggestedDeadline: twin?.advice?.[0] ?? alert.suggestedDeadline,
         });
-        created = await this.repository.updateWorkOrder(getWorkOrderTransitionIdentifier(created), {
-          notificationStatus: notification.delivered ? 'sent' : 'failed',
-          notificationMessage: notification.delivered ? '飞书工单卡片已发送' : (notification.error ?? '卡片发送失败'),
-          ...(notification.messageId ? { feishuMessageId: notification.messageId } : {}),
-        });
+        created = await this.persistNotificationResult(created, notification);
         await this.log(
           'work-order',
           getWorkOrderNo(created),
-          notification.delivered ? '发送高风险工单卡片' : '高风险工单卡片发送失败',
+          notification.delivered ? '发送工单卡片' : '工单卡片发送失败',
           '系统',
           notification.delivered
             ? `消息 ${notification.messageId || 'Mock 卡片预览'} 已生成`
@@ -199,7 +209,7 @@ export class OperationsService {
           notificationStatus: 'failed',
           notificationMessage: error instanceof Error ? error.message : '卡片发送失败',
         });
-        await this.log('work-order', getWorkOrderNo(created), '高风险工单卡片发送失败', '系统', `${error instanceof Error ? error.message : '未知错误'}；工单已创建，可稍后重试通知`);
+        await this.log('work-order', getWorkOrderNo(created), '工单卡片发送失败', '系统', `${error instanceof Error ? error.message : '未知错误'}；工单已创建，可稍后重试通知`);
       }
     }
     this.idempotency.set(input.idempotencyKey, created);
@@ -209,7 +219,7 @@ export class OperationsService {
   async transitionWorkOrder(id: string, input: {
     targetStatus: WorkOrderStatus; operator: string; note: string; inspectionResult?: string; repairResult?: string;
     consumedSpareParts?: Array<{ partId: string; quantity: number }>; healthScoreAfter?: number; verificationResult?: string; idempotencyKey: string;
-  }) {
+  }, options: { refreshCard?: boolean } = {}) {
     const cached = this.idempotency.get(input.idempotencyKey) as WorkOrder | undefined;
     if (cached) return cached;
     const order = await this.repository.getWorkOrder(id);
@@ -223,7 +233,7 @@ export class OperationsService {
     const record = { id: randomUUID(), time: new Date().toISOString(), operator: input.operator, action: `状态推进：${order.status} → ${input.targetStatus}`, detail: input.note || '按标准流程推进' };
     const updateIdentifier = getWorkOrderTransitionIdentifier(order);
     if (!updateIdentifier) throw new AppError(404, 'WORK_ORDER_IDENTIFIER_MISSING', '维修工单缺少可用标识');
-    const updated = await this.repository.updateWorkOrder(updateIdentifier, {
+    let updated = await this.repository.updateWorkOrder(updateIdentifier, {
       status: input.targetStatus, inspectionResult: input.inspectionResult ?? order.inspectionResult,
       repairResult: input.repairResult ?? order.repairResult, consumedSpareParts: consumed,
       healthScoreAfter: input.healthScoreAfter ?? order.healthScoreAfter, verificationResult: input.verificationResult ?? order.verificationResult,
@@ -234,7 +244,25 @@ export class OperationsService {
     if (input.targetStatus === '已完成') await this.completeWorkOrder(updated, input.operator, input.idempotencyKey);
     else if (order.sourceAlertId) await this.repository.updateAlert(order.sourceAlertId, { alertStatus: input.targetStatus === '待接单' ? '已生成工单' : '处理中' });
     await this.log('work-order', getWorkOrderNo(updated), '推进工单状态', input.operator, `${order.status} → ${input.targetStatus}；${input.note}`);
+    if (options.refreshCard !== false) updated = await this.refreshWorkOrderCard(updated);
     this.idempotency.set(input.idempotencyKey, updated);
+    return updated;
+  }
+
+  async resendWorkOrderNotification(id: string, operator: string) {
+    const order = await this.repository.getWorkOrder(id);
+    if (!order) throw new AppError(404, 'WORK_ORDER_NOT_FOUND', '未找到维修工单');
+    const notification = await this.notifications.sendWorkOrderAlert(order);
+    const updated = await this.persistNotificationResult(order, notification);
+    await this.log(
+      'work-order',
+      getWorkOrderNo(updated),
+      notification.delivered ? '重新发送工单卡片' : '重新发送工单卡片失败',
+      operator,
+      notification.delivered
+        ? `消息 ${notification.messageId} 已发送`
+        : `${notification.error ?? '未知错误'}；本地工单未回滚`,
+    );
     return updated;
   }
 
@@ -329,6 +357,12 @@ export class OperationsService {
     await this.repository.setTelemetry(order.deviceId, [...telemetry, point]);
     const alert = order.sourceAlertId ? await this.repository.getAlert(order.sourceAlertId) : undefined;
     if (order.sourceAlertId) await this.repository.updateAlert(order.sourceAlertId, { alertStatus: '已关闭', closedAt: new Date().toISOString() });
+    if (order.sourceInspectionId) {
+      await this.repository.updateInspection(order.sourceInspectionId, {
+        status: '已关闭',
+        updatedAt: new Date().toISOString(),
+      });
+    }
     if (this.options.createKnowledgeCandidates && this.repository.addKnowledge) {
       const candidate: KnowledgeEntry = {
         knowledgeId: `KB-CANDIDATE-${order.workOrderId}`,
@@ -355,5 +389,33 @@ export class OperationsService {
   }
   private async ensureStock(items: SparePartUsage[]) { for (const usage of items) { const part = await this.repository.getSparePart(usage.partId); if (!part || part.currentStock < usage.quantity) throw new AppError(409, 'INSUFFICIENT_STOCK', `${part?.partName ?? usage.partId}库存不足，无法完成工单`); } }
   private async mustDevice(id: string) { const item = await this.repository.getEquipment(id); if (!item) throw new AppError(404, 'DEVICE_NOT_FOUND', '未找到设备'); return item; }
+  private async persistNotificationResult(order: WorkOrder, result: NotificationResult) {
+    const notConfigured = !result.delivered && /未配置/u.test(result.error ?? '');
+    return this.repository.updateWorkOrder(getWorkOrderTransitionIdentifier(order), {
+      notificationStatus: result.delivered ? 'sent' : notConfigured ? 'not_requested' : 'failed',
+      notificationMessage: result.delivered
+        ? '飞书工单卡片已发送'
+        : notConfigured
+          ? '工单已创建，通知群未配置'
+          : (result.error ?? '卡片发送失败'),
+      ...(result.messageId ? { feishuMessageId: result.messageId } : {}),
+    });
+  }
+  private async refreshWorkOrderCard(order: WorkOrder) {
+    if (!order.feishuMessageId) return order;
+    const result = await this.notifications.updateCard(
+      order.feishuMessageId,
+      buildHighRiskWorkOrderCard(order),
+    );
+    const updated = await this.persistNotificationResult(order, result);
+    await this.log(
+      'work-order',
+      getWorkOrderNo(updated),
+      result.delivered ? '更新飞书工单卡片' : '更新飞书工单卡片失败',
+      '系统',
+      result.delivered ? `消息 ${order.feishuMessageId} 已更新` : (result.error ?? '更新失败'),
+    );
+    return updated;
+  }
   private async log(entityType: string, entityId: string, action: string, operator: string, detail: string) { await this.repository.addOperationLog({ logId: `LOG-${randomUUID()}`, entityType, entityId, action, operator, detail, timestamp: new Date().toISOString() }); }
 }

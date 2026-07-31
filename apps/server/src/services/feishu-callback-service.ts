@@ -256,7 +256,7 @@ export class FeishuCallbackService {
       operator,
       note: '通过飞书高风险工单卡片确认接单',
       idempotencyKey: `feishu-event-${eventId}-accept`,
-    });
+    }, { refreshCard: false });
     return workOrderCardResponse(updated, `接单成功：${updated.workOrderNo}`);
   }
 
@@ -303,7 +303,7 @@ export class FeishuCallbackService {
         verificationResult: current.verificationResult ?? '通过飞书卡片确认验收，需结合现场记录复核',
       } : {}),
       idempotencyKey: key,
-    });
+    }, { refreshCard: false });
     const labels: Record<string, string> = {
       accept_order: '接单成功', start_process: '已开始处理', submit_acceptance: '已提交验收',
       approve_completion: '验收完成', return_processing: '已退回处理', close_order: '工单已关闭',

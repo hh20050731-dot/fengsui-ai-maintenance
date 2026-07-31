@@ -3,7 +3,18 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/coverage/**', 'node_modules/**', '.vercel/**', 'playwright-report/**', 'test-results/**'] },
+  {
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      'node_modules/**',
+      '.agents/**',
+      '.vercel/**',
+      'apps/miaoda-inspection/**',
+      'playwright-report/**',
+      'test-results/**'
+    ]
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
